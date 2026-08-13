@@ -9,6 +9,7 @@ class modelGalleryplus extends cmsModel {
     public $user_karma    = 0;
     public $adult_rating  = 0;
     public $user_rating   = 0;
+    public $skip_visible_albums_filter = false;
 
     public function isPrivacyFilterDisabled() {
         return $this->privacy_filter_disabled;
@@ -482,6 +483,7 @@ class modelGalleryplus extends cmsModel {
     }
 
     public function filterVisibleAlbums($user_id = 0, $include_adult_for_guests = false) {
+        if ($this->skip_visible_albums_filter) { return $this; }
         $this->joinInner('galleryplus_albums', 'gp_a', 'gp_a.id = i.album_id');
         if ($user_id) {
             $this->filter("(gp_a.privacy = 'public' OR gp_a.privacy = 'adult' OR gp_a.user_id = " . intval($user_id) . ")");
@@ -504,7 +506,9 @@ class modelGalleryplus extends cmsModel {
         $this->limitPagePlus($page, $perpage);
         return $this->get('galleryplus_albums', function ($item, $model) {
             $item['url'] = href_to('galleryplus', 'album', [$item['slug']]) . '.html';
+            $model->skip_visible_albums_filter = true;
             $item['photo_count'] = $model->getPhotosCount($item['id']);
+            $model->skip_visible_albums_filter = false;
             $cover = $model->getAlbumCover($item['id']);
             $item['cover_url']    = $cover['url'];
             $item['cover_width']  = $cover['width'];

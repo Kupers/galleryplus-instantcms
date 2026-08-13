@@ -29,6 +29,21 @@ class actionGalleryplusAlbum extends cmsAction {
         $album = $this->model->getAlbumBySlug($slug);
         if (!$album) { return cmsCore::error404(); }
 
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+            href_to('galleryplus')
+        );
+        if (!empty($album['category_id'])) {
+            $album_category = $this->model->getCategoryById((int)$album['category_id']);
+            if ($album_category) {
+                $this->cms_template->addBreadcrumb(
+                    $album_category['title'],
+                    href_to('galleryplus', 'category', [$album_category['slug']]) . '.html'
+                );
+            }
+        }
+        $this->cms_template->addBreadcrumb($album['title']);
+
         if (!$this->model->canAccessAlbum($album, $user->id, $this->model->user_karma, $this->model->adult_karma, false, $this->model->user_rating, $this->model->adult_rating)) {
 
             $password_submit = $this->request->get('album_password', '');
@@ -57,6 +72,9 @@ class actionGalleryplusAlbum extends cmsAction {
             if ($album['privacy'] === 'password' && !empty($_SESSION['galleryplus_album_' . $album['id']])) {
                 // already unlocked via session
             } elseif ($album['privacy'] === 'password') {
+                if (!$user->id) {
+                    return $this->redirectTo('auth', 'login');
+                }
                 if ($this->request->isAjax()) {
                     return $this->cms_template->renderJSON(['redirect' => href_to('galleryplus', 'album', [$album['slug']]) . '.html']);
                 }
@@ -91,6 +109,8 @@ class actionGalleryplusAlbum extends cmsAction {
                 return cmsCore::error404();
             }
         }
+
+        $this->model->skip_visible_albums_filter = true;
 
         $page    = $this->request->get('page', 1);
         $perpage = $this->options['limit'] ?? 24;

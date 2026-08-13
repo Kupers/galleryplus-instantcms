@@ -124,7 +124,7 @@
         </div>
 
         <?php if ($has_next) { ?>
-            <div class="galleryplus-loading active" id="galleryplus-loading">
+            <div class="galleryplus-loading" id="galleryplus-loading">
                 <div class="galleryplus-spinner"></div>
             </div>
         <?php } ?>
@@ -203,10 +203,12 @@
     var page = parseInt(grid.dataset.page) || 2;
     var hasNext = grid.dataset.hasNext === '1';
     var baseUrl = grid.dataset.url;
+    var el = document.getElementById('galleryplus-loading');
 
     function loadMore() {
         if (loading || !hasNext) return;
         loading = true;
+        if (el) el.classList.add('active');
 
         var xhr = new XMLHttpRequest();
         xhr.open('GET', baseUrl + '?page=' + page, true);
@@ -226,8 +228,10 @@
                 } catch(e) {}
             }
             loading = false;
+            if (el) el.classList.remove('active');
+            if (!hasNext && el) el.style.display = 'none';
         };
-        xhr.onerror = function() { loading = false; };
+        xhr.onerror = function() { loading = false; if (el) el.classList.remove('active'); };
         xhr.send();
     }
 

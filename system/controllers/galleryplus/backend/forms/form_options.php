@@ -211,6 +211,12 @@ class formGalleryplusOptions extends cmsForm {
                 'type'   => 'fieldset',
                 'childs' => [
 
+                    new fieldCheckbox('auto_approve', [
+                        'title'   => LANG_GALLERYPLUS_AUTO_APPROVE,
+                        'hint'    => LANG_GALLERYPLUS_AUTO_APPROVE_HINT,
+                        'default' => 1,
+                    ]),
+
                     new fieldList('naming_scheme', [
                         'title'   => LANG_GALLERYPLUS_NAMING_SCHEME,
                         'default' => 'original',

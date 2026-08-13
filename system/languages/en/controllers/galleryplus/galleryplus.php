@@ -56,6 +56,8 @@
     define('LANG_GALLERYPLUS_REJECT_SELECTED',   'Reject selected');
     define('LANG_GALLERYPLUS_SAVED',             'Photos saved');
     define('LANG_GALLERYPLUS_EMPTY',             'No images yet.');
+    define('LANG_GALLERYPLUS_AUTO_APPROVE',      'Auto-approve uploaded photos');
+    define('LANG_GALLERYPLUS_AUTO_APPROVE_HINT', 'Publish uploaded photos without moderation. Disable to send new photos to moderation');
     define('LANG_GALLERYPLUS_NAMING_SCHEME',     'File naming scheme');
     define('LANG_GALLERYPLUS_NAMING_ORIGINAL',   'Original name');
     define('LANG_GALLERYPLUS_NAMING_RANDOM',     'Random string');

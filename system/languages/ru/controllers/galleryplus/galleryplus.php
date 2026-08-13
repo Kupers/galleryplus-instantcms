@@ -56,6 +56,8 @@
     define('LANG_GALLERYPLUS_REJECT_SELECTED',   'Отклонить выбранные');
     define('LANG_GALLERYPLUS_SAVED',             'Фото сохранены');
     define('LANG_GALLERYPLUS_EMPTY',             'Изображений пока нет.');
+    define('LANG_GALLERYPLUS_AUTO_APPROVE',      'Автопубликация загруженных фото');
+    define('LANG_GALLERYPLUS_AUTO_APPROVE_HINT', 'Публиковать фото без модерации. Отключите, чтобы новые фото отправлялись на модерацию');
     define('LANG_GALLERYPLUS_NAMING_SCHEME',     'Схема именования файлов');
     define('LANG_GALLERYPLUS_NAMING_ORIGINAL',   'Оригинальное имя');
     define('LANG_GALLERYPLUS_NAMING_RANDOM',     'Случайный набор символов');

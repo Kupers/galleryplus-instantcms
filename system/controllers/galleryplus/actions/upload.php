@@ -37,6 +37,14 @@ class actionGalleryplusUpload extends cmsAction {
 
     public function showUploadForm() {
 
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+            href_to('galleryplus')
+        );
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_UPLOAD') ? LANG_GALLERYPLUS_UPLOAD : 'Upload'
+        );
+
         $albums = $this->model->getAlbums(1, 500);
         if (!$albums) {
             $albums = [];
@@ -95,10 +103,18 @@ class actionGalleryplusUpload extends cmsAction {
             $privacy = 'public';
         }
 
-        $privacy_users = '';
+        $privacy_users = null;
         $privacy_password = null;
         if ($privacy === 'users') {
-            $privacy_users = strip_tags($this->request->get('privacy_users', ''));
+            $user_ids = [];
+            $names = explode(',', strip_tags($this->request->get('privacy_users', '')));
+            foreach ($names as $name) {
+                $name = trim($name);
+                if (!$name) { continue; }
+                $u = cmsCore::getModel('users')->filterEqual('nickname', $name)->getUser();
+                if ($u) { $user_ids[] = $u['id']; }
+            }
+            $privacy_users = $user_ids ? implode(',', $user_ids) : null;
         }
         if ($privacy === 'password') {
             $password = $this->request->get('password', '');
@@ -180,7 +196,7 @@ class actionGalleryplusUpload extends cmsAction {
                 foreach ($names as $name) {
                     $name = trim($name);
                     if (!$name) { continue; }
-                    $u = cmsCore::getModel('users')->getUserByNickname($name);
+                    $u = cmsCore::getModel('users')->filterEqual('nickname', $name)->getUser();
                     if ($u) { $user_ids[] = $u['id']; }
                 }
                 $update['privacy_users'] = $user_ids ? implode(',', $user_ids) : null;
@@ -390,7 +406,7 @@ class actionGalleryplusUpload extends cmsAction {
                 $sizes[$name] = ['width' => $s[0], 'height' => $s[1]];
             }
 
-            $auto_approve = $this->userCanBypassModeration();
+            $auto_approve = !empty($this->options['auto_approve'] ?? 1) || $this->userCanBypassModeration();
 
             $xmp_description = $this->extractXmpDescription($result['path'] ?? '');
 

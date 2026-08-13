@@ -40,6 +40,18 @@ class actionGalleryplusIndex extends cmsAction {
 
         $category_id = $current_category ? $current_category['id'] : 0;
 
+        if ($current_category) {
+            $this->cms_template->addBreadcrumb(
+                defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+                href_to('galleryplus')
+            );
+            $this->cms_template->addBreadcrumb($current_category['title']);
+        } else {
+            $this->cms_template->addBreadcrumb(
+                defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery'
+            );
+        }
+
         if ($mode === 'albums') {
             return $this->showAlbums($page, $category_id);
         }
@@ -151,6 +163,18 @@ class actionGalleryplusIndex extends cmsAction {
                     $current_category['url'] = href_to('galleryplus', 'category', [$current_category['slug']]) . '.html';
                 }
             }
+        }
+
+        if ($current_category) {
+            $this->cms_template->addBreadcrumb(
+                defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+                href_to('galleryplus')
+            );
+            $this->cms_template->addBreadcrumb($current_category['title']);
+        } else {
+            $this->cms_template->addBreadcrumb(
+                defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery'
+            );
         }
 
         $use_album_tags = !empty($this->options['use_album_tags']);

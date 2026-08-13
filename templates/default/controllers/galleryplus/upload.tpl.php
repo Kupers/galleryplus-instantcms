@@ -50,6 +50,7 @@
 
         <div id="galleryplus-selected-album" class="galleryplus-selected-album" style="display:none">
             <div class="galleryplus-selected-album-info" id="galleryplus-selected-album-info"></div>
+            <button type="button" id="galleryplus-album-edit-btn" class="btn btn-secondary btn-sm galleryplus-album-edit-btn" style="display:none"><?php echo LANG_GALLERYPLUS_ALBUM_EDIT ?? 'Edit album'; ?></button>
             <div class="galleryplus-album-upload-settings" id="galleryplus-album-settings">
                 <div class="galleryplus-settings-section">
                     <label class="galleryplus-settings-label"><?php echo LANG_GALLERYPLUS_ALBUM_TITLE ?? 'Album name'; ?></label>
@@ -150,6 +151,7 @@
     var newAlbumBtn = document.getElementById('galleryplus-new-album-btn');
     var selectedAlbumDiv = document.getElementById('galleryplus-selected-album');
     var selectedAlbumInfo = document.getElementById('galleryplus-selected-album-info');
+    var albumEditBtn = document.getElementById('galleryplus-album-edit-btn');
     var albumSettings = document.getElementById('galleryplus-album-settings');
     var settingsTitle = document.getElementById('album-settings-title');
     var settingsContent = document.getElementById('album-settings-content');
@@ -243,6 +245,7 @@
         }
         selectedAlbumInfo.innerHTML = info;
         selectedAlbumDiv.style.display = 'block';
+        if (albumEditBtn) { albumEditBtn.style.display = 'none'; }
         if (isNew) {
             albumSettings.style.display = 'block';
             settingsTitle.value = title || '';
@@ -265,6 +268,7 @@
         activeAlbum = null;
         albumIdInput.value = '';
         selectedAlbumDiv.style.display = 'none';
+        if (albumEditBtn) { albumEditBtn.style.display = 'none'; }
         albumSearch.value = '';
     }
 
@@ -279,6 +283,7 @@
             activeAlbum = null;
             albumIdInput.value = '';
             selectedAlbumDiv.style.display = 'none';
+            if (albumEditBtn) { albumEditBtn.style.display = 'none'; }
         }
         renderDropdown(val);
     });
@@ -314,6 +319,12 @@
         selectAlbum(null, searchVal || '', true, null);
         settingsTitle.focus();
         albumSearch.disabled = true;
+    });
+
+    albumEditBtn.addEventListener('click', function() {
+        albumSettings.style.display = 'block';
+        if (albumEditBtn) { albumEditBtn.style.display = 'none'; }
+        settingsTitle.focus();
     });
 
     // Save album settings
@@ -375,6 +386,9 @@
                     } else {
                         activeAlbum.title = r.title || settingsTitle.value;
                     }
+                    selectedAlbumInfo.innerHTML = '<div class="galleryplus-selected-album-addto"><?php echo LANG_GALLERYPLUS_ALBUM ?? 'Album'; ?>: <strong>' + htmlspecialchars(activeAlbum.title) + '</strong></div>';
+                    albumSettings.style.display = 'none';
+                    if (albumEditBtn) { albumEditBtn.style.display = 'inline-block'; }
                 } catch(e) {
                     settingsStatus.textContent = 'Error';
                     settingsStatus.className = 'galleryplus-settings-status error';

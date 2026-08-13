@@ -92,7 +92,7 @@ class actionGalleryplusSave extends cmsAction {
                     foreach ($names as $name) {
                         $name = trim($name);
                         if (!$name) { continue; }
-                        $u = cmsCore::getModel('users')->getUserByNickname($name);
+                        $u = cmsCore::getModel('users')->filterEqual('nickname', $name)->getUser();
                         if ($u) { $user_ids[] = $u['id']; }
                     }
                     $update_album['privacy_users'] = $user_ids ? implode(',', $user_ids) : null;

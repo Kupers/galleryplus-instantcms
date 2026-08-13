@@ -7,9 +7,10 @@ window.galleryplusMasonry = function(container, itemSelector) {
     var items = grid.querySelectorAll(itemSelector);
     if (!items.length) { grid.classList.add('jsly'); return; }
 
-    var gap = 12;
+    var isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    var gap = isMobile ? 1 : 12;
     var gridWidth = grid.getBoundingClientRect().width;
-    var cols = Math.max(1, Math.floor((gridWidth + gap) / (260 + gap)));
+    var cols = isMobile ? 2 : Math.max(1, Math.floor((gridWidth + gap) / (260 + gap)));
 
     var colHeights = [];
     for (var c = 0; c < cols; c++) colHeights[c] = 0;

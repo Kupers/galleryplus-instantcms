@@ -54,6 +54,27 @@ class actionGalleryplusView extends cmsAction {
             }
         }
 
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+            href_to('galleryplus')
+        );
+        if (!empty($photo['album'])) {
+            if (!empty($photo['album']['category_id'])) {
+                $photo_category = $this->model->getCategoryById((int)$photo['album']['category_id']);
+                if ($photo_category) {
+                    $this->cms_template->addBreadcrumb(
+                        $photo_category['title'],
+                        href_to('galleryplus', 'category', [$photo_category['slug']]) . '.html'
+                    );
+                }
+            }
+            $this->cms_template->addBreadcrumb(
+                $photo['album']['title'],
+                href_to('galleryplus', 'album', [$photo['album']['slug']]) . '.html'
+            );
+        }
+        $this->cms_template->addBreadcrumb($photo['title'] ?: ($photo['filename'] ?? ''));
+
         $this->model->incrementCounter($photo['id']);
 
         $likes_count = $this->model->getLikesCount($photo['id'], 'photo');

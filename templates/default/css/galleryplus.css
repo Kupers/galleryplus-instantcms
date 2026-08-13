@@ -1675,6 +1675,46 @@ button.galleryplus-viewer-share-option {
     transform: scale(1.15);
 }
 
+.galleryplus-album-card--protected {
+    position: relative;
+}
+
+.galleryplus-album-card--protected .galleryplus-blurred {
+    filter: blur(16px);
+    transform: scale(1.15);
+}
+
+.galleryplus-album-lock-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 30px;
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.galleryplus-album-lock-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #546e7a;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
 .galleryplus-album-adult-label {
     display: inline-block;
     font-size: 11px;
@@ -1906,6 +1946,10 @@ img.galleryplus-viewer-blurred {
 
 .galleryplus-selected-album-addto {
     color: #666;
+}
+
+.galleryplus-album-edit-btn {
+    margin-top: 4px;
 }
 
 .galleryplus-selected-album-owner {

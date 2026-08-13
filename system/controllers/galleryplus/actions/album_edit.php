@@ -17,6 +17,16 @@ class actionGalleryplusAlbumEdit extends cmsAction {
             return cmsCore::error404();
         }
 
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+            href_to('galleryplus')
+        );
+        $album['url'] = href_to('galleryplus', 'album', [$album['slug']]) . '.html';
+        $this->cms_template->addBreadcrumb($album['title'], $album['url']);
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_ALBUM_EDIT') ? LANG_GALLERYPLUS_ALBUM_EDIT : 'Edit album'
+        );
+
         if ($this->request->has('submit')) {
 
             $csrf_token = $this->request->get('csrf_token', '');
@@ -57,7 +67,7 @@ class actionGalleryplusAlbumEdit extends cmsAction {
                 foreach ($names as $name) {
                     $name = trim($name);
                     if (!$name) { continue; }
-                    $user = cmsCore::getModel('users')->getUserByNickname($name);
+                    $user = cmsCore::getModel('users')->filterEqual('nickname', $name)->getUser();
                     if ($user) { $user_ids[] = $user['id']; }
                 }
                 $update['privacy_users'] = $user_ids ? implode(',', $user_ids) : null;
