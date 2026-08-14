@@ -9,6 +9,13 @@
             $is_adult_album = $privacy === 'adult';
             $is_protected = !empty($a['is_protected']);
             $show_blur = !$is_owner && $is_protected;
+            $privacy_labels = [
+                'password' => LANG_GALLERYPLUS_PRIVACY_PASSWORD ?? 'By password',
+                'friends'  => LANG_GALLERYPLUS_PRIVACY_FRIENDS ?? 'Friends',
+                'users'    => LANG_GALLERYPLUS_PRIVACY_USERS ?? 'Selected users',
+                'private'  => LANG_GALLERYPLUS_PRIVACY_PRIVATE ?? 'Only me',
+            ];
+            $lock_label = $privacy_labels[$privacy] ?? LANG_GALLERYPLUS_ALBUM_LOCKED ?? 'Protected';
         ?>
             <a href="<?php echo $a['url']; ?>" class="galleryplus-album-card<?php echo $show_blur ? ' galleryplus-album-card--protected' . ($is_adult_album ? ' galleryplus-album-card--adult' : '') : ''; ?>" data-album-id="<?php echo $a['id']; ?>">
                     <?php if ($is_owner) { ?>
@@ -39,11 +46,14 @@
                             <?php if ($is_adult_album) { ?>
                                 <span class="galleryplus-album-adult-label">18+</span>
                             <?php } else { ?>
-                                <span class="galleryplus-album-lock-label">&#128274; <?php echo LANG_GALLERYPLUS_PRIVACY_PRIVATE ?? 'Private'; ?></span>
+                                <span class="galleryplus-album-lock-label">&#128274; <?php echo $lock_label; ?></span>
                             <?php } ?>
                         <?php } ?>
                         <span class="galleryplus-album-count"><?php echo $a['photo_count']; ?> <?php echo LANG_GALLERYPLUS_PHOTOS ?? 'photos'; ?></span>
                         <span class="galleryplus-album-likes">&#10084; <?php echo $a['likes_count'] ?? 0; ?></span>
+                        <?php if (!empty($a['user']['nickname'])) { ?>
+                            <span class="galleryplus-album-user"><?php echo htmlspecialchars($a['user']['nickname']); ?></span>
+                        <?php } ?>
                     </div>
                 </div>
             </a>

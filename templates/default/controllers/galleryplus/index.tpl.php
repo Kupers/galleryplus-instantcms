@@ -9,7 +9,7 @@
         $this->setPageTitle($current_category['title'] . ' — ' . (LANG_GALLERYPLUS_TITLE ?? 'Gallery'));
         $this->setPageDescription($current_category['description'] ?: $current_category['title']);
     } else {
-        $this->setPageTitle(LANG_GALLERYPLUS_TITLE ?? 'Gallery');
+        $this->setPageTitle($mode === 'albums' ? (LANG_GALLERYPLUS_ALBUMS ?? 'Albums') : (LANG_GALLERYPLUS_TITLE ?? 'Gallery'));
         $this->setPageDescription(LANG_GALLERYPLUS_DESC ?? 'Explore all images');
     }
     $explore = $explore ?? 'recent';
@@ -29,7 +29,7 @@
     <?php } ?>
 
     <div class="galleryplus-header">
-        <h1 class="galleryplus-title"><?php echo $current_category ? htmlspecialchars($current_category['title']) : (LANG_GALLERYPLUS_TITLE ?? 'Gallery'); ?></h1>
+        <h1 class="galleryplus-title"><?php echo $current_category ? htmlspecialchars($current_category['title']) : ($is_albums ? (LANG_GALLERYPLUS_ALBUMS ?? 'Albums') : (LANG_GALLERYPLUS_TITLE ?? 'Gallery')); ?></h1>
 
         <div class="galleryplus-toolbar">
             <div class="galleryplus-tabs">

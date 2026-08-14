@@ -24,6 +24,19 @@
                 <?php if (!empty($category)) { ?>
                     &middot; <?php echo LANG_GALLERYPLUS_CATEGORY ?? 'Категория'; ?>: <a href="<?php echo $category['url']; ?>"><?php echo htmlspecialchars($category['title']); ?></a>
                 <?php } ?>
+                <?php
+                    $album_status = '';
+                    switch ($album['privacy'] ?? '') {
+                        case 'password': $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_PASSWORD ?? 'закрыт паролем'; break;
+                        case 'friends':  $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_FRIENDS ?? 'для друзей'; break;
+                        case 'users':    $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_USERS ?? 'для выбранных пользователей'; break;
+                        case 'private':  $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_PRIVATE ?? 'только я'; break;
+                        case 'adult':    $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_ADULT ?? '18+'; break;
+                    }
+                ?>
+                <?php if ($album_status) { ?>
+                    &middot; <span class="galleryplus-album-status">&#128274; <?php echo htmlspecialchars($album_status); ?></span>
+                <?php } ?>
             </div>
             <?php if (!empty($album_tags)) { ?>
                 <div class="tags_bar mt-3">

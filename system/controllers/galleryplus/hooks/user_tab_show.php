@@ -5,6 +5,7 @@ class onGalleryplusUserTabShow extends cmsAction {
     public function run($profile, $tab_name, $tab) {
 
         $this->cms_template->addTplCSSName('galleryplus');
+        $this->cms_template->addTplJSName('galleryplus');
 
         $page_url = href_to_profile($profile, ['albums']);
         $page = $this->request->get('page', 1);

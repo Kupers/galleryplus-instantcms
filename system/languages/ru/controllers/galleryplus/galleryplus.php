@@ -118,6 +118,11 @@
     define('LANG_GALLERYPLUS_PRIVACY_PASSWORD_HELP','Если оставить пустым, текущий пароль будет сброшен');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT',         '18+');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT_HINT',   'Контент для взрослых. Контент заблюрен, доступен только авторизованным пользователям');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_PASSWORD',  'закрыт паролем');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_FRIENDS',   'для друзей');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_USERS',     'для выбранных пользователей');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_PRIVATE',   'только я');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_ADULT',     '18+');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD',      'Разрешить загрузку другим');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD_HINT', 'Другие пользователи смогут загружать фото в этот альбом');
     define('LANG_GALLERYPLUS_ALBUM_SEARCH_PLACEHOLDER','Начните вводить название альбома...');
@@ -242,6 +247,8 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_MAP_CENTER_LAT_HINT', 'Координаты центра карты по умолчанию (широта)');
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG',      'Долгота центра карты');
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG_HINT', 'Координаты центра карты по умолчанию (долгота)');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC',      'Определять местоположение пользователя');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT', 'Центр карты ставится по геолокации посетителя (по IP, без запроса); если определить не удалось — используется заданный центр');
 
     define('LANG_GALLERYPLUS_WIDGET_ALBUMS',        'Альбомы');
     define('LANG_GALLERYPLUS_WIDGET_PHOTOS',        'Последние фото');

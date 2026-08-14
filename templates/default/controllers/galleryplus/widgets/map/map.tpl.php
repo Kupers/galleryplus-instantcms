@@ -50,11 +50,5 @@ $this->addTplCSSName('galleryplus');
     });
 
     map.addLayer(markers);
-
-    if (photos.length === 1) {
-        map.setView([photos[0].lat, photos[0].lon], 14);
-    } else if (photos.length > 1) {
-        map.fitBounds(markers.getBounds().pad(0.1));
-    }
 })();
 </script>

@@ -102,12 +102,109 @@ class widgetGalleryplusMap extends cmsWidget {
             return false;
         }
 
+        $map_center_lat = $this->getOption('map_center_lat', '59.938933');
+        $map_center_lng = $this->getOption('map_center_lng', '30.315721');
+
+        if ($this->getOption('map_user_loc', 0)) {
+            $user_loc = $this->getUserLocation();
+            if ($user_loc) {
+                $map_center_lat = $user_loc['lat'];
+                $map_center_lng = $user_loc['lon'];
+            }
+        }
+
         return [
             'photos'         => $photos,
             'map_height'     => $this->getOption('map_height', '500'),
             'default_zoom'   => $this->getOption('default_zoom', '5'),
-            'map_center_lat' => $this->getOption('map_center_lat', '59.938933'),
-            'map_center_lng' => $this->getOption('map_center_lng', '30.315721'),
+            'map_center_lat' => $map_center_lat,
+            'map_center_lng' => $map_center_lng,
         ];
+    }
+
+    private function getUserLocation() {
+
+        $ip = cmsUser::getIp();
+
+        if (!$ip || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            return null;
+        }
+
+        $cache_dir  = cmsConfig::get('cache_path') . 'galleryplus_map' . DIRECTORY_SEPARATOR;
+        $cache_file = $cache_dir . md5($ip) . '.json';
+
+        if (is_file($cache_file) && (time() - filemtime($cache_file)) < 86400) {
+            $cached = @json_decode(file_get_contents($cache_file), true);
+            if (is_array($cached) && isset($cached['lat'], $cached['lon'])) {
+                return $cached;
+            }
+        }
+
+        $coords = $this->fetchGeoFromApi($ip);
+
+        if ($coords) {
+            if (!is_dir($cache_dir)) {
+                @mkdir($cache_dir, 0777, true);
+            }
+            @file_put_contents($cache_file, json_encode($coords));
+        }
+
+        return $coords;
+    }
+
+    private function fetchGeoFromApi($ip) {
+
+        // ip-api.com (бесплатно, без ключа; только http)
+        $data = $this->httpGetJson('http://ip-api.com/json/' . $ip . '?fields=status,lat,lon,query');
+        if (isset($data['status']) && $data['status'] === 'success' && isset($data['lat'], $data['lon'])) {
+            return [
+                'lat' => (float)$data['lat'],
+                'lon' => (float)$data['lon'],
+            ];
+        }
+
+        // fallback: ipwho.is (бесплатно, без ключа, https)
+        $data = $this->httpGetJson('https://ipwho.is/' . $ip);
+        if (!empty($data['success']) && isset($data['latitude'], $data['longitude'])) {
+            return [
+                'lat' => (float)$data['latitude'],
+                'lon' => (float)$data['longitude'],
+            ];
+        }
+
+        return null;
+    }
+
+    private function httpGetJson($url) {
+
+        $options = [
+            'http' => [
+                'timeout'       => 4,
+                'ignore_errors' => true,
+                'header'        => "User-Agent: GalleryPlus/1.0\r\n",
+            ],
+        ];
+
+        $body = @file_get_contents($url, false, stream_context_create($options));
+
+        if ($body === false && function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 4,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_USERAGENT      => 'GalleryPlus/1.0',
+            ]);
+            $body = curl_exec($ch);
+            curl_close($ch);
+        }
+
+        if (!$body) {
+            return null;
+        }
+
+        $data = json_decode($body, true);
+
+        return is_array($data) ? $data : null;
     }
 }

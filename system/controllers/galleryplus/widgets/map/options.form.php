@@ -51,6 +51,11 @@ class formWidgetGalleryplusMapOptions extends cmsForm {
                             ['max', 180],
                         ]
                     ]),
+                    new fieldCheckbox('options:map_user_loc', [
+                        'title' => LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC,
+                        'hint' => LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT,
+                        'default' => 0,
+                    ]),
                 ]
             ]
         ];

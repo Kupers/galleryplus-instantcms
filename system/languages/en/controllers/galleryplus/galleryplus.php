@@ -118,6 +118,11 @@
     define('LANG_GALLERYPLUS_PRIVACY_PASSWORD_HELP','Leave empty to reset current password');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT',         '18+');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT_HINT',   'Adult content. Blurred thumbnails, only logged-in users can view');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_PASSWORD',  'closed by password');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_FRIENDS',   'for friends');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_USERS',     'for selected users');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_PRIVATE',   'only me');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_ADULT',     '18+');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD',      'Allow others to upload');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD_HINT', 'Other users will be able to upload photos to this album');
     define('LANG_GALLERYPLUS_ALBUM_SEARCH_PLACEHOLDER','Start typing album name...');
@@ -238,6 +243,8 @@
     define('LANG_GALLERYPLUS_MAP_CENTER_LAT_HINT', 'Default map center coordinates (latitude)');
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG',      'Map center longitude');
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG_HINT', 'Default map center coordinates (longitude)');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC',      'Detect user location');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT', 'Map center is set by visitor geolocation (by IP, without prompt); if detection fails, the configured center is used');
 
     define('LANG_GALLERYPLUS_WIDGET_ALBUMS',        'Albums');
     define('LANG_GALLERYPLUS_WIDGET_PHOTOS',        'Latest photos');

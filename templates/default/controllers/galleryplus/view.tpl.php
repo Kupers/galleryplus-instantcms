@@ -123,7 +123,12 @@
         <?php if ($has_embed && !empty($show_embed_codes)) { ?>
         <div class="galleryplus-tab-pane" data-tab="embed">
             <?php
-                $embed_url  = $photo['url'];
+                $site_host = cmsConfig::get('host');
+                $to_abs = function($p) use ($site_host) {
+                    if (!$p || strpos($p, '://') !== false) { return $p; }
+                    return $site_host . $p;
+                };
+                $embed_url  = $to_abs($photo['url']);
                 $embed_original = $photo['url_original'] ?: ($photo['url_nocrop'] ?: '');
                 $sizes = ['Original' => $embed_original, 'Full' => $photo['url_big'], 'Medium' => $photo['url_thumb']];
                 $types = [
@@ -141,7 +146,7 @@
                 <?php foreach ($types as $label => $fmt) { ?>
                     <tr>
                         <td class="galleryplus-embed-label"><?php echo $label; ?></td>
-                        <?php foreach ($sizes as $sk => $sv) { if (!$sv) { echo '<td>&mdash;</td>'; continue; } ?>
+                        <?php foreach ($sizes as $sk => $sv) { $sv = $to_abs($sv); if (!$sv) { echo '<td>&mdash;</td>'; continue; } ?>
                             <td><textarea class="galleryplus-embed-code" rows="1" readonly onclick="this.select();navigator.clipboard.writeText(this.value)"><?php echo htmlspecialchars($fmt($embed_url, $sv, $img_title)); ?></textarea></td>
                         <?php } ?>
                     </tr>
@@ -149,7 +154,7 @@
                 </tbody>
             </table>
             <div class="galleryplus-direct-links">
-                <?php foreach ($sizes as $sk => $sv) { if (!$sv) continue; ?>
+                <?php foreach ($sizes as $sk => $sv) { $sv = $to_abs($sv); if (!$sv) continue; ?>
                     <div><code><?php echo $sk; ?>:</code> <input type="text" readonly value="<?php echo htmlspecialchars($sv); ?>" onclick="this.select();navigator.clipboard.writeText(this.value)"></div>
                 <?php } ?>
             </div>
