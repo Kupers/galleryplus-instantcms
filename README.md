@@ -11,7 +11,7 @@ AJAX likes, collaborative albums, bcrypt password protection, adult content with
 ## Requirements
 
 - InstantCMS 2.18.2+
-- PHP 7.4+ (developed and tested on PHP 8.1)
+- PHP 7.4+ (developed and tested on PHP 8.2)
 - PHP modules:
   - `mbstring` — required (auto-titles use `mb_strlen`/`mb_substr`)
   - `json` — built-in (always available in PHP 8.x)
@@ -24,7 +24,7 @@ AJAX likes, collaborative albums, bcrypt password protection, adult content with
 ## Требования
 
 - InstantCMS 2.18.2+
-- PHP 7.4+ (разработано и протестировано на PHP 8.1)
+- PHP 7.4+ (разработано и протестировано на PHP 8.2)
 - Модули PHP:
   - `mbstring` — обязателен (авто-заголовки используют `mb_strlen`/`mb_substr`)
   - `json` — встроенный (в PHP 8.x есть всегда)
