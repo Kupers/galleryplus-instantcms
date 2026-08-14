@@ -19,21 +19,38 @@ window.galleryplusMasonry = function(container, itemSelector) {
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         var img = item.querySelector('img');
-        var w = parseInt(img.getAttribute('width')) || parseInt(img.getAttribute('data-width')) || 0;
-        var h = parseInt(img.getAttribute('height')) || parseInt(img.getAttribute('data-height')) || 0;
+        var w = 0;
+        var h = 0;
+        if (img) {
+            w = parseInt(img.getAttribute('width')) || parseInt(img.getAttribute('data-width')) || 0;
+            h = parseInt(img.getAttribute('height')) || parseInt(img.getAttribute('data-height')) || 0;
+        }
 
         var itemH;
+        var itemHCalc;
         if (w && h) {
-            itemH = itemWidth * (h / w);
-        } else if (img.naturalWidth && img.naturalHeight) {
-            itemH = itemWidth * (img.naturalHeight / img.naturalWidth);
+            itemH = itemHCalc = itemWidth * (h / w);
+        } else if (img && img.naturalWidth && img.naturalHeight) {
+            itemH = itemHCalc = itemWidth * (img.naturalHeight / img.naturalWidth);
+        } else if (img) {
+            itemH = itemHCalc = itemWidth * 0.75;
         } else {
-            itemH = itemWidth * 0.75;
+            itemH = itemHCalc = 0;
+        }
+
+        // альбомные карточки: обложка имеет min-height (cover) + бордеры карточки
+        var cover = item.querySelector('.galleryplus-album-cover');
+        if (grid.classList.contains('galleryplus-albums-grid') && cover) {
+            var cs = getComputedStyle(cover);
+            var minH = parseInt(cs.minHeight, 10) || 0;
+            var itemCs = getComputedStyle(item);
+            var borders = (parseInt(itemCs.borderTopWidth, 10) || 0) + (parseInt(itemCs.borderBottomWidth, 10) || 0);
+            itemH = Math.max(itemH, minH) + borders;
         }
 
         if (img) {
             img.style.width = itemWidth + 'px';
-            img.style.height = itemH + 'px';
+            img.style.height = itemHCalc + 'px';
         }
 
         var shortest = 0;

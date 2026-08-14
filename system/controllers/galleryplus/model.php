@@ -364,8 +364,34 @@ class modelGalleryplus extends cmsModel {
     public function getPhotosImagesByIds($ids) {
         if (!$ids) { return []; }
         $ids = array_map('intval', $ids);
-        $rows = $this->db->getRows('galleryplus_photos', 'id IN (' . implode(',', $ids) . ')', 'id, title, user_id, image');
+        $rows = $this->db->getRows('galleryplus_photos', 'id IN (' . implode(',', $ids) . ')', 'id, album_id, title, user_id, image');
         return $rows ?: [];
+    }
+
+    public function getUniqueAlbumSlug($slug, $user_id = 0) {
+        $slug = trim((string)$slug);
+        if ($slug === '') { $slug = 'album'; }
+        $base   = $slug;
+        $suffix = 2;
+        $this->resetFilters();
+        $this->filterEqual('slug', $slug);
+        if ($user_id) { $this->filterEqual('user_id', $user_id); }
+        while ($this->getCount('galleryplus_albums')) {
+            $slug = $base . '-' . $suffix++;
+            $this->resetFilters();
+            $this->filterEqual('slug', $slug);
+            if ($user_id) { $this->filterEqual('user_id', $user_id); }
+        }
+        $this->resetFilters();
+        return $slug;
+    }
+
+    public function recalcAlbumPhotosCount($album_id) {
+        $this->resetFilters();
+        $this->filterEqual('album_id', $album_id);
+        $count = $this->getCount('galleryplus_photos');
+        $this->resetFilters();
+        return $this->update('galleryplus_albums', $album_id, ['photos_count' => $count]);
     }
 
     public function deletePhotosBatch($ids) {

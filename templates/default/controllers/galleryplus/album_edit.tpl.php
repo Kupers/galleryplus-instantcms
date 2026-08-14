@@ -20,7 +20,7 @@
     }
 ?>
 <div class="galleryplus-album-edit">
-    <h1><?php echo sprintf(LANG_GALLERYPLUS_ALBUM_EDIT, htmlspecialchars($album['title'])); ?></h1>
+    <h1><?php echo sprintf(LANG_GALLERYPLUS_ALBUM_EDIT, htmlspecialchars($album['title'] ?? '')); ?></h1>
 
     <form action="<?php echo href_to('galleryplus', 'album', ['edit', $album['slug']]) . '.html'; ?>" method="post" class="galleryplus-album-edit-form">
         <?php echo html_csrf_token(); ?>

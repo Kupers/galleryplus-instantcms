@@ -43,8 +43,11 @@ class actionGalleryplusAlbumEdit extends cmsAction {
 
             $allow_upload = $this->request->get('allow_upload', 0);
 
+            $title = trim(strip_tags($title));
+            if ($title === '') { $title = $album['title'] ?? ''; }
+
             $update = [
-                'title'        => strip_tags($title),
+                'title'        => $title,
                 'content'      => strip_tags($content),
                 'allow_upload' => $allow_upload ? 1 : 0,
                 'category_id'  => (int)$this->request->get('category_id', 0),
@@ -82,7 +85,7 @@ class actionGalleryplusAlbumEdit extends cmsAction {
                 $tags_model->updateTags($this->request->get('tags', ''), 'galleryplus', 'album', $album['id']);
             }
 
-            $this->model->addLog('edit', 'album', $album['id'], strip_tags($title), $album['user_id'], $this->cms_user->id);
+            $this->model->addLog('edit', 'album', $album['id'], $title, $album['user_id'], $this->cms_user->id);
 
             cmsUser::addSessionMessage(LANG_GALLERYPLUS_ALBUM_SAVED, 'success');
             return $this->redirectTo('galleryplus', 'album', [$album['slug'] . '.html']);

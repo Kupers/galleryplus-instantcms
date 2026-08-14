@@ -95,7 +95,7 @@ class actionGalleryplusUpload extends cmsAction {
             return $this->cms_template->renderJSON($existing);
         }
 
-        $slug = lang_slug($title);
+        $slug = $this->model->getUniqueAlbumSlug(lang_slug($title), $this->cms_user->id);
 
         $privacy = $this->request->get('privacy', 'public');
         $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult'];
@@ -648,7 +648,7 @@ class actionGalleryplusUpload extends cmsAction {
         if ($existing) {
             return $existing['id'];
         }
-        $slug = lang_slug($title);
+        $slug = $this->model->getUniqueAlbumSlug(lang_slug($title), $this->cms_user->id);
         $album_id = $this->model->insert('galleryplus_albums', [
             'title'    => $title,
             'slug'     => $slug,

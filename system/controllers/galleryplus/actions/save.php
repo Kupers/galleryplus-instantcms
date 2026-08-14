@@ -47,7 +47,7 @@ class actionGalleryplusSave extends cmsAction {
                 $album_id = $existing['id'];
                 $album    = $existing;
             } else {
-                $slug = lang_slug($title);
+                $slug = $this->model->getUniqueAlbumSlug(lang_slug($title), $this->cms_user->id);
                 $album_id = $this->model->insert('galleryplus_albums', [
                     'title'   => $title,
                     'slug'    => $slug,
@@ -261,6 +261,15 @@ class actionGalleryplusSave extends cmsAction {
         }
 
         $deleted = $this->model->deletePhotosBatch($allowed_ids);
+
+        $album_ids = [];
+        foreach ($rows as $row) {
+            if (!in_array($row['id'], $allowed_ids)) { continue; }
+            if (!empty($row['album_id'])) { $album_ids[$row['album_id']] = true; }
+        }
+        foreach (array_keys($album_ids) as $album_id) {
+            $this->model->recalcAlbumPhotosCount($album_id);
+        }
 
         foreach ($rows as $row) {
             if (!in_array($row['id'], $allowed_ids)) { continue; }
