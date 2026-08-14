@@ -133,23 +133,45 @@ class widgetGalleryplusMap extends cmsWidget {
         $cache_dir  = cmsConfig::get('cache_path') . 'galleryplus_map' . DIRECTORY_SEPARATOR;
         $cache_file = $cache_dir . md5($ip) . '.json';
 
-        if (is_file($cache_file) && (time() - filemtime($cache_file)) < 86400) {
-            $cached = @json_decode(file_get_contents($cache_file), true);
-            if (is_array($cached) && isset($cached['lat'], $cached['lon'])) {
-                return $cached;
+        if (is_file($cache_file)) {
+            if ((time() - filemtime($cache_file)) > 86400) {
+                @unlink($cache_file);
+            } else {
+                $cached = @json_decode(file_get_contents($cache_file), true);
+                if (is_array($cached)) {
+                    if (isset($cached['lat'], $cached['lon'])) {
+                        return $cached;
+                    }
+                    return null;
+                }
             }
+        }
+
+        // локальные/приватные/служебные адреса не определяются — не дёргаем API
+        if (!$this->isPublicIp($ip)) {
+            $this->writeGeoCache($cache_dir, $cache_file, null);
+            return null;
         }
 
         $coords = $this->fetchGeoFromApi($ip);
 
-        if ($coords) {
-            if (!is_dir($cache_dir)) {
-                @mkdir($cache_dir, 0777, true);
-            }
-            @file_put_contents($cache_file, json_encode($coords));
-        }
+        $this->writeGeoCache($cache_dir, $cache_file, $coords);
 
         return $coords;
+    }
+
+    private function isPublicIp($ip) {
+
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+    }
+
+    private function writeGeoCache($cache_dir, $cache_file, $coords) {
+
+        if (!is_dir($cache_dir)) {
+            @mkdir($cache_dir, 0777, true);
+        }
+
+        @file_put_contents($cache_file, $coords ? json_encode($coords) : json_encode(['fail' => 1]));
     }
 
     private function fetchGeoFromApi($ip) {
