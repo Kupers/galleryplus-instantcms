@@ -8,6 +8,32 @@ AJAX likes, collaborative albums, bcrypt password protection, adult content with
 <img width="1242" height="940" alt="2026-08-10_16-04-30" src="https://github.com/user-attachments/assets/4d309308-a50d-4cbb-8baf-df60947049b0" />
 <img width="1132" height="938" alt="2026-08-10_16-03-57" src="https://github.com/user-attachments/assets/3bc54afb-f66e-4dc7-ba12-04f940b85a29" />
 
+## Requirements
+
+- InstantCMS 2.18.2+
+- PHP 7.4+ (developed and tested on PHP 8.1)
+- PHP modules:
+  - `mbstring` — required (auto-titles use `mb_strlen`/`mb_substr`)
+  - `json` — built-in (always available in PHP 8.x)
+  - `simplexml` — built-in, used for XMP description extraction on upload
+  - `exif` — optional; enables EXIF/GPS reading on upload (skipped if absent)
+  - `curl` — optional; used for external APIs (map widget geolocation, update check). If absent, `allow_url_fopen=On` is used as a fallback (`file_get_contents` with a stream context)
+- Image processing uses InstantCMS presets, so the same image modules as the CMS (GD2 or ImageMagick) are required
+- Web server: Apache or nginx + PHP-FPM, database MySQL/MariaDB (same as the CMS)
+
+## Требования
+
+- InstantCMS 2.18.2+
+- PHP 7.4+ (разработано и протестировано на PHP 8.1)
+- Модули PHP:
+  - `mbstring` — обязателен (авто-заголовки используют `mb_strlen`/`mb_substr`)
+  - `json` — встроенный (в PHP 8.x есть всегда)
+  - `simplexml` — встроенный, используется для извлечения XMP-описаний при загрузке
+  - `exif` — опционально; включает чтение EXIF/GPS при загрузке (если нет — пропускается)
+  - `curl` — опционально; используется для внешних API (геолокация виджета карты, проверка обновлений). Если нет — используется fallback на `allow_url_fopen=On` (`file_get_contents` с stream context)
+- Обработка изображений идёт через пресеты ядра InstantCMS, поэтому нужны те же модули изображений, что и для CMS (GD2 или ImageMagick)
+- Веб-сервер: Apache или nginx + PHP-FPM, база данных MySQL/MariaDB (как у CMS)
+
 ## Location detection (Map widget)
 
 The visitor's location is resolved by IP on the server (PHP); the browser does not request anything.
