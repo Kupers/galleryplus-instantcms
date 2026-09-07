@@ -79,6 +79,7 @@ class actionGalleryplusView extends cmsAction {
 
         $likes_count = $this->model->getLikesCount($photo['id'], 'photo');
         $user_liked  = $this->model->getUserLikeStatus($photo['id'], 'photo', $this->cms_user->id);
+        $is_favorite = $this->model->isPhotoFavorited($photo['id'], $this->cms_user->id);
         $is_owner    = $this->cms_user->id && (int)$photo['user_id'] === (int)$this->cms_user->id;
 
         // Comments widget
@@ -113,11 +114,25 @@ class actionGalleryplusView extends cmsAction {
 
         $adjacent = $this->model->getAdjacentPhotos($photo['id'], $photo['album_id']);
 
+        // Похожие фото (по общим тегам, затем из того же альбома)
+        $similar_limit = max(1, (int)($this->options['similar_photos_limit'] ?? 6));
+        $similar_photos = [];
+        if ($similar_limit > 0 && !empty($photo['album_id'])) {
+            $similar_photos = $this->model->getSimilarPhotos(
+                $photo['id'],
+                (int)$photo['album_id'],
+                $photo['slug'],
+                $this->cms_user->id,
+                $similar_limit
+            );
+        }
+
         return $this->cms_template->render('view', [
             'photo'            => $photo,
             'user'             => $this->cms_user,
             'likes_count'      => $likes_count,
             'user_liked'       => $user_liked,
+            'is_favorite'      => $is_favorite,
             'is_owner'         => $is_owner,
             'comments_widget'  => $comments_widget,
             'photo_tags'       => $photo_tags,
@@ -130,6 +145,7 @@ class actionGalleryplusView extends cmsAction {
             'gps_lon'          => $gps_lon,
             'prev_photo'       => $adjacent['prev'],
             'next_photo'       => $adjacent['next'],
+            'similar_photos'   => $similar_photos,
         ]);
     }
 

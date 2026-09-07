@@ -14,6 +14,9 @@ class actionGalleryplusSave extends cmsAction {
         if ($action === 'delete_photos') {
             return $this->deletePhotos();
         }
+        if ($action === 'move_photos') {
+            return $this->movePhotos();
+        }
         if ($action === 'delete_albums') {
             return $this->deleteAlbums();
         }
@@ -277,6 +280,40 @@ class actionGalleryplusSave extends cmsAction {
         }
 
         return $this->cms_template->renderJSON(['success' => true, 'deleted' => $deleted]);
+    }
+
+    private function movePhotos() {
+        $ids = $this->request->get('ids', '');
+        $new_album_id = (int) $this->request->get('new_album_id', 0);
+        if (!$ids || !$new_album_id) {
+            return $this->cms_template->renderJSON(['error' => 'Invalid params']);
+        }
+        $ids = array_filter(array_map('intval', explode(',', $ids)));
+        if (!$ids) {
+            return $this->cms_template->renderJSON(['error' => 'No photos selected']);
+        }
+        $new_album = $this->model->getItemById('galleryplus_albums', $new_album_id);
+        if (!$new_album) {
+            return $this->cms_template->renderJSON(['error' => 'Album not found']);
+        }
+        $is_admin = $this->cms_user->is_admin;
+        if ((int)$new_album['user_id'] !== (int)$this->cms_user->id && !$is_admin) {
+            return $this->cms_template->renderJSON(['error' => 'Access denied']);
+        }
+        $old_album_ids = [];
+        foreach ($ids as $id) {
+            $photo = $this->model->getItemById('galleryplus_photos', $id);
+            if (!$photo) { continue; }
+            if ((int)$photo['user_id'] !== (int)$this->cms_user->id && !$is_admin) { continue; }
+            if (!empty($photo['album_id'])) { $old_album_ids[(int)$photo['album_id']] = true; }
+            $this->model->resetFilters();
+            $this->model->update('galleryplus_photos', $id, ['album_id' => $new_album_id]);
+        }
+        $all_album_ids = array_merge(array_keys($old_album_ids), [$new_album_id]);
+        foreach (array_unique($all_album_ids) as $aid) {
+            $this->model->recalcAlbumPhotosCount($aid);
+        }
+        return $this->cms_template->renderJSON(['success' => true, 'moved' => count($ids)]);
     }
 
     private function generateSlug($title, $id) {

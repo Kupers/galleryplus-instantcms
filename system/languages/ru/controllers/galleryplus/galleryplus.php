@@ -151,6 +151,9 @@
 
     define('LANG_GALLERYPLUS_CONFIRM_DELETE_ALBUMS', 'Удалить выбранные альбомы со всеми фотографиями?');
 
+    define('LANG_GALLERYPLUS_MOVE_TO_ALBUM', 'Переместить в альбом');
+    define('LANG_GALLERYPLUS_CONFIRM_MOVE', 'Переместить выбранные фото?');
+
     define('LANG_GALLERYPLUS_EXIF',                   'EXIF');
     define('LANG_GALLERYPLUS_EXIF_CAMERA',            'Камера');
     define('LANG_GALLERYPLUS_EXIF_DATE',              'Дата съёмки');
@@ -255,3 +258,12 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_WIDGET_RANDOM',        'Случайные фото');
     define('LANG_GALLERYPLUS_WIDGET_CATEGORIES',    'Категории');
     define('LANG_GALLERYPLUS_WIDGET_MAP',           'Карта фото');
+
+    define('LANG_GALLERYPLUS_FAVORITES',           'Избранное');
+    define('LANG_GALLERYPLUS_FAVORITE',            'В избранное');
+    define('LANG_GALLERYPLUS_UNFAVORITE',          'Убрать из избранного');
+    define('LANG_GALLERYPLUS_FAVORITE_TOGGLE',     'Добавить / убрать из избранного');
+    define('LANG_GALLERYPLUS_NO_FAVORITES',        'В избранном пока пусто.');
+    define('LANG_GALLERYPLUS_FAVORITE_ADDED',      'Добавлено в избранное');
+    define('LANG_GALLERYPLUS_FAVORITE_REMOVED',    'Убрано из избранного');
+    define('LANG_GALLERYPLUS_SIMILAR',             'Похожие фото');

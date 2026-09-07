@@ -36,10 +36,17 @@ class actionGalleryplusEdit extends cmsAction {
         }
 
         if (!$is_owner && !$is_admin && !$is_moderator) {
-            return cmsCore::error403();
+            http_response_code(403);
+            die('403 Forbidden');
         }
 
         $album = $this->model->getAlbum($photo['album_id']);
+
+        $user_albums = [];
+        if ($is_owner || $is_admin) {
+            $owner_id = $is_admin ? $photo['user_id'] : $this->cms_user->id;
+            $user_albums = $this->model->getUserAlbumsList($owner_id);
+        }
 
         if ($this->request->has('submit')) {
 
@@ -57,8 +64,22 @@ class actionGalleryplusEdit extends cmsAction {
                 $update['slug'] = $slug;
             }
 
+            $new_album_id = (int) $this->request->get('album_id', 0);
+            if ($new_album_id && $new_album_id !== (int) $photo['album_id']) {
+                $new_album = $this->model->getItemById('galleryplus_albums', $new_album_id);
+                if ($new_album && ((int) $new_album['user_id'] === (int) $this->cms_user->id || $is_admin)) {
+                    $old_album_id = (int) $photo['album_id'];
+                    $update['album_id'] = $new_album_id;
+                }
+            }
+
             $this->model->resetFilters();
             $this->model->update('galleryplus_photos', $photo_id, $update);
+
+            if (!empty($new_album_id) && !empty($old_album_id) && $new_album_id !== $old_album_id) {
+                $this->model->updateAlbumPhotosCount($old_album_id);
+                $this->model->updateAlbumPhotosCount($new_album_id);
+            }
 
             if ($this->request->get('exif_delete')) {
                 $this->model->resetFilters();
@@ -119,6 +140,7 @@ class actionGalleryplusEdit extends cmsAction {
         return $this->cms_template->render('edit', [
             'photo'         => $photo,
             'album'         => $album,
+            'user_albums'   => $user_albums,
             'photo_url'     => $photo_url,
             'photo_tags'    => $photo_tags,
             'use_photo_tags' => !empty($this->options['use_photo_tags']),

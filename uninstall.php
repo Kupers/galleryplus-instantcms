@@ -157,6 +157,7 @@ function uninstall_package() {
 
     // Remove user profile tab
     $db->query("DELETE FROM `{$prefix}users_tabs` WHERE controller = 'galleryplus' AND name = 'albums'");
+    $db->query("DELETE FROM `{$prefix}users_tabs` WHERE controller = 'galleryplus' AND name = 'favorites'");
 
     // Drop database tables
     $tables = [
@@ -164,6 +165,7 @@ function uninstall_package() {
         $prefix . 'galleryplus_photos',
         $prefix . 'galleryplus_likes',
         $prefix . 'galleryplus_categories',
+        $prefix . 'galleryplus_favorites',
     ];
     foreach ($tables as $table) {
         $db->query("DROP TABLE IF EXISTS `{$table}`");

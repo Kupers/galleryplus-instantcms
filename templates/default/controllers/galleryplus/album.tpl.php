@@ -79,6 +79,14 @@
                     <span><?php echo LANG_GALLERYPLUS_SELECT_ALL ?? 'Select all'; ?></span>
                 </label>
                 <span class="galleryplus-selection-count" id="galleryplus-selection-count"></span>
+                <?php if (!empty($user_albums)) { ?>
+                <select class="form-control galleryplus-move-select" id="galleryplus-move-album" style="width:auto;display:none;padding:2px 8px;font-size:13px;">
+                    <option value=""><?php echo LANG_GALLERYPLUS_MOVE_TO_ALBUM ?? 'Переместить в альбом'; ?>...</option>
+                    <?php foreach ($user_albums as $ua) { ?>
+                        <option value="<?php echo $ua['id']; ?>"><?php html($ua['title']); ?></option>
+                    <?php } ?>
+                </select>
+                <?php } ?>
                 <button class="galleryplus-btn galleryplus-delete-btn" id="galleryplus-delete-btn" style="display:none">
                     &#128465; <?php echo LANG_GALLERYPLUS_DELETE ?? 'Delete'; ?>
                 </button>
@@ -94,6 +102,7 @@
                 $likes_count = $photo['likes_count'] ?? 0;
                 $comments_count = $photo['comments'] ?? 0;
                 $is_liked = !empty($photo['is_liked']);
+                $is_favorite = !empty($photo['is_favorite']);
                 $obj = htmlspecialchars(json_encode([
                     'id'       => $photo['id'],
                     'url'      => $photo['url'],
@@ -106,12 +115,14 @@
                     'adult'    => $is_adult,
                     'likes'    => $likes_count,
                     'liked'    => $is_liked,
+                    'favorite' => $is_favorite,
                     'owner_id' => $photo['user_id'],
                     'comments' => $comments_count,
                     'desc'     => $photo['content'] ?? '',
                 ], JSON_UNESCAPED_UNICODE));
             ?>
                 <div class="galleryplus-item<?php echo $is_adult ? ' galleryplus-item--adult' : ''; ?>" data-object="<?php echo $obj; ?>">
+                    <button class="galleryplus-fav-btn galleryplus-fav-btn--card<?php echo $is_favorite ? ' favorited' : ''; ?>" data-photo-id="<?php echo $photo['id']; ?>" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>"><?php echo $is_favorite ? '&#9733;' : '&#9734;'; ?></button>
                     <?php if ($can_select) { ?>
                         <label class="galleryplus-checkbox-wrap">
                             <input type="checkbox" class="galleryplus-select-cb" data-id="<?php echo $photo['id']; ?>">
@@ -182,6 +193,7 @@
         </div>
         <div class="galleryplus-viewer-bottom-right">
             <button class="galleryplus-viewer-like" data-target-id="" data-target-type="photo" title="<?php echo LANG_GALLERYPLUS_LIKE ?? 'Like'; ?>"><span class="galleryplus-viewer-like-icon">&#9825;</span> <span class="galleryplus-viewer-like-count">0</span></button>
+            <button class="galleryplus-viewer-fav" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>">&#9734;</button>
             <button class="galleryplus-viewer-comments" title="<?php echo LANG_GALLERYPLUS_COMMENTS ?? 'Comments'; ?>"><span class="galleryplus-viewer-comments-icon">&#9993;</span> <span class="galleryplus-viewer-comments-count">0</span></button>
             <button class="galleryplus-viewer-share" title="<?php echo LANG_GALLERYPLUS_SHARE ?? 'Поделиться'; ?>"><svg class="galleryplus-share-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
         </div>
@@ -272,12 +284,13 @@
 
     function updateBar() {
         var n = getChecked().length;
-        var grid = document.getElementById('galleryplus-grid');
-        if (n === 0) { bar.style.display = 'none'; if (grid) grid.classList.remove('galleryplus-selecting'); return; }
+        if (n === 0) { bar.style.display = 'none'; document.body.classList.remove('galleryplus-selecting'); return; }
         bar.style.display = '';
-        if (grid) grid.classList.add('galleryplus-selecting');
+        document.body.classList.add('galleryplus-selecting');
         countEl.textContent = n;
         deleteBtn.style.display = n > 0 ? '' : 'none';
+        var moveSelect = document.getElementById('galleryplus-move-album');
+        if (moveSelect) moveSelect.style.display = n > 0 ? '' : 'none';
     }
 
     bar.addEventListener('change', function(e) {
@@ -322,6 +335,41 @@
         };
         xhr.send(fd);
     });
+
+    var moveSelect = document.getElementById('galleryplus-move-album');
+    if (moveSelect) {
+        moveSelect.addEventListener('change', function() {
+            var targetAlbumId = parseInt(moveSelect.value);
+            if (!targetAlbumId) return;
+            var cbs = getChecked();
+            if (!cbs.length) return;
+            if (!confirm('<?php echo addslashes(LANG_GALLERYPLUS_CONFIRM_MOVE ?? "Переместить выбранные фото?"); ?>')) { moveSelect.value = ''; return; }
+            var ids = [];
+            for (var i = 0; i < cbs.length; i++) ids.push(parseInt(cbs[i].getAttribute('data-id')));
+            var fd = new FormData();
+            fd.append('action', 'move_photos');
+            fd.append('ids', ids.join(','));
+            fd.append('new_album_id', targetAlbumId);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/galleryplus/save', true);
+            xhr.onload = function() {
+                moveSelect.value = '';
+                if (xhr.status === 200) {
+                    var r = JSON.parse(xhr.responseText);
+                    if (r.success) {
+                        for (var i = 0; i < cbs.length; i++) {
+                            var item = cbs[i].closest('.galleryplus-item');
+                            if (item) item.remove();
+                        }
+                        selectAll.checked = false;
+                        updateBar();
+                        if (typeof galleryplusMasonry === 'function') galleryplusMasonry(document.getElementById('galleryplus-grid'));
+                    }
+                }
+            };
+            xhr.send(fd);
+        });
+    }
 })();
 </script>
 <?php } ?>

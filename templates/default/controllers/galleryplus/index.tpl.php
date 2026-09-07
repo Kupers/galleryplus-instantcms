@@ -136,6 +136,7 @@
                     $likes_count = $photo['likes_count'] ?? 0;
                     $comments_count = $photo['comments'] ?? 0;
                     $is_liked = !empty($photo['is_liked']);
+                    $is_favorite = !empty($photo['is_favorite']);
                     $obj = htmlspecialchars(json_encode([
                         'id'       => $photo['id'],
                         'url'      => $photo['url'],
@@ -148,12 +149,14 @@
                         'adult'    => $is_adult,
                         'likes'    => $likes_count,
                         'liked'    => $is_liked,
+                        'favorite' => $is_favorite,
                         'owner_id' => $photo['user_id'],
                         'comments' => $comments_count,
                         'desc'     => $photo['content'] ?? '',
                     ], JSON_UNESCAPED_UNICODE));
                 ?>
                     <div class="galleryplus-item<?php echo $is_adult ? ' galleryplus-item--adult' : ''; ?>" data-object="<?php echo $obj; ?>">
+                        <button class="galleryplus-fav-btn galleryplus-fav-btn--card<?php echo $is_favorite ? ' favorited' : ''; ?>" data-photo-id="<?php echo $photo['id']; ?>" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>"><?php echo $is_favorite ? '&#9733;' : '&#9734;'; ?></button>
                         <?php if ($can_select) { ?>
                             <label class="galleryplus-checkbox-wrap">
                                 <input type="checkbox" class="galleryplus-select-cb" data-id="<?php echo $photo['id']; ?>">
@@ -227,6 +230,7 @@
         </div>
         <div class="galleryplus-viewer-bottom-right">
             <button class="galleryplus-viewer-like" data-target-id="" data-target-type="photo" title="<?php echo LANG_GALLERYPLUS_LIKE ?? 'Like'; ?>"><span class="galleryplus-viewer-like-icon">&#9825;</span> <span class="galleryplus-viewer-like-count">0</span></button>
+            <button class="galleryplus-viewer-fav" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>">&#9734;</button>
             <button class="galleryplus-viewer-comments" title="<?php echo LANG_GALLERYPLUS_COMMENTS ?? 'Comments'; ?>"><span class="galleryplus-viewer-comments-icon">&#9993;</span> <span class="galleryplus-viewer-comments-count">0</span></button>
             <button class="galleryplus-viewer-share" title="<?php echo LANG_GALLERYPLUS_SHARE ?? 'Поделиться'; ?>"><svg class="galleryplus-share-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
         </div>

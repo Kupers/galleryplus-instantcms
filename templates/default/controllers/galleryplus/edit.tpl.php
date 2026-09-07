@@ -52,6 +52,17 @@
                 <?php echo html_input('text', 'title', $photo['title'], ['id' => 'galleryplus-title', 'class' => 'form-control']); ?>
             </div>
 
+            <?php if (!empty($user_albums)) { ?>
+                <div class="galleryplus-edit-field">
+                    <label for="galleryplus-album"><?php echo defined('LANG_GALLERYPLUS_ALBUM') ? LANG_GALLERYPLUS_ALBUM : 'Альбом'; ?></label>
+                    <select name="album_id" id="galleryplus-album" class="form-control">
+                        <?php foreach ($user_albums as $ua) { ?>
+                            <option value="<?php echo $ua['id']; ?>"<?php echo (int)$ua['id'] === (int)$photo['album_id'] ? ' selected' : ''; ?>><?php html($ua['title']); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+            <?php } ?>
+
             <?php if (!empty($use_photo_tags)) { ?>
                 <div class="galleryplus-edit-field">
                     <label for="galleryplus-tags"><?php echo defined('LANG_TAGS') ? LANG_TAGS : 'Теги'; ?></label>

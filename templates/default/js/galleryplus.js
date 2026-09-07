@@ -153,6 +153,45 @@ window.galleryplusMasonry = function(container, itemSelector) {
         xhr.send('target_id=' + encodeURIComponent(targetId) + '&target_type=' + encodeURIComponent(targetType));
     });
 
+    // ---- Favorites toggle (cards & single view) ----
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.galleryplus-fav-btn:not(.disabled)');
+        if (!btn) return;
+        var photoId = btn.dataset.photoId;
+        if (!photoId) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/galleryplus/favorite', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function() {
+            if (xhr.status !== 200) return;
+            try {
+                var r = JSON.parse(xhr.responseText);
+                if (r.error) return;
+                var fav = r.status === 'favorited';
+                btn.classList.toggle('favorited', fav);
+                btn.innerHTML = fav ? '\u2605' : '\u2606';
+                btn.title = fav ? '\u0412 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435' : '\u0412 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435';
+                // Sync the lightbox favorite button if open
+                var vf = document.querySelector('.galleryplus-viewer-fav');
+                if (vf && vf.dataset.photoId === photoId) {
+                    vf.classList.toggle('favorited', fav);
+                    vf.innerHTML = fav ? '\u2605' : '\u2606';
+                }
+                // On favorites page: unfavoriting removes the card
+                var item = btn.closest('.galleryplus-item');
+                if (item && !fav && /\/favorites\/?$/.test(window.location.pathname)) {
+                    item.remove();
+                    if (typeof galleryplusMasonry === 'function') galleryplusMasonry(document.getElementById('galleryplus-grid'));
+                }
+            } catch(e) {}
+        };
+        xhr.send('photo_id=' + encodeURIComponent(photoId));
+    });
+
     // ---- Embed code auto-select on click ----
     document.addEventListener('click', function(e) {
         var textarea = e.target.closest('.galleryplus-embed-code');
@@ -164,6 +203,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
     // ---- Viewer (lightbox) ----
     var viewer = document.getElementById('galleryplus-viewer');
     if (!viewer) return;
+    var currentUserId = viewer.dataset.currentUser || '0';
 
     var viewerImg = viewer.querySelector('.galleryplus-viewer-img');
     var viewerTitle = viewer.querySelector('.galleryplus-viewer-title');
@@ -176,6 +216,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
     var viewerBg = viewer.querySelector('.galleryplus-viewer-bg');
     var viewerLikeBtn = viewer.querySelector('.galleryplus-viewer-like');
     var viewerLikeCount = viewerLikeBtn ? viewerLikeBtn.querySelector('.galleryplus-viewer-like-count') : null;
+    var viewerFavBtn = viewer.querySelector('.galleryplus-viewer-fav');
     var viewerCommentsBtn = viewer.querySelector('.galleryplus-viewer-comments');
     var viewerCommentsCount = viewerCommentsBtn ? viewerCommentsBtn.querySelector('.galleryplus-viewer-comments-count') : null;
     var viewerShareBtn = viewer.querySelector('.galleryplus-viewer-share');
@@ -371,6 +412,14 @@ window.galleryplusMasonry = function(container, itemSelector) {
             viewerLikeBtn.classList.toggle('disabled', isOwner);
             viewerLikeBtn.title = isOwner ? 'Cannot like your own photo' : 'Like';
         }
+        // Update viewer favorite button
+        if (viewerFavBtn) {
+            viewerFavBtn.dataset.photoId = obj.id || '';
+            var fav = obj.favorite ? true : false;
+            viewerFavBtn.classList.toggle('favorited', fav);
+            viewerFavBtn.innerHTML = fav ? '\u2605' : '\u2606';
+            viewerFavBtn.classList.toggle('disabled', !currentUserId);
+        }
         // Update comments count
         if (viewerCommentsCount) {
             viewerCommentsCount.textContent = obj.comments || 0;
@@ -442,6 +491,52 @@ window.galleryplusMasonry = function(container, itemSelector) {
         e.preventDefault();
         openViewer(item);
     });
+
+    // Viewer favorite button
+    if (viewerFavBtn) {
+        viewerFavBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (viewerFavBtn.classList.contains('disabled')) return;
+            var photoId = viewerFavBtn.dataset.photoId;
+            if (!photoId) return;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/galleryplus/favorite', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                if (xhr.status !== 200) return;
+                try {
+                    var r = JSON.parse(xhr.responseText);
+                    if (r.error) return;
+                    var fav = r.status === 'favorited';
+                    viewerFavBtn.classList.toggle('favorited', fav);
+                    viewerFavBtn.innerHTML = fav ? '\u2605' : '\u2606';
+                    viewerFavBtn.title = fav ? '\u0412 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435' : '\u0412 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435';
+                    // Update data-object on current item to keep state on navigate
+                    if (currentItem) {
+                        try {
+                            var obj = JSON.parse(currentItem.getAttribute('data-object'));
+                            obj.favorite = fav;
+                            currentItem.setAttribute('data-object', JSON.stringify(obj));
+                        } catch(e) {}
+                    }
+                    // Sync card button
+                    var cardBtn = document.querySelector('.galleryplus-fav-btn[data-photo-id="' + photoId + '"]');
+                    if (cardBtn) {
+                        cardBtn.classList.toggle('favorited', fav);
+                        cardBtn.innerHTML = fav ? '\u2605' : '\u2606';
+                    }
+                    // On favorites page: unfavoriting removes the card
+                    var item = currentItem;
+                    if (item && !fav && /\/favorites\/?$/.test(window.location.pathname)) {
+                        item.remove();
+                        if (typeof galleryplusMasonry === 'function') galleryplusMasonry(document.getElementById('galleryplus-grid'));
+                    }
+                } catch(e) {}
+            };
+            xhr.send('photo_id=' + encodeURIComponent(photoId));
+        });
+    }
 
     // Viewer like button
     if (viewerLikeBtn) {

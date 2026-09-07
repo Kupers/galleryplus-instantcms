@@ -7,6 +7,15 @@ function routes_galleryplus() {
             'action'  => 'comments_html',
         ],
         [
+            'pattern' => '/^galleryplus\/favorites$/i',
+            'action'  => 'favorites',
+        ],
+        [
+            'pattern' => '/^galleryplus\/users\/(\d+)\/favorites$/i',
+            'action'  => 'favorites',
+            1         => 'user_id'
+        ],
+        [
             'pattern' => '/^galleryplus\/album\/edit\/([a-z0-9\-\/]+).html$/i',
             'action'  => 'album_edit',
             1         => 'slug'

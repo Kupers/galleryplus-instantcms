@@ -138,10 +138,12 @@ class actionGalleryplusAlbum extends cmsAction {
         $user_id = $this->cms_user->id;
         $ids = array_column($photos, 'id');
         $likes_data = $this->model->getPhotosLikesBatch($ids, $user_id);
+        $fav_data   = $this->model->getPhotosFavoritesBatch($ids, $user_id);
         foreach ($photos as &$p) {
             $pid = $p['id'];
             $p['likes_count'] = $likes_data[$pid]['count'] ?? 0;
             $p['is_liked']    = $likes_data[$pid]['liked'] ?? false;
+            $p['is_favorite'] = !empty($fav_data[$pid]);
         }
         unset($p);
 
@@ -181,6 +183,17 @@ class actionGalleryplusAlbum extends cmsAction {
             }
         }
 
+        $user_albums = [];
+        if ($this->cms_user->id) {
+            $owner_id = $is_admin ? $album['user_id'] : $this->cms_user->id;
+            $all_albums = $this->model->getUserAlbumsList($owner_id);
+            foreach ($all_albums as $ua) {
+                if ((int)$ua['id'] !== (int)$album['id']) {
+                    $user_albums[] = $ua;
+                }
+            }
+        }
+
         return $this->cms_template->render('album', [
             'album'           => $album,
             'photos'          => $photos,
@@ -195,6 +208,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'album_tags'      => $album_tags,
             'can_upload'      => $can_upload,
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'user_albums'     => $user_albums,
         ]);
     }
 
@@ -214,10 +228,12 @@ class actionGalleryplusAlbum extends cmsAction {
         $user_id = $this->cms_user->id;
         $ids = array_column($photos, 'id');
         $likes_data = $this->model->getPhotosLikesBatch($ids, $user_id);
+        $fav_data   = $this->model->getPhotosFavoritesBatch($ids, $user_id);
         foreach ($photos as &$p) {
             $pid = $p['id'];
             $p['likes_count'] = $likes_data[$pid]['count'] ?? 0;
             $p['is_liked']    = $likes_data[$pid]['liked'] ?? false;
+            $p['is_favorite'] = !empty($fav_data[$pid]);
         }
         unset($p);
 
@@ -254,6 +270,7 @@ class actionGalleryplusAlbum extends cmsAction {
         $avatar = $photo['user']['avatar'] ?? '';
         $is_adult = !empty($photo['is_adult']);
         $is_liked = !empty($photo['is_liked']);
+        $is_favorite = !empty($photo['is_favorite']);
         $likes_count = $photo['likes_count'] ?? 0;
         $comments_count = $photo['comments'] ?? 0;
         $data = htmlspecialchars(json_encode([
@@ -268,15 +285,18 @@ class actionGalleryplusAlbum extends cmsAction {
             'adult'    => $is_adult,
             'likes'    => $likes_count,
             'liked'    => $is_liked,
+            'favorite' => $is_favorite,
             'owner_id' => $photo['user_id'],
             'comments' => $comments_count,
             'desc'     => $photo['content'] ?? '',
         ], JSON_UNESCAPED_UNICODE));
         $blur_class = $is_adult ? ' galleryplus-item--adult' : '';
+        $fav_btn = '<button class="galleryplus-fav-btn galleryplus-fav-btn--card' . ($is_favorite ? ' favorited' : '') . '" data-photo-id="' . $photo['id'] . '" title="' . (defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное') . '">' . ($is_favorite ? '&#9733;' : '&#9734;') . '</button>';
         $checkbox = $this->can_select
             ? '<label class="galleryplus-checkbox-wrap"><input type="checkbox" class="galleryplus-select-cb" data-id="' . $photo['id'] . '"><span class="galleryplus-checkbox"></span></label>'
             : '';
         return '<div class="galleryplus-item' . $blur_class . '" data-object="' . $data . '">'
+            . $fav_btn
             . $checkbox
             . '<a href="' . $photo['url'] . '" class="galleryplus-viewer-link">'
             . '<img src="' . $photo['url_thumb'] . '" alt="' . $title . '" loading="lazy" width="' . ($photo['width'] ?? 0) . '" height="' . ($photo['height'] ?? 0) . '" class="' . ($is_adult ? 'galleryplus-blurred' : '') . '">'

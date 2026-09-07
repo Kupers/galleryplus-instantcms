@@ -83,6 +83,9 @@
                     <span class="galleryplus-like-icon"><?php echo $user_liked ? '♥' : '♡'; ?></span>
                     <span class="galleryplus-like-count"><?php echo $likes_count; ?></span>
                 </button>
+                <button class="galleryplus-fav-btn galleryplus-fav-btn--view <?php echo $is_favorite ? 'favorited' : ''; ?> <?php echo !$user->id ? 'disabled' : ''; ?>" data-photo-id="<?php echo $photo['id']; ?>" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE_TOGGLE') ? LANG_GALLERYPLUS_FAVORITE_TOGGLE : 'В избранное'; ?>">
+                    <?php echo $is_favorite ? '★' : '☆'; ?>
+                </button>
                 <?php $dl_url = $photo['url_nocrop'] ?: ($photo['url_original'] ?: ''); ?>
                 <?php if ($dl_url) { ?>
                 <a href="<?php echo $dl_url; ?>" class="galleryplus-dl-btn" download><?php echo defined('LANG_GALLERYPLUS_DOWNLOAD') ? LANG_GALLERYPLUS_DOWNLOAD : 'Скачать'; ?></a>
@@ -180,6 +183,42 @@
     <?php } ?>
 <?php } ?>
 
+<?php if (!empty($similar_photos)) { ?>
+    <div class="galleryplus-similar">
+        <div class="galleryplus-similar-title"><?php echo defined('LANG_GALLERYPLUS_SIMILAR') ? LANG_GALLERYPLUS_SIMILAR : 'Похожие фото'; ?></div>
+        <div class="galleryplus-grid galleryplus-similar-grid" id="galleryplus-similar-grid">
+            <?php foreach ($similar_photos as $sp) {
+                $spt = htmlspecialchars($sp['title'] ?: ($sp['filename'] ?? ''));
+            ?>
+                <div class="galleryplus-item" data-object="<?php echo htmlspecialchars(json_encode([
+                    'id'       => $sp['id'],
+                    'url'      => $sp['url'],
+                    'src'      => $sp['url_big'],
+                    'nocrop'   => $sp['url_nocrop'] ?: '',
+                    'thumb'    => $sp['url_thumb'],
+                    'title'    => $spt,
+                    'author'   => htmlspecialchars($sp['user']['nickname'] ?? ''),
+                    'avatar'   => $sp['user']['avatar'] ?? '',
+                    'adult'    => false,
+                    'likes'    => 0,
+                    'liked'    => false,
+                    'favorite' => false,
+                    'owner_id' => $sp['user_id'],
+                    'comments' => $sp['comments'] ?? 0,
+                    'desc'     => $sp['content'] ?? '',
+                ], JSON_UNESCAPED_UNICODE)); ?>">
+                    <a href="<?php echo $sp['url']; ?>" class="galleryplus-viewer-link">
+                        <img src="<?php echo $sp['url_thumb']; ?>" alt="<?php echo $spt; ?>" loading="lazy" width="<?php echo $sp['width'] ?? 0; ?>" height="<?php echo $sp['height'] ?? 0; ?>">
+                    </a>
+                    <div class="galleryplus-item-overlay">
+                        <a href="<?php echo $sp['url']; ?>" class="galleryplus-item-overlay-title"><?php echo $spt; ?></a>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+<?php } ?>
+
 <?php if (!empty($comments_widget)) { ?>
     <div class="galleryplus-comments-block">
         <?php echo $comments_widget; ?>
@@ -210,29 +249,6 @@
             if (pane) pane.classList.add('active');
         });
     });
-
-    var likeBtn = document.querySelector('.galleryplus-like-btn');
-    if (likeBtn && !likeBtn.classList.contains('disabled')) {
-        likeBtn.addEventListener('click', function() {
-            var btn = this;
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '<?php echo href_to('galleryplus', 'like'); ?>', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    try {
-                        var r = JSON.parse(xhr.responseText);
-                        if (r.error) return;
-                        btn.classList.toggle('liked', r.status === 'liked');
-                        btn.querySelector('.galleryplus-like-icon').textContent = r.status === 'liked' ? '♥' : '♡';
-                        btn.querySelector('.galleryplus-like-count').textContent = r.count;
-                    } catch(e) {}
-                }
-            };
-            xhr.send('target_id=' + btn.dataset.targetId + '&target_type=' + btn.dataset.targetType);
-        });
-    }
 
     // ---- Fullscreen original viewer ----
     var viewImg = document.getElementById('galleryplus-view-img');

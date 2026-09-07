@@ -109,6 +109,23 @@ map_center_lng: 30.315721\n";
             KEY `user_id` (`user_id`),
             KEY `owner_id` (`owner_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+        @$db->query("CREATE TABLE IF NOT EXISTS `{#}galleryplus_favorites` (
+            `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+            `photo_id` int(11) unsigned NOT NULL,
+            `user_id` int(11) unsigned NOT NULL,
+            `date_pub` datetime DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `photo_user` (`photo_id`,`user_id`),
+            KEY `user_id` (`user_id`),
+            KEY `photo_id` (`photo_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+        $tab_exists = $db->query("SELECT id FROM `{#}users_tabs` WHERE `name` = 'favorites' AND `controller` = 'galleryplus'")->fetchAssoc();
+        if (!$tab_exists) {
+            @$db->query("INSERT INTO `{#}users_tabs` (`title`, `controller`, `name`, `is_active`, `ordering`)
+                VALUES ('Favorites', 'galleryplus', 'favorites', 1, 9)");
+        }
     } catch (\Throwable $e) {}
 
     // Widget bindings: categories, map

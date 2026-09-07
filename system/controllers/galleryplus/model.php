@@ -338,6 +338,122 @@ class modelGalleryplus extends cmsModel {
         return $status;
     }
 
+    // ─── Favorites ─────────────────────────────────────────
+
+    public function isPhotoFavorited($photo_id, $user_id) {
+        if (!$user_id) { return false; }
+        return (bool) $this->filterEqual('photo_id', $photo_id)
+            ->filterEqual('user_id', $user_id)
+            ->getCount('galleryplus_favorites');
+    }
+
+    public function toggleFavorite($photo_id, $user_id) {
+        $this->resetFilters();
+        $exists = $this->filterEqual('photo_id', $photo_id)
+            ->filterEqual('user_id', $user_id)
+            ->getItem('galleryplus_favorites');
+        $this->resetFilters();
+        if ($exists) {
+            $this->delete('galleryplus_favorites', $exists['id']);
+            return ['status' => 'unfavorited', 'count' => $this->getFavoritesCount($photo_id)];
+        }
+        $this->insert('galleryplus_favorites', [
+            'photo_id' => $photo_id,
+            'user_id'  => $user_id,
+            'date_pub' => null,
+        ]);
+        return ['status' => 'favorited', 'count' => $this->getFavoritesCount($photo_id)];
+    }
+
+    public function getFavoritesCount($photo_id) {
+        $this->resetFilters();
+        $count = $this->filterEqual('photo_id', $photo_id)->getCount('galleryplus_favorites');
+        $this->resetFilters();
+        return $count;
+    }
+
+    public function getUserFavoritesCount($user_id) {
+        $this->resetFilters();
+        $count = $this->filterEqual('user_id', $user_id)->getCount('galleryplus_favorites');
+        $this->resetFilters();
+        return $count;
+    }
+
+    public function getFavoritePhotoIds($user_id) {
+        $this->resetFilters();
+        $rows = $this->filterEqual('user_id', $user_id)
+            ->orderBy('date_pub', 'desc')
+            ->get('galleryplus_favorites', function ($item) {
+                return (int)$item['photo_id'];
+            }, false);
+        $this->resetFilters();
+        return $rows ?: [];
+    }
+
+    public function getPhotosFavoritesBatch($photo_ids, $user_id) {
+        if (!$photo_ids) { return []; }
+        $ids = array_map('intval', $photo_ids);
+        $fav = [];
+        if ($user_id) {
+            $list = implode(',', $ids);
+            $sql = "SELECT photo_id FROM {#}galleryplus_favorites WHERE user_id = " . (int)$user_id . " AND photo_id IN ({$list})";
+            $result = $this->db->query($sql);
+            while ($row = $this->db->fetchAssoc($result)) {
+                $fav[(int)$row['photo_id']] = true;
+            }
+        }
+        $data = [];
+        foreach ($ids as $pid) {
+            $data[$pid] = !empty($fav[$pid]);
+        }
+        return $data;
+    }
+
+    public function getFavoritePhotos($user_id, $page = 1, $perpage = 24, $include_adult_for_guests = false) {
+        $ids = $this->getFavoritePhotoIds($user_id);
+        if (!$ids) { return []; }
+
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        $offset = max(0, ($page - 1) * $perpage);
+        $page_ids = array_slice($ids, $offset, $perpage + 1);
+        if (!$page_ids) { return []; }
+
+        $this->joinUser();
+        if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
+        if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
+
+        $result = $this->filterIn('i.id', $page_ids)->get('galleryplus_photos', function ($item, $model) {
+            $item['image'] = cmsModel::yamlToArray($item['image']);
+            $item['sizes'] = cmsModel::yamlToArray($item['sizes']);
+            $item['exif']  = cmsModel::yamlToArray($item['exif']);
+            $item['user'] = [
+                'id'       => $item['user_id'],
+                'nickname' => $item['user_nickname'],
+                'slug'     => $item['user_slug'],
+                'avatar'   => $item['user_avatar'],
+            ];
+            $item = $this->decoratePhoto($item);
+            $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
+            $item['url_big']      = html_image_src($item['image'], $model->preset_big, true)
+                ?: html_image_src($item['image'], 'normal', true);
+            $item['url_nocrop']   = html_image_src($item['image'], $model->preset_nocrop, true);
+            $item['url_original'] = html_image_src($item['image'], 'original', true);
+            return $item;
+        }, false);
+        $this->resetFilters();
+        if (!$result) { return []; }
+
+        // Восстанавливаем порядок последних добавленных (date_pub desc)
+        $order_map = array_flip($page_ids);
+        usort($result, function ($a, $b) use ($order_map) {
+            $ka = isset($order_map[$a['id']]) ? $order_map[$a['id']] : 0;
+            $kb = isset($order_map[$b['id']]) ? $order_map[$b['id']] : 0;
+            return $ka <=> $kb;
+        });
+
+        return $result;
+    }
+
     public function filterApprovedOnly() {
         if ($this->approved_filtered) { return $this; }
         $this->approved_filtered = true;
@@ -523,6 +639,17 @@ class modelGalleryplus extends cmsModel {
 
     public function isAlbumProtected($album) {
         return !empty($album['privacy']) && $album['privacy'] !== 'public';
+    }
+
+    public function getUserAlbumsList($user_id) {
+        $this->resetFilters();
+        $user_id = (int) $user_id;
+        $result = $this->db->query("SELECT id, title FROM {#}galleryplus_albums WHERE user_id = {$user_id} ORDER BY title ASC");
+        $rows = [];
+        while ($row = $this->db->fetchAssoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
     }
 
     public function getUserAlbums($user_id, $page = 1, $perpage = 12) {
@@ -848,6 +975,104 @@ class modelGalleryplus extends cmsModel {
 
         $this->resetFilters();
         return ['prev' => $prev, 'next' => $next];
+    }
+
+    /**
+     * Похожие фото: по общим тегам (приоритет), затем из того же альбома
+     *
+     * @param int $photo_id
+     * @param int $album_id
+     * @param string $photo_slug Текущий slug, чтобы исключить само фото
+     * @param int $user_id Текущий пользователь для фильтра видимости
+     * @param int $limit
+     * @return array
+     */
+    public function getSimilarPhotos($photo_id, $album_id, $photo_slug = '', $user_id = 0, $limit = 6) {
+
+        $photo_id = (int)$photo_id;
+        $limit    = max(1, (int)$limit);
+
+        $include_adult_for_guests = !$user_id && !empty(cmsController::loadOptions('galleryplus')['show_adult_to_guests']);
+
+        // 1) По общим тегам, если теги включены в опциях
+        $options = cmsController::loadOptions('galleryplus');
+        $use_photo_tags = !empty($options['use_photo_tags']);
+
+        $tag_ids = [];
+        if ($use_photo_tags && cmsCore::isModelExists('tags')) {
+            $tags_model = cmsCore::getModel('tags');
+            $rows = $this->db->query(
+                "SELECT tag_id FROM {#}tags_bind WHERE target_controller = 'galleryplus' AND target_subject = 'photo' AND target_id = " . $photo_id
+            );
+            if ($rows) {
+                while ($row = $this->db->fetchAssoc($rows)) {
+                    $tag_ids[(int)$row['tag_id']] = true;
+                }
+            }
+        }
+
+        $similar_photo_id = 0;
+        if ($tag_ids) {
+            $tag_list = implode(',', array_keys($tag_ids));
+            $row = $this->db->query(
+                "SELECT target_id, COUNT(*) AS cnt
+                 FROM {#}tags_bind
+                 WHERE target_controller = 'galleryplus' AND target_subject = 'photo'
+                   AND target_id <> " . $photo_id . "
+                   AND tag_id IN ({$tag_list})
+                 GROUP BY target_id
+                 ORDER BY cnt DESC
+                 LIMIT 1"
+            );
+            $r = $row ? $this->db->fetchAssoc($row) : null;
+            if ($r) { $similar_photo_id = (int)$r['target_id']; }
+        }
+
+        $this->resetFilters();
+        $this->joinUser();
+        if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
+        if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
+        $this->skip_visible_albums_filter = true; // в page видимость уже проверена у текущего фото
+
+        $this->filterNotEqual('i.id', $photo_id);
+
+        if ($similar_photo_id) {
+            // приоритет: фото с общим тегом, затем из того же альбома
+            $this->filterStart();
+            $this->filterEqual('i.id', $similar_photo_id);
+            $this->filterOr();
+            $this->filterEqual('i.album_id', $album_id);
+            $this->filterEnd();
+            $this->orderByRaw('(i.id = ' . $similar_photo_id . ') desc, i.date_pub desc');
+        } else {
+            $this->filterEqual('i.album_id', $album_id);
+            $this->orderBy('i.date_pub', 'desc');
+        }
+
+        $this->limit($limit);
+
+        $result = $this->get('galleryplus_photos', function ($item, $model) {
+            $item['image'] = cmsModel::yamlToArray($item['image']);
+            $item['sizes'] = cmsModel::yamlToArray($item['sizes']);
+            $item['exif']  = cmsModel::yamlToArray($item['exif']);
+            $item['user'] = [
+                'id'       => $item['user_id'],
+                'nickname' => $item['user_nickname'],
+                'slug'     => $item['user_slug'],
+                'avatar'   => $item['user_avatar'],
+            ];
+            $item = $this->decoratePhoto($item);
+            $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
+            $item['url_big']      = html_image_src($item['image'], $model->preset_big, true)
+                ?: html_image_src($item['image'], 'normal', true);
+            $item['url_nocrop']   = html_image_src($item['image'], $model->preset_nocrop, true);
+            $item['url_original'] = html_image_src($item['image'], 'original', true);
+            return $item;
+        }, false);
+        $this->resetFilters();
+        $this->skip_visible_albums_filter = false;
+
+        return $result ?: [];
     }
 
     public function getAlbumsCountByCategory($category_id, $user_id = 0, $include_adult_for_guests = false) {

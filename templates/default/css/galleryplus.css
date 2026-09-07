@@ -2579,3 +2579,117 @@ body.galleryplus-selecting .galleryplus-item > .galleryplus-checkbox-wrap {
 .d-flex:has(.icms-widget [class*="galleryplus-"]):not(.flex-nowrap) {
     flex-wrap: wrap !important;
 }
+
+/* ─── Избранное: кнопка в карточке ─── */
+.galleryplus-fav-btn--card {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s, background .15s, color .15s;
+}
+.galleryplus-item:hover .galleryplus-fav-btn--card,
+.galleryplus-fav-btn--card.favorited {
+    opacity: 1;
+}
+.galleryplus-fav-btn--card:hover {
+    background: #ffcf3f;
+    color: #222;
+}
+.galleryplus-fav-btn--card.favorited {
+    background: #ffcf3f;
+    color: #222;
+    opacity: 1;
+}
+.galleryplus-fav-btn--card.disabled {
+    cursor: default;
+    opacity: .5;
+}
+body.galleryplus-selecting .galleryplus-item .galleryplus-fav-btn--card {
+    display: none;
+}
+
+/* ─── Избранное: кнопка на странице фото ─── */
+.galleryplus-fav-btn--view {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    color: #888;
+    transition: all .15s;
+}
+.galleryplus-fav-btn--view:hover:not(.disabled) {
+    border-color: #fc0;
+    color: #fc0;
+}
+.galleryplus-fav-btn--view.favorited {
+    background: #fff8e1;
+    border-color: #fc0;
+    color: #e6a800;
+}
+.galleryplus-fav-btn--view.disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+/* ─── Избранное: кнопка в лайтбоксе ─── */
+.galleryplus-viewer-fav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: .7;
+    transition: opacity .15s, color .15s, background .15s;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+.galleryplus-viewer-fav:hover {
+    opacity: 1;
+    background: rgba(255,255,255,.1);
+}
+.galleryplus-viewer-fav.favorited {
+    opacity: 1;
+    color: #ffcf3f;
+}
+.galleryplus-viewer-fav.disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+/* ─── Похожие фото ─── */
+.galleryplus-similar {
+    margin-top: 30px;
+}
+.galleryplus-similar-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+.galleryplus-similar-grid .galleryplus-item {
+    margin-bottom: 0;
+}

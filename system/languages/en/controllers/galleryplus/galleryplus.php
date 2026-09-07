@@ -149,6 +149,9 @@
     define('LANG_GALLERYPLUS_DELETE',        'Delete');
     define('LANG_GALLERYPLUS_CONFIRM_DELETE','Delete selected photos?');
 
+    define('LANG_GALLERYPLUS_MOVE_TO_ALBUM', 'Move to album');
+    define('LANG_GALLERYPLUS_CONFIRM_MOVE', 'Move selected photos?');
+
     define('LANG_GALLERYPLUS_DELETE_EXIF',             'Delete EXIF');
     define('LANG_GALLERYPLUS_EXIF_CAMERA',            'Camera');
     define('LANG_GALLERYPLUS_EXIF_DATE',              'Date');
@@ -251,3 +254,12 @@
     define('LANG_GALLERYPLUS_WIDGET_RANDOM',        'Random photos');
     define('LANG_GALLERYPLUS_WIDGET_CATEGORIES',    'Categories');
     define('LANG_GALLERYPLUS_WIDGET_MAP',           'Photo map');
+
+    define('LANG_GALLERYPLUS_FAVORITES',           'Favorites');
+    define('LANG_GALLERYPLUS_FAVORITE',            'Add to favorites');
+    define('LANG_GALLERYPLUS_UNFAVORITE',          'Remove from favorites');
+    define('LANG_GALLERYPLUS_FAVORITE_TOGGLE',     'Add / remove favorites');
+    define('LANG_GALLERYPLUS_NO_FAVORITES',        'No favorites yet.');
+    define('LANG_GALLERYPLUS_FAVORITE_ADDED',      'Added to favorites');
+    define('LANG_GALLERYPLUS_FAVORITE_REMOVED',    'Removed from favorites');
+    define('LANG_GALLERYPLUS_SIMILAR',             'Similar photos');

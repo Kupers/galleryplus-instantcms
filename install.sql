@@ -104,6 +104,11 @@ SELECT 'Albums', 'galleryplus', 'albums', 1, 8
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `{#}users_tabs` WHERE `name` = 'albums' AND `controller` = 'galleryplus');
 
+INSERT INTO `{#}users_tabs` (`title`, `controller`, `name`, `is_active`, `ordering`)
+SELECT 'Favorites', 'galleryplus', 'favorites', 1, 9
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `{#}users_tabs` WHERE `name` = 'favorites' AND `controller` = 'galleryplus');
+
 INSERT INTO `{#}widgets` (`title`, `name`, `controller`, `author`, `version`, `is_external`)
 SELECT 'Albums', 'albums', 'galleryplus', 'GalleryPlus', '1.0.0', 0
 FROM DUAL
@@ -143,6 +148,17 @@ INSERT INTO `{#}widgets_pages` (`controller`, `name`, `title_const`, `url_mask`,
 SELECT 'galleryplus', 'galleryplus.photos', 'LANG_GALLERYPLUS_PAGE_PHOTOS', 'galleryplus/*.html', 'galleryplus/album/*\ngalleryplus/category/*\ngalleryplus/tag/*'
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `{#}widgets_pages` WHERE `controller` = 'galleryplus' AND `name` = 'galleryplus.photos');
+
+CREATE TABLE IF NOT EXISTS `{#}galleryplus_favorites` (
+  `id`          int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `photo_id`    int(11) unsigned NOT NULL,
+  `user_id`     int(11) unsigned NOT NULL,
+  `date_pub`    timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `photo_user` (`photo_id`,`user_id`),
+  KEY `user_id` (`user_id`),
+  KEY `photo_id` (`photo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `{#}galleryplus_updates` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
