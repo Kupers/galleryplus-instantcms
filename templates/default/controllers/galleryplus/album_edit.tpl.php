@@ -6,6 +6,7 @@
     $this->addBreadcrumb(LANG_GALLERYPLUS_ALBUM_EDIT);
 
     $privacy = $album['privacy'] ?? 'public';
+    if (!empty($album['is_paid'])) { $privacy = 'paid'; }
     $privacy_password = '';
     $privacy_users = '';
     if ($privacy === 'users' && !empty($album['privacy_users'])) {
@@ -124,6 +125,36 @@
                     <br><small class="text-muted"><?php echo LANG_GALLERYPLUS_PRIVACY_ADULT_HINT; ?></small>
                 </label>
             </div>
+
+            <div class="custom-control custom-radio">
+                <input type="radio" id="privacy-paid" name="privacy" value="paid" class="custom-control-input galleryplus-privacy-radio" <?php echo $privacy === 'paid' ? 'checked' : ''; ?>>
+                <label class="custom-control-label" for="privacy-paid">
+                    <strong><?php echo LANG_GALLERYPLUS_PRIVACY_PAID; ?></strong>
+                    <br><small class="text-muted"><?php echo LANG_GALLERYPLUS_PRIVACY_PAID_HINT; ?></small>
+                </label>
+            </div>
+
+            <div class="galleryplus-album-edit-previews" id="galleryplus-album-edit-previews" style="<?php echo $privacy === 'paid' ? '' : 'display:none;'; ?>">
+                <div class="form-group">
+                    <label><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_LABEL') ? LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_LABEL : 'Какие фото показывать без блюра'; ?></label>
+                    <?php if (!empty($edit_photos)) { ?>
+                        <div class="galleryplus-edit-previews-grid">
+                            <?php foreach ($edit_photos as $fp) { ?>
+                                <label class="galleryplus-edit-preview-photo<?php echo !empty($fp['album_preview']) ? ' is-preview' : ''; ?>">
+                                    <img src="<?php echo $fp['url_thumb']; ?>" alt="" loading="lazy">
+                                    <span class="galleryplus-edit-preview-check">
+                                        <input type="checkbox" name="preview_photos[]" value="<?php echo $fp['id']; ?>" <?php echo !empty($fp['album_preview']) ? 'checked' : ''; ?>>
+                                        <span class="galleryplus-checkbox"></span>
+                                    </span>
+                                </label>
+                            <?php } ?>
+                        </div>
+                        <small class="text-muted"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_HINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_HINT : 'Отмеченные фото будут видны всем, остальные — под блюром до покупки доступа'; ?></small>
+                    <?php } else { ?>
+                        <small class="text-muted"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_EMPTY') ? LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_EMPTY : 'В альбоме пока нет фото. После загрузки вернитесь сюда, чтобы выбрать открытые фото.'; ?></small>
+                    <?php } ?>
+                </div>
+            </div>
         </div>
 
         <div class="galleryplus-album-edit-actions">
@@ -148,6 +179,7 @@
     var radios = document.querySelectorAll('.galleryplus-privacy-radio');
     var usersInput = document.getElementById('galleryplus-privacy-users-input');
     var passwordInput = document.getElementById('galleryplus-privacy-password-input');
+    var previewsBlock = document.getElementById('galleryplus-album-edit-previews');
 
     function toggleFields() {
         var checked = document.querySelector('.galleryplus-privacy-radio:checked');
@@ -155,6 +187,9 @@
         var val = checked.value;
         usersInput.style.display = val === 'users' ? '' : 'none';
         passwordInput.style.display = val === 'password' ? '' : 'none';
+        if (previewsBlock) {
+            previewsBlock.style.display = val === 'paid' ? '' : 'none';
+        }
     }
 
     radios.forEach(function(r) {
@@ -164,7 +199,9 @@
 </script>
 <?php if (!empty($use_album_tags)) { ?>
 <?php $this->addTplJSName('jquery-ui'); $this->addTplCSSName('jquery-ui'); $this->addTplJSName('fields/string_input'); ?>
+<?php ob_start(); ?>
 <script>
 initAutocomplete('tags', true, '/tags/autocomplete', false, ', ');
 </script>
+<?php $this->addBottom(ob_get_clean()); ?>
 <?php } ?>

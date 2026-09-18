@@ -53,9 +53,15 @@ class actionGalleryplusAlbumEdit extends cmsAction {
                 'category_id'  => (int)$this->request->get('category_id', 0),
             ];
 
-            $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult'];
+            $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult', 'paid'];
             if (in_array($privacy, $allowed_privacy)) {
-                $update['privacy'] = $privacy;
+                if ($privacy === 'paid') {
+                    $update['is_paid'] = 1;
+                    $update['privacy'] = 'public';
+                } else {
+                    $update['is_paid'] = 0;
+                    $update['privacy'] = $privacy;
+                }
             }
 
             if ($privacy === 'password' && $password) {
@@ -79,6 +85,14 @@ class actionGalleryplusAlbumEdit extends cmsAction {
             }
 
             $this->model->updateAlbum($album['id'], $update);
+
+            if (!empty($update['is_paid'])) {
+                $preview_ids = $this->request->get('preview_photos', []);
+                if (!is_array($preview_ids)) { $preview_ids = []; }
+                $this->model->syncAlbumPreviews($album['id'], array_map('intval', $preview_ids));
+            } else {
+                $this->model->clearAlbumPreviews($album['id']);
+            }
 
             if (!empty($this->options['use_album_tags']) && $this->request->has('tags')) {
                 $tags_model = cmsCore::getModel('tags');
@@ -108,6 +122,9 @@ class actionGalleryplusAlbumEdit extends cmsAction {
         $use_categories = !empty($this->options['use_categories']);
         $categories = $use_categories ? $this->model->getCategoriesAll() : [];
 
+        $this->model->preset_small = $this->options['preset_small'] ?? 'galleryplus_thumb';
+        $edit_photos = $this->model->getAlbumPhotosForEdit($album['id']);
+
         $use_album_tags = !empty($this->options['use_album_tags']);
         $album_tags = [];
         if ($use_album_tags) {
@@ -119,6 +136,7 @@ class actionGalleryplusAlbumEdit extends cmsAction {
             'album'      => $album,
             'user'       => $this->cms_user,
             'categories' => $categories,
+            'edit_photos' => $edit_photos,
             'use_album_tags' => $use_album_tags,
             'album_tags' => $album_tags,
         ]);

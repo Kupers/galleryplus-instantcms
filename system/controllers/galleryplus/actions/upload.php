@@ -37,6 +37,12 @@ class actionGalleryplusUpload extends cmsAction {
 
     public function showUploadForm() {
 
+        $this->billingEnsureBalance('add_photo', href_to('galleryplus', 'upload'));
+        $add_price = $this->billingPrice('add_photo');
+
+        $billing = $this->billing();
+        $billing_currency = $billing && !empty($billing->options) ? ($billing->options['currency'] ?? '') : '';
+
         $this->cms_template->addBreadcrumb(
             defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
             href_to('galleryplus')
@@ -78,6 +84,8 @@ class actionGalleryplusUpload extends cmsAction {
             'categories'  => $categories,
             'use_album_tags' => !empty($this->options['use_album_tags']),
             'use_photo_tags' => !empty($this->options['use_photo_tags']),
+            'add_price'   => $add_price,
+            'add_price_spell' => $this->billingSpellPrice($add_price, $billing_currency),
         ]);
     }
 
@@ -98,10 +106,13 @@ class actionGalleryplusUpload extends cmsAction {
         $slug = $this->model->getUniqueAlbumSlug(lang_slug($title), $this->cms_user->id);
 
         $privacy = $this->request->get('privacy', 'public');
-        $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult'];
+        $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult', 'paid'];
         if (!in_array($privacy, $allowed_privacy)) {
             $privacy = 'public';
         }
+
+        $is_paid = ($privacy === 'paid') ? 1 : 0;
+        if ($is_paid) { $privacy = 'public'; }
 
         $privacy_users = null;
         $privacy_password = null;
@@ -133,6 +144,7 @@ class actionGalleryplusUpload extends cmsAction {
             'privacy_password' => $privacy_password,
             'category_id'    => (int)$this->request->get('category_id', 0),
             'allow_upload'   => (int)$this->request->get('allow_upload', 0),
+            'is_paid'        => $is_paid,
             'date_pub'       => null,
         ]);
 
@@ -178,9 +190,12 @@ class actionGalleryplusUpload extends cmsAction {
         $update['category_id'] = $category_id;
 
         $privacy = $this->request->get('privacy', '');
-        $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult'];
+        $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult', 'paid'];
         if (in_array($privacy, $allowed_privacy)) {
+            $is_paid = ($privacy === 'paid') ? 1 : 0;
+            if ($is_paid) { $privacy = 'public'; }
             $update['privacy'] = $privacy;
+            $update['is_paid'] = $is_paid;
             if ($privacy === 'password') {
                 $password = $this->request->get('password', '');
                 if ($password) {
@@ -224,6 +239,7 @@ class actionGalleryplusUpload extends cmsAction {
             ['value' => 'users',    'label' => LANG_GALLERYPLUS_PRIVACY_USERS,          'hint' => LANG_GALLERYPLUS_PRIVACY_USERS_HINT],
             ['value' => 'password', 'label' => LANG_GALLERYPLUS_PRIVACY_PASSWORD,       'hint' => LANG_GALLERYPLUS_PRIVACY_PASSWORD_HINT],
             ['value' => 'adult',    'label' => LANG_GALLERYPLUS_PRIVACY_ADULT,          'hint' => LANG_GALLERYPLUS_PRIVACY_ADULT_HINT],
+            ['value' => 'paid',     'label' => LANG_GALLERYPLUS_PRIVACY_PAID,           'hint' => LANG_GALLERYPLUS_PRIVACY_PAID_HINT],
         ];
     }
 
@@ -234,6 +250,15 @@ class actionGalleryplusUpload extends cmsAction {
         }
 
         try {
+
+            $add_price = $this->billingPrice('add_photo');
+            $paid_add  = $add_price > 0;
+            if ($paid_add) {
+                $bill_check = $this->billingAjaxCheck('add_photo');
+                if (is_array($bill_check)) {
+                    return $this->cms_template->renderJSON($bill_check);
+                }
+            }
 
             $presets = cmsCore::getModel('images')->orderByList([
                 ['by' => 'is_square', 'to' => 'asc'],
@@ -415,7 +440,15 @@ class actionGalleryplusUpload extends cmsAction {
                 $album_id = $this->getDefaultAlbumId();
             }
 
-            $photo_id = $this->model->addPhoto([
+            $billing_model = null;
+            if ($paid_add) {
+                $billing_model = $this->billing()->model;
+                $billing_model->startTransaction();
+            }
+
+            $charge_ok = !$paid_add || $this->billingCharge('add_photo', $this->cms_user->id);
+
+            $photo_id = $charge_ok ? $this->model->addPhoto([
                 'user_id'     => $this->cms_user->id,
                 'album_id'    => $album_id,
                 'image'       => $result['paths'],
@@ -426,12 +459,19 @@ class actionGalleryplusUpload extends cmsAction {
                 'is_approved' => $auto_approve,
                 'exif'        => !empty($image_data['exif']) ? $image_data['exif'] : null,
                 'content'     => $xmp_description ?: null,
-            ]);
+            ]) : false;
 
-            if ($photo_id === false) {
+            if ($billing_model) {
+                $billing_model->endTransaction($charge_ok && $photo_id !== false);
+            }
+
+            if (!$charge_ok || $photo_id === false) {
+                foreach ($result['paths'] as $rel) {
+                    files_delete_file($this->cms_config->upload_path . $rel, 2);
+                }
                 return $this->cms_template->renderJSON([
                     'success' => false,
-                    'error'   => 'addPhoto returned false'
+                    'error'   => $charge_ok ? 'addPhoto returned false' : LANG_GALLERYPLUS_BILLING_CHARGE_ERROR,
                 ]);
             }
 
@@ -472,6 +512,8 @@ class actionGalleryplusUpload extends cmsAction {
                 $slug = 'photo-' . $photo_id;
                 $this->model->updatePhoto($photo_id, ['slug' => $slug]);
             }
+
+            $this->model->setPaidAlbumDefaultPreview($album_id);
 
             $result['id']      = $photo_id;
             $result['thumb']   = $this->cms_config->upload_host . '/' . $thumb_path;

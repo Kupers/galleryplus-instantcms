@@ -78,12 +78,14 @@ if (php_sapi_name() !== 'cli') {
 
     <form method="post">
         <div class="card">
-            <h2>База данных <span>(4 таблицы)</span></h2>
+            <h2>База данных <span>(6 таблиц)</span></h2>
             <ul>
                 <li><span class="icon icon-tbl">T</span> cms_galleryplus_albums<span class="count">альбомы</span></li>
                 <li><span class="icon icon-tbl">T</span> cms_galleryplus_photos<span class="count">фотографии</span></li>
                 <li><span class="icon icon-tbl">T</span> cms_galleryplus_likes<span class="count">лайки</span></li>
                 <li><span class="icon icon-tbl">T</span> cms_galleryplus_categories<span class="count">категории</span></li>
+                <li><span class="icon icon-tbl">T</span> cms_galleryplus_album_access<span class="count">доступ к альбомам</span></li>
+                <li><span class="icon icon-tbl">T</span> cms_galleryplus_original_access<span class="count">доступ к оригиналам</span></li>
             </ul>
         </div>
 
@@ -166,6 +168,8 @@ function uninstall_package() {
         $prefix . 'galleryplus_likes',
         $prefix . 'galleryplus_categories',
         $prefix . 'galleryplus_favorites',
+        $prefix . 'galleryplus_album_access',
+        $prefix . 'galleryplus_original_access',
     ];
     foreach ($tables as $table) {
         $db->query("DROP TABLE IF EXISTS `{$table}`");

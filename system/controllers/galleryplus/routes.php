@@ -46,6 +46,16 @@ function routes_galleryplus() {
             1         => 'photo_id'
         ],
         [
+            'pattern' => '/^galleryplus\/buy_album\/(\d+)$/i',
+            'action'  => 'buy_album',
+            1         => 'album_id'
+        ],
+        [
+            'pattern' => '/^galleryplus\/buy_original\/(\d+)$/i',
+            'action'  => 'buy_original',
+            1         => 'photo_id'
+        ],
+        [
             'pattern' => '/^galleryplus\/serve\/(\d+)\/(small|big|nocrop|original)$/i',
             'action'  => 'serve',
             1         => 'photo_id',

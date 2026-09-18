@@ -112,6 +112,22 @@ class actionGalleryplusAlbum extends cmsAction {
 
         $this->model->skip_visible_albums_filter = true;
 
+        // Платный просмотр альбома (первые N фото) и платный оригинал
+        $is_owner = $this->cms_user->id && $album['user_id'] == $this->cms_user->id;
+
+        $this->model->original_paid = $this->billingEnabledFeature('download_original');
+
+        $view_price     = $this->billingPrice('view_album');
+        $view_paid      = !empty($album['is_paid']) && $view_price > 0 && !$is_owner && !$this->cms_user->is_admin;
+        $has_view_access = !$view_paid || ($this->cms_user->id && $this->model->isAlbumAccessGranted($this->cms_user->id, $album['id']));
+
+        $billing = $this->billing();
+        $billing_currency = $billing && !empty($billing->options) ? ($billing->options['currency'] ?? '') : '';
+
+        if ($view_paid && !$has_view_access) {
+            return $this->renderLockedAlbum($album, $view_price, $billing_currency);
+        }
+
         $page    = $this->request->get('page', 1);
         $perpage = $this->options['limit'] ?? 24;
 
@@ -201,7 +217,10 @@ class actionGalleryplusAlbum extends cmsAction {
             'has_next'        => $has_next,
             'user'            => $this->cms_user,
             'locked'          => false,
-            'is_owner'        => $this->cms_user->id && $album['user_id'] == $this->cms_user->id,
+            'is_owner'        => $is_owner,
+            'view_paid'       => $view_paid,
+            'view_price'      => $view_price,
+            'view_price_spell' => $this->billingSpellPrice($view_price, $billing_currency),
             'comments_widget' => $comments_widget,
             'can_select'      => $this->can_select,
             'category'        => $category,
@@ -212,7 +231,72 @@ class actionGalleryplusAlbum extends cmsAction {
         ]);
     }
 
-    public function loadMore($album, $page, $perpage) {
+    /**
+     * Платный просмотр без доступа: превью-фото открыты, остальные под блюром + paywall.
+     */
+    private function renderLockedAlbum($album, $view_price, $billing_currency = '') {
+
+        $this->model->preset_small  = $this->options['preset_small'] ?? 'galleryplus_thumb';
+        $this->model->preset_big    = $this->options['preset_big'] ?? 'galleryplus_big';
+        $this->model->preset_nocrop = $this->options['preset_nocrop'] ?? 'galleryplus_nocrop';
+
+        $album['photo_count'] = $this->model->getPhotosCount($album['id']);
+        $album_photo_count = (int)($album['photo_count'] ?? 0);
+
+        $this->can_select = false;
+
+        $page    = $this->request->get('page', 1);
+        $perpage = $this->options['limit'] ?? 24;
+
+        if ($this->request->isAjax() && $page > 1) {
+            return $this->loadMore($album, $page, $perpage, true);
+        }
+
+        $this->model->filterEqual('album_id', $album['id']);
+
+        $photos = $this->model->getPhotos($page, $perpage);
+        if (!$photos) { $photos = []; }
+        $photos = $this->applyAdultFilter($photos);
+        $has_next = count($photos) > $perpage;
+        if ($has_next) { array_pop($photos); }
+
+        $preview_count = 0;
+        foreach ($photos as $p) {
+            if (!empty($p['album_preview'])) { $preview_count++; }
+        }
+
+        $buy_album_url = href_to('galleryplus', 'buy_album', [$album['id']]);
+        $buy_url = $this->cms_user->id
+            ? $buy_album_url
+            : href_to('auth', 'login', [], ['back' => $buy_album_url]);
+
+        return $this->cms_template->render('album', [
+            'album'            => $album,
+            'photos'           => $photos,
+            'page'             => $page,
+            'has_next'         => $has_next,
+            'user'             => $this->cms_user,
+            'locked'           => true,
+            'is_owner'         => false,
+            'view_paid'        => true,
+            'view_price'       => $view_price,
+            'view_price_spell' => $this->billingSpellPrice($view_price, $billing_currency),
+            'paid_locked'      => true,
+            'preview_count'    => $preview_count,
+            'album_photo_count'=> $album_photo_count,
+            'buy_url'          => $buy_url,
+            'billing_currency' => $billing_currency,
+            'comments_widget'  => '',
+            'can_select'       => false,
+            'category'         => null,
+            'album_tags'       => [],
+            'can_upload'       => false,
+            'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'user_albums'      => [],
+        ]);
+    }
+
+    public function loadMore($album, $page, $perpage, $paid_locked = false) {
         $this->model->filterEqual('album_id', $album['id']);
         $this->model->preset_small  = $this->options['preset_small'] ?? 'galleryplus_thumb';
         $this->model->preset_big    = $this->options['preset_big'] ?? 'galleryplus_big';
@@ -239,7 +323,7 @@ class actionGalleryplusAlbum extends cmsAction {
 
         $html = '';
         foreach ($photos as $photo) {
-            $html .= $this->renderPhotoCard($photo);
+            $html .= $this->renderPhotoCard($photo, $paid_locked);
         }
 
         return $this->cms_template->renderJSON([
@@ -264,7 +348,7 @@ class actionGalleryplusAlbum extends cmsAction {
         return false;
     }
 
-    private function renderPhotoCard($photo) {
+    private function renderPhotoCard($photo, $paid_locked = false) {
         $title = htmlspecialchars($photo['title'] ?: $photo['filename'] ?? '');
         $author = htmlspecialchars($photo['user']['nickname'] ?? '');
         $avatar = $photo['user']['avatar'] ?? '';
@@ -273,11 +357,24 @@ class actionGalleryplusAlbum extends cmsAction {
         $is_favorite = !empty($photo['is_favorite']);
         $likes_count = $photo['likes_count'] ?? 0;
         $comments_count = $photo['comments'] ?? 0;
+
+        // Платный просмотр без доступа: фотографии без флага preview закрыты блюром
+        if ($paid_locked && empty($photo['album_preview'])) {
+            $img = '<img src="' . $photo['url_thumb'] . '" alt="' . $title . '" loading="lazy" width="' . ($photo['width'] ?? 0) . '" height="' . ($photo['height'] ?? 0) . '" class="galleryplus-blurred">'
+                . '<div class="galleryplus-paid-lock-icon">&#128274;</div>';
+            return '<div class="galleryplus-item galleryplus-item--paid-blur">'
+                . '<a href="#galleryplus-paywall" class="galleryplus-paid-lock">' . $img . '</a>'
+                . '<div class="galleryplus-item-overlay">'
+                . '<span class="galleryplus-item-overlay-title">' . $title . '</span>'
+                . '</div>'
+                . '</div>';
+        }
+
         $data = htmlspecialchars(json_encode([
             'id'       => $photo['id'],
             'url'      => $photo['url'],
             'src'      => $photo['url_big'],
-            'nocrop'   => $photo['url_nocrop'] ?: '',
+            'nocrop'   => !empty($photo['can_original']) ? ($photo['url_nocrop'] ?: '') : '',
             'thumb'    => $photo['url_thumb'],
             'title'    => $title,
             'author'   => $author,

@@ -77,9 +77,15 @@ class actionGalleryplusSave extends cmsAction {
             $update_album['allow_upload'] = $allow_upload ? 1 : 0;
 
             $privacy = $this->request->get('privacy', '');
-            $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult'];
+            $allowed_privacy = ['public', 'private', 'friends', 'users', 'password', 'adult', 'paid'];
             if (in_array($privacy, $allowed_privacy)) {
-                $update_album['privacy'] = $privacy;
+                if ($privacy === 'paid') {
+                    $update_album['is_paid'] = 1;
+                    $update_album['privacy'] = 'public';
+                } else {
+                    $update_album['is_paid'] = 0;
+                    $update_album['privacy'] = $privacy;
+                }
                 if ($privacy === 'password') {
                     $password = $this->request->get('password', '');
                     if ($password) {
@@ -140,6 +146,9 @@ class actionGalleryplusSave extends cmsAction {
         $this->model->updateFiltered('galleryplus_albums', [
             'photos_count' => $count,
         ]);
+        $this->model->resetFilters();
+
+        $this->model->setPaidAlbumDefaultPreview($album_id);
 
         cmsUser::addSessionMessage(defined('LANG_GALLERYPLUS_SAVED') ? LANG_GALLERYPLUS_SAVED : 'Photos saved', 'success');
 

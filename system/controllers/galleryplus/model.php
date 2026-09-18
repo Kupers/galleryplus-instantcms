@@ -2,6 +2,8 @@
 
 class modelGalleryplus extends cmsModel {
 
+    use icms\traits\controllers\models\transactable;
+
     public $preset_small  = 'galleryplus_thumb';
     public $preset_big    = 'galleryplus_big';
     public $preset_nocrop = 'galleryplus_nocrop';
@@ -10,6 +12,12 @@ class modelGalleryplus extends cmsModel {
     public $adult_rating  = 0;
     public $user_rating   = 0;
     public $skip_visible_albums_filter = false;
+
+    /**
+     * При включении платного скачивания оригинала
+     * url_nocrop / url_original направляются через serve.php
+     */
+    public $original_paid = false;
 
     public function isPrivacyFilterDisabled() {
         return $this->privacy_filter_disabled;
@@ -43,11 +51,7 @@ class modelGalleryplus extends cmsModel {
                 'avatar'   => $item['user_avatar'],
             ];
             $item = $this->decoratePhoto($item);
-            $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
-            $item['url_big']      = html_image_src($item['image'], $model->preset_big, true)
-                ?: html_image_src($item['image'], 'normal', true);
-            $item['url_nocrop']   = html_image_src($item['image'], $model->preset_nocrop, true);
-            $item['url_original'] = html_image_src($item['image'], 'original', true);
+            $this->applyPhotoUrls($item);
             return $item;
         }, false);
         if (!$result) { return []; }
@@ -111,6 +115,123 @@ class modelGalleryplus extends cmsModel {
         return $item;
     }
 
+    /**
+     * Формирует url_thumb / url_big / url_nocrop / url_original у фото.
+     * При original_paid url_nocrop и url_original идут через serve.php
+     * и в шаблонах должны выдаваться только при can_original.
+     */
+    public function applyPhotoUrls(&$item) {
+        $item['url_thumb'] = html_image_src($item['image'], $this->preset_small, true);
+        $item['url_big']   = html_image_src($item['image'], $this->preset_big, true)
+            ?: html_image_src($item['image'], 'normal', true);
+        if ($this->original_paid) {
+            $item['url_nocrop']   = !empty($item['image'][$this->preset_nocrop]) ? $this->getPhotoServeUrl($item['id'], 'nocrop') : '';
+            $item['url_original'] = !empty($item['image']['original']) ? $this->getPhotoServeUrl($item['id'], 'original') : '';
+        } else {
+            $item['url_nocrop']   = html_image_src($item['image'], $this->preset_nocrop, true);
+            $item['url_original'] = html_image_src($item['image'], 'original', true);
+        }
+        $item['can_original'] = $this->canDownloadOriginal($item);
+        return $item;
+    }
+
+    /**
+     * Может ли пользователь скачать оригинал фото.
+     */
+    public function canDownloadOriginal($photo) {
+        if (!$this->original_paid) { return true; }
+        $user_id = cmsUser::get('id');
+        if (!$user_id) { return false; }
+        if (cmsUser::isAdmin()) { return true; }
+        if ((int)$photo['user_id'] === (int)$user_id) { return true; }
+        return $this->isOriginalAccessGranted($user_id, $photo['id']);
+    }
+
+    public function isAlbumAccessGranted($user_id, $album_id) {
+        $this->resetFilters();
+        $this->filterEqual('user_id', (int)$user_id);
+        $this->filterEqual('album_id', (int)$album_id);
+        $count = $this->getCount('galleryplus_album_access');
+        $this->resetFilters();
+        return (bool)$count;
+    }
+
+    public function setAlbumAccess($user_id, $album_id) {
+        $this->insert('galleryplus_album_access', [
+            'user_id'  => (int)$user_id,
+            'album_id' => (int)$album_id,
+        ], false, true);
+        return true;
+    }
+
+    public function deleteAlbumAccess($user_id, $album_id) {
+        $this->resetFilters();
+        $this->filterEqual('user_id', (int)$user_id);
+        $this->filterEqual('album_id', (int)$album_id);
+        $result = $this->deleteFiltered('galleryplus_album_access');
+        $this->resetFilters();
+        return $result;
+    }
+
+    public function clearAlbumAccess($album_id) {
+        $this->resetFilters();
+        $this->filterEqual('album_id', (int)$album_id);
+        $result = $this->deleteFiltered('galleryplus_album_access');
+        $this->resetFilters();
+        return $result;
+    }
+
+    public function isOriginalAccessGranted($user_id, $photo_id) {
+        $this->resetFilters();
+        $this->filterEqual('user_id', (int)$user_id);
+        $this->filterEqual('photo_id', (int)$photo_id);
+        $count = $this->getCount('galleryplus_original_access');
+        $this->resetFilters();
+        return (bool)$count;
+    }
+
+    public function setOriginalAccess($user_id, $photo_id) {
+        $this->insert('galleryplus_original_access', [
+            'user_id'  => (int)$user_id,
+            'photo_id' => (int)$photo_id,
+        ], false, true);
+        return true;
+    }
+
+    public function deleteOriginalAccess($user_id, $photo_id) {
+        $this->resetFilters();
+        $this->filterEqual('user_id', (int)$user_id);
+        $this->filterEqual('photo_id', (int)$photo_id);
+        $result = $this->deleteFiltered('galleryplus_original_access');
+        $this->resetFilters();
+        return $result;
+    }
+
+    public function clearPhotoAccess($photo_id) {
+        $this->resetFilters();
+        $this->filterEqual('photo_id', (int)$photo_id);
+        $result = $this->deleteFiltered('galleryplus_original_access');
+        $this->resetFilters();
+        return $result;
+    }
+
+    /**
+     * id фото, по которым у пользователя есть платный доступ к оригиналу.
+     * Для батч-проверок в списках фото.
+     */
+    public function getOriginalAccessGrantedIds($user_id, $photo_ids) {
+        if (!$user_id || !$photo_ids) { return []; }
+        $photo_ids = array_map('intval', $photo_ids);
+        $this->resetFilters();
+        $this->filterEqual('user_id', (int)$user_id);
+        $this->filterIn('photo_id', $photo_ids);
+        $rows = $this->get('galleryplus_original_access', function ($item) {
+            return (int)$item['photo_id'];
+        }, false);
+        $this->resetFilters();
+        return $rows ?: [];
+    }
+
     public function getPhotoBySlug($slug) {
         $this->joinUser();
         $this->joinSessionsOnline();
@@ -131,11 +252,7 @@ class modelGalleryplus extends cmsModel {
                 'avatar'    => $item['user_avatar'],
             ];
             $item = $this->decoratePhoto($item);
-            $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
-            $item['url_big']      = html_image_src($item['image'], $model->preset_big, true)
-                ?: html_image_src($item['image'], 'normal', true);
-            $item['url_nocrop']   = html_image_src($item['image'], $model->preset_nocrop, true);
-            $item['url_original'] = html_image_src($item['image'], 'original', true);
+            $this->applyPhotoUrls($item);
             return $item;
         });
         if (!$photo) { return null; }
@@ -474,7 +591,9 @@ class modelGalleryplus extends cmsModel {
     public function deletePhoto($id) {
         $this->resetFilters();
         $this->filterEqual('id', $id);
-        return $this->delete('galleryplus_photos', $id);
+        $result = $this->delete('galleryplus_photos', $id);
+        if ($result) { $this->clearPhotoAccess($id); }
+        return $result;
     }
 
     public function getPhotosImagesByIds($ids) {
@@ -518,6 +637,7 @@ class modelGalleryplus extends cmsModel {
             $this->resetFilters();
             $this->filterEqual('id', $id);
             if ($this->delete('galleryplus_photos', $id)) {
+                $this->clearPhotoAccess($id);
                 $deleted++;
             }
         }
@@ -634,6 +754,31 @@ class modelGalleryplus extends cmsModel {
         } else {
             $this->filter("gp_a.privacy = 'public'");
         }
+        $this->filterPaidAlbumPhotos($user_id);
+        return $this;
+    }
+
+    /**
+     * В общей ленте фото платных альбомов без доступа скрываются,
+     * кроме открытых превью-фото (album_preview = 1).
+     * Владелец, админ и купившие доступ видят все фото.
+     */
+    public function filterPaidAlbumPhotos($user_id = 0) {
+        if (cmsUser::isAdmin()) { return $this; }
+        $user_id = (int)$user_id;
+        $cond = "(gp_a.is_paid = 0 OR i.album_preview = 1";
+        if ($user_id) {
+            $cond .= " OR gp_a.user_id = " . $user_id;
+            $access = $this->db->getRows('galleryplus_album_access', 'user_id = ' . $user_id, 'album_id');
+            if ($access) {
+                $ids = array_map('intval', array_column($access, 'album_id'));
+                if ($ids) {
+                    $cond .= " OR gp_a.id IN (" . implode(',', $ids) . ")";
+                }
+            }
+        }
+        $cond .= ")";
+        $this->filter($cond);
         return $this;
     }
 
@@ -650,6 +795,92 @@ class modelGalleryplus extends cmsModel {
             $rows[] = $row;
         }
         return $rows;
+    }
+
+    /**
+     * Фото альбома для формы редактирования: чекбоксы «показывать без блюра».
+     */
+    public function getAlbumPhotosForEdit($album_id) {
+        $album_id = (int)$album_id;
+        $rows = $this->db->getRows(
+            'galleryplus_photos',
+            'album_id = ' . $album_id,
+            'id, title, album_preview, image'
+        );
+        if (!$rows) { return []; }
+        $model = $this;
+        $result = [];
+        foreach ($rows as $row) {
+            $image = cmsModel::yamlToArray($row['image']);
+            $row['url_thumb'] = html_image_src($image, $model->preset_small, true)
+                ?: html_image_src($image, 'original', true);
+            $result[] = $row;
+        }
+        return $result;
+    }
+
+    /**
+     * Устанавливает album_preview=1 указанным фото альбома, остальным — 0.
+     * Если список пуст — открывает первые 3 фото (превью по умолчанию).
+     */
+    public function syncAlbumPreviews($album_id, $preview_ids = []) {
+        $album_id = (int)$album_id;
+        $preview_ids = array_map('intval', $preview_ids);
+
+        if (!$preview_ids) {
+            $this->resetFilters();
+            $this->filterEqual('album_id', $album_id);
+            $this->orderBy('date_pub', 'asc', 'id', 'asc');
+            $rows = $this->limit(3)->get('galleryplus_photos', function ($item) {
+                return (int)$item['id'];
+            }, false);
+            $this->resetFilters();
+            $preview_ids = $rows ?: [];
+        }
+
+        $this->resetFilters();
+        $this->filterEqual('album_id', $album_id);
+        $this->updateFiltered('galleryplus_photos', ['album_preview' => 0]);
+
+        if ($preview_ids) {
+            $this->resetFilters();
+            $this->filterIn('id', $preview_ids);
+            $this->filterEqual('album_id', $album_id);
+            $this->updateFiltered('galleryplus_photos', ['album_preview' => 1]);
+        }
+
+        $this->resetFilters();
+        return true;
+    }
+
+    /**
+     * Снимает все флаги preview у фото альбома.
+     */
+    public function clearAlbumPreviews($album_id) {
+        $album_id = (int)$album_id;
+        $this->resetFilters();
+        $this->filterEqual('album_id', $album_id);
+        $this->updateFiltered('galleryplus_photos', ['album_preview' => 0]);
+        $this->resetFilters();
+        return true;
+    }
+
+    /**
+     * Если альбом платный и открытых (preview) фото ещё нет —
+     * помечает первые 3 как открытые.
+     */
+    public function setPaidAlbumDefaultPreview($album_id) {
+        $album_id = (int)$album_id;
+        if (!$album_id) { return; }
+        $album = $this->getItemById('galleryplus_albums', $album_id);
+        if (!$album || empty($album['is_paid'])) { return; }
+        $this->resetFilters();
+        $this->filterEqual('album_id', $album_id);
+        $this->filterEqual('album_preview', 1);
+        $have_preview = $this->getCount('galleryplus_photos') > 0;
+        $this->resetFilters();
+        if ($have_preview) { return; }
+        $this->syncAlbumPreviews($album_id, []);
     }
 
     public function getUserAlbums($user_id, $page = 1, $perpage = 12) {
@@ -742,12 +973,20 @@ class modelGalleryplus extends cmsModel {
                     $this->addLog('delete', 'photo', $photo['id'], $photo['title'] ?? '', $album['user_id'], $user_id);
                 }
             }
+            $photo_ids = array_map('intval', array_column($photos, 'id'));
+            if ($photo_ids) {
+                $this->resetFilters();
+                $this->filterIn('photo_id', $photo_ids);
+                $this->deleteFiltered('galleryplus_original_access');
+                $this->resetFilters();
+            }
         }
         $this->resetFilters();
         $this->filterEqual('album_id', $id);
         $this->deleteFiltered('galleryplus_photos');
         $this->resetFilters();
         $result = $this->delete('galleryplus_albums', $id);
+        $this->clearAlbumAccess($id);
 
         if ($album) {
             $this->addLog('delete', 'album', $id, $album['title'] ?? '', $album['user_id'], $user_id);

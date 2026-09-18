@@ -10,6 +10,10 @@
         <h1><?php echo LANG_GALLERYPLUS_UPLOAD ?? 'Upload images'; ?></h1>
     </div>
 
+    <?php if (!empty($add_price) && $add_price > 0) { ?>
+        <div class="galleryplus-upload-billing"><?php echo defined('LANG_GALLERYPLUS_BILLING_UPLOAD_HINT') ? sprintf(LANG_GALLERYPLUS_BILLING_UPLOAD_HINT, $add_price_spell) : ('Стоимость загрузки одного фото: ' . $add_price_spell); ?></div>
+    <?php } ?>
+
     <div class="galleryplus-upload-dropzone" id="galleryplus-dropzone">
         <div class="galleryplus-upload-icon">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -110,6 +114,10 @@
                             <input type="radio" id="priv-adult" name="settings-privacy" value="adult" class="custom-control-input">
                             <label class="custom-control-label" for="priv-adult"><strong><?php echo LANG_GALLERYPLUS_PRIVACY_ADULT ?? '18+'; ?></strong></label>
                         </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="priv-paid" name="settings-privacy" value="paid" class="custom-control-input">
+                            <label class="custom-control-label" for="priv-paid"><strong><?php echo LANG_GALLERYPLUS_PRIVACY_PAID ?? 'Платный'; ?></strong></label>
+                        </div>
                     </div>
                 </div>
                 <div class="galleryplus-settings-section">
@@ -168,9 +176,9 @@
     }
 
     var allAlbums = <?php echo $albums_json; ?> || [];
-    var activeAlbum = null; // {id, title, isNew, nickname}
+    var activeAlbum = null; /* {id, title, isNew, nickname} */
 
-    // Prevent browser autofill
+    /* Prevent browser autofill */
     albumSearch.setAttribute('readonly', 'readonly');
     albumSearch.addEventListener('focus', function() {
         this.removeAttribute('readonly');
@@ -181,7 +189,7 @@
         }
     });
 
-    // Privacy sub-inputs
+    /* Privacy sub-inputs */
     var privRadios = document.querySelectorAll('#galleryplus-album-settings input[name="settings-privacy"]');
     var privUsersInput = document.getElementById('priv-users-input');
     var privPasswordInput = document.getElementById('priv-password-input');
@@ -193,7 +201,7 @@
         });
     });
 
-    // Preselect album from URL param
+    /* Preselect album from URL param */
     var preselectedId = parseInt(<?php echo (int)$album_id; ?>);
     if (preselectedId) {
         for (var i = 0; i < allAlbums.length; i++) {
@@ -230,7 +238,7 @@
 
     function htmlspecialchars(s) {
         if (s === null || s === undefined) return '';
-        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/\u003c/g, '&lt;').replace(/\u003e/g, '&gt;');
     }
 
     function selectAlbum(id, title, isNew, label) {
@@ -327,7 +335,7 @@
         settingsTitle.focus();
     });
 
-    // Save album settings
+    /* Save album settings */
     settingsSave.addEventListener('click', function() {
         if (!activeAlbum) { return; }
 

@@ -268,6 +268,27 @@ class formGalleryplusOptions extends cmsForm {
                 ]
             ],
 
+            [
+                'title'  => LANG_GALLERYPLUS_BILLING_TAB,
+                'type'   => 'fieldset',
+                'childs' => [
+
+                    new fieldCheckbox('billing_take_percent', [
+                        'title'   => LANG_GALLERYPLUS_BILLING_TAKE_PERCENT,
+                        'hint'    => LANG_GALLERYPLUS_BILLING_TAKE_PERCENT_HINT,
+                        'default' => 0,
+                    ]),
+
+                    new fieldNumber('billing_percent', [
+                        'title'   => LANG_GALLERYPLUS_BILLING_PERCENT,
+                        'hint'    => LANG_GALLERYPLUS_BILLING_PERCENT_HINT,
+                        'default' => 0,
+                        'rules'   => [['min', 0], ['max', 100]],
+                    ]),
+
+                ]
+            ],
+
         ];
 
     }

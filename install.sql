@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_albums` (
   `privacy_password` varchar(255) DEFAULT NULL,
   `privacy_users` text,
   `allow_upload` tinyint(1) NOT NULL DEFAULT '0',
+  `is_paid` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `slug` (`slug`),
   KEY `user_id` (`user_id`,`date_pub`),
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_photos` (
   `approved_by` int(11) DEFAULT NULL,
   `date_approved` timestamp NULL DEFAULT NULL,
   `ordering` int(11) unsigned NOT NULL DEFAULT '0',
+  `album_preview` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`,`date_pub`),
   KEY `album_id` (`album_id`,`date_pub`,`id`),
@@ -167,4 +169,26 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_updates` (
   `notified_version` varchar(32) DEFAULT NULL,
   `checked_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `{#}galleryplus_album_access` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) unsigned NOT NULL,
+  `album_id` int(11) unsigned NOT NULL,
+  `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_album` (`user_id`,`album_id`),
+  KEY `album_id` (`album_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `{#}galleryplus_original_access` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) unsigned NOT NULL,
+  `photo_id` int(11) unsigned NOT NULL,
+  `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_photo` (`user_id`,`photo_id`),
+  KEY `photo_id` (`photo_id`),
+  KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -174,7 +174,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php if (!empty($use_photo_tags)) { ?>
 <?php $this->addTplJSName('jquery-ui'); $this->addTplCSSName('jquery-ui'); $this->addTplJSName('fields/string_input'); ?>
+<?php ob_start(); ?>
 <script>
 initAutocomplete('galleryplus-tags', true, '/tags/autocomplete', false, ', ');
 </script>
+<?php $this->addBottom(ob_get_clean()); ?>
 <?php } ?>

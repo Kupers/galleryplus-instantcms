@@ -4,6 +4,22 @@
 Gallery+ — full-featured gallery with masonry grid, infinite scroll, lightbox, 6 album privacy levels (password, 18+ included), categories, tags, likes, EXIF/GPS, Leaflet maps, embed codes, and 5 widgets
 AJAX likes, collaborative albums, bcrypt password protection, adult content with karma gate, XMP description extraction, no-crop WebP preset instead of storing originals, 3 view modes (albums, infinite scroll, paged), custom lightbox (swipe/likes/comments/shares), 5 widgets (Random, Photos, Albums, Categories, Map), Leaflet geo-maps, admin cleanup tool
 
+### Paid features (v1.2.0, works with the InstantCMS Billing component)
+
+- Paid photo upload (`add_photo`) — per-photo price, charged from the user's balance
+- Paid album viewing (`view_album`) — first 3 photos free, then a paywall
+- Paid original download (`download_original`) — instead of the free original image
+- Site commission (`billing_take_percent` / `billing_percent`) — % of each sale deducted to the site owner
+- Prices are set per user group in Billing → Prices; feature is disabled by default (action price 0)
+
+### Платные фишки (v1.2.0, работают с компонентом Billing из InstantCMS)
+
+- Платная загрузка фото (`add_photo`) — цена за одно фото, списывается с баланса пользователя
+- Платный просмотр альбома (`view_album`) — первые 3 фото бесплатно, дальше оплата
+- Платное скачивание оригинала (`download_original`) — вместо бесплатного оригинала
+- Комиссия сайта (`billing_take_percent` / `billing_percent`) — % с каждой продажи в пользу владельца сайта
+- Цены задаются по группам в Биллинг → Цены; фичи выключены по умолчанию (цена действия 0)
+
 <img width="1124" height="776" alt="2026-08-10_16-01-13" src="https://github.com/user-attachments/assets/13670c7d-1c25-46c6-a97a-4575de73109c" />
 <img width="1242" height="940" alt="2026-08-10_16-04-30" src="https://github.com/user-attachments/assets/4d309308-a50d-4cbb-8baf-df60947049b0" />
 <img width="1132" height="938" alt="2026-08-10_16-03-57" src="https://github.com/user-attachments/assets/3bc54afb-f66e-4dc7-ba12-04f940b85a29" />

@@ -14,6 +14,7 @@ class actionGalleryplusIndex extends cmsAction {
         $this->model->preset_small  = $this->options['preset_small'] ?? 'galleryplus_thumb';
         $this->model->preset_big    = $this->options['preset_big'] ?? 'galleryplus_big';
         $this->model->preset_nocrop = $this->options['preset_nocrop'] ?? 'galleryplus_nocrop';
+        $this->model->original_paid = $this->billingEnabledFeature('download_original');
         $this->model->adult_karma   = (int)($this->options['adult_karma'] ?? 0);
         $this->model->user_karma    = $user->karma ?? 0;
         $this->model->adult_rating  = (int)($this->options['adult_rating'] ?? 0);
@@ -209,6 +210,7 @@ class actionGalleryplusIndex extends cmsAction {
     }
 
     public function loadMore($page, $explore = 'recent', $category_id = 0) {
+        $this->model->original_paid = $this->billingEnabledFeature('download_original');
         $this->applyExploreOrder($explore);
 
         $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;

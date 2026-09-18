@@ -52,6 +52,16 @@ class actionGalleryplusServe extends cmsAction {
             }
         }
 
+        // Платный оригинал: nocrop/original доступны только оплатившим
+        if (($preset === 'nocrop' || $preset === 'original') && $this->billingEnabledFeature('download_original')) {
+            $uid = (int)$this->cms_user->id;
+            $is_owner = $uid && (int)$photo['user_id'] === $uid;
+            $allowed = $this->cms_user->is_admin || $is_owner || ($uid && $this->model->isOriginalAccessGranted($uid, $photo_id));
+            if (!$allowed) {
+                return cmsCore::error404();
+            }
+        }
+
         $image = cmsModel::yamlToArray($photo['image']);
 
         switch ($preset) {

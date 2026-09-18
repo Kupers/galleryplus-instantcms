@@ -5,7 +5,7 @@
     $this->setPageDescription($photo['content'] ?: $photo['title']);
 
     $photo_url  = $photo['url'] ?? '';
-    $photo_img  = $photo['url_big'] ?? $photo['url_thumb'] ?? '';
+    $photo_img  = $is_paid_blurred ? ($photo['url_thumb'] ?? '') : (($photo['url_big'] ?? $photo['url_thumb'] ?? ''));
     $photo_desc = $photo['content'] ?: ($photo['title'] ?? '');
 
     $this->addHead('<meta property="og:type" content="article">');
@@ -30,13 +30,20 @@
 ?>
 
 <div class="galleryplus-view">
-    <div class="galleryplus-view-image <?php echo $is_blurred ? 'galleryplus-view-image--adult' : ''; ?>">
-        <img src="<?php echo ($photo['url_big'] ?? '') ?: ($photo['url_original'] ?? ''); ?>" alt="<?php html($photo['title'] ?? ''); ?>" id="galleryplus-view-img" data-nocrop="<?php echo htmlspecialchars($photo['url_nocrop'] ?? ''); ?>" <?php echo $is_blurred ? 'class="galleryplus-blurred"' : ''; ?>>
+    <div class="galleryplus-view-image <?php echo $is_blurred ? 'galleryplus-view-image--adult' : ($is_paid_blurred ? 'galleryplus-view-image--paid-blur' : ''); ?>">
+        <img src="<?php echo $is_paid_blurred ? (($photo['url_thumb'] ?? '') ?: ($photo['url_big'] ?? '')) : (($photo['url_big'] ?? '') ?: ($photo['url_original'] ?? '')); ?>" alt="<?php html($photo['title'] ?? ''); ?>" id="galleryplus-view-img" data-nocrop="<?php echo !$can_original ? '' : htmlspecialchars($photo['url_nocrop'] ?? ''); ?>" <?php echo ($is_blurred || $is_paid_blurred) ? 'class="galleryplus-blurred"' : ''; ?>>
         <?php if ($is_blurred) { ?>
             <div class="galleryplus-adult-badge galleryplus-adult-badge--view">18+</div>
             <div class="galleryplus-view-adult-overlay">
                 <p><?php echo defined('LANG_GALLERYPLUS_ADULT_LOGIN') ? LANG_GALLERYPLUS_ADULT_LOGIN : 'Войдите, чтобы посмотреть это фото'; ?></p>
                 <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit"><?php echo defined('LANG_LOGIN') ? LANG_LOGIN : 'Войти'; ?></a>
+            </div>
+        <?php } ?>
+        <?php if ($is_paid_blurred) { ?>
+            <div class="galleryplus-paid-lock-icon galleryplus-paid-lock-icon--view">&#128274;</div>
+            <div class="galleryplus-view-adult-overlay">
+                <p><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED') ? LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED : 'Фото платное'; ?></p>
+                <a href="<?php echo $buy_album_url; ?>" class="galleryplus-btn galleryplus-buy-btn"><?php echo defined('LANG_GALLERYPLUS_BILLING_BUY_ALBUM') ? LANG_GALLERYPLUS_BILLING_BUY_ALBUM : 'Купить просмотр'; ?> (<?php echo $album_view_price_spell; ?>)</a>
             </div>
         <?php } ?>
     </div>
@@ -78,6 +85,8 @@
             <?php } ?>
             <?php if ($is_blurred) { ?>
                 <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit galleryplus-view-login-btn"><?php echo defined('LANG_GALLERYPLUS_VIEW_FULL') ? LANG_GALLERYPLUS_VIEW_FULL : 'Войти для просмотра'; ?></a>
+            <?php } elseif ($is_paid_blurred) { ?>
+                <a href="<?php echo $buy_album_url; ?>" class="galleryplus-btn galleryplus-buy-btn"><?php echo defined('LANG_GALLERYPLUS_BILLING_BUY_ALBUM') ? LANG_GALLERYPLUS_BILLING_BUY_ALBUM : 'Купить просмотр'; ?> (<?php echo $album_view_price_spell; ?>)</a>
             <?php } else { ?>
                 <button class="galleryplus-like-btn <?php echo $user_liked ? 'liked' : ''; ?> <?php echo (!$user->id || !empty($is_owner)) ? 'disabled' : ''; ?>" data-target-id="<?php echo $photo['id']; ?>" data-target-type="photo">
                     <span class="galleryplus-like-icon"><?php echo $user_liked ? '♥' : '♡'; ?></span>
@@ -86,10 +95,11 @@
                 <button class="galleryplus-fav-btn galleryplus-fav-btn--view <?php echo $is_favorite ? 'favorited' : ''; ?> <?php echo !$user->id ? 'disabled' : ''; ?>" data-photo-id="<?php echo $photo['id']; ?>" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE_TOGGLE') ? LANG_GALLERYPLUS_FAVORITE_TOGGLE : 'В избранное'; ?>">
                     <?php echo $is_favorite ? '★' : '☆'; ?>
                 </button>
-                <?php $dl_url = $photo['url_nocrop'] ?: ($photo['url_original'] ?: ''); ?>
-                <?php if ($dl_url) { ?>
+                <?php if (!$can_original && $original_price > 0) { ?>
+                <a href="<?php echo $buy_original_url; ?>" class="galleryplus-dl-btn galleryplus-dl-btn--buy"><?php echo defined('LANG_GALLERYPLUS_BUY_ORIGINAL') ? LANG_GALLERYPLUS_BUY_ORIGINAL : 'Купить оригинал'; ?> (<?php echo $original_price_spell; ?>)</a>
+                <?php } else { $dl_url = $photo['url_nocrop'] ?: ($photo['url_original'] ?: ''); if ($dl_url) { ?>
                 <a href="<?php echo $dl_url; ?>" class="galleryplus-dl-btn" download><?php echo defined('LANG_GALLERYPLUS_DOWNLOAD') ? LANG_GALLERYPLUS_DOWNLOAD : 'Скачать'; ?></a>
-                <?php } ?>
+                <?php } } ?>
             <?php } ?>
         </div>
 
@@ -101,7 +111,7 @@
     </div>
 </div>
 
-    <?php if (!$is_blurred) { ?>
+    <?php if (!$is_blurred && !$is_paid_blurred) { ?>
     <div class="galleryplus-tabs">
         <div class="galleryplus-tabs-nav">
             <button class="active" data-tab="about"><?php echo LANG_GALLERYPLUS_TAB_ABOUT ?? 'About'; ?></button>
@@ -132,7 +142,7 @@
                     return $site_host . $p;
                 };
                 $embed_url  = $to_abs($photo['url']);
-                $embed_original = $photo['url_original'] ?: ($photo['url_nocrop'] ?: '');
+                $embed_original = $can_original ? ($photo['url_original'] ?: ($photo['url_nocrop'] ?: '')) : '';
                 $sizes = ['Original' => $embed_original, 'Full' => $photo['url_big'], 'Medium' => $photo['url_thumb']];
                 $types = [
                     'HTML with link' => function($u, $i, $t) { return '<a href="' . $u . '"><img src="' . $i . '" alt="' . $t . '"></a>'; },
@@ -189,7 +199,16 @@
         <div class="galleryplus-grid galleryplus-similar-grid" id="galleryplus-similar-grid">
             <?php foreach ($similar_photos as $sp) {
                 $spt = htmlspecialchars($sp['title'] ?: ($sp['filename'] ?? ''));
+                $similar_paid_locked = !empty($paid_locked) && empty($sp['url_big']) && empty($sp['album_preview']);
             ?>
+                <?php if ($similar_paid_locked) { ?>
+                    <div class="galleryplus-item galleryplus-item--paid-blur">
+                        <a href="#galleryplus-paywall" class="galleryplus-paid-lock">
+                            <img src="<?php echo $sp['url_thumb']; ?>" alt="<?php echo $spt; ?>" loading="lazy" width="<?php echo $sp['width'] ?? 0; ?>" height="<?php echo $sp['height'] ?? 0; ?>" class="galleryplus-blurred">
+                            <div class="galleryplus-paid-lock-icon">&#128274;</div>
+                        </a>
+                    </div>
+                <?php } else { ?>
                 <div class="galleryplus-item" data-object="<?php echo htmlspecialchars(json_encode([
                     'id'       => $sp['id'],
                     'url'      => $sp['url'],
@@ -214,6 +233,7 @@
                         <a href="<?php echo $sp['url']; ?>" class="galleryplus-item-overlay-title"><?php echo $spt; ?></a>
                     </div>
                 </div>
+                <?php } ?>
             <?php } ?>
         </div>
     </div>
@@ -250,7 +270,7 @@
         });
     });
 
-    // ---- Fullscreen original viewer ----
+    /* ---- Fullscreen original viewer ---- */
     var viewImg = document.getElementById('galleryplus-view-img');
     var origViewer = document.getElementById('galleryplus-original-viewer');
     var origViewerImg = document.getElementById('galleryplus-original-viewer-img');
@@ -261,7 +281,7 @@
 
     if (viewImg && origViewer && !viewImg.classList.contains('galleryplus-blurred')) {
         viewImg.addEventListener('click', function() {
-            var origUrl = viewImg.getAttribute('data-nocrop') || <?php echo json_encode($photo['url_original']); ?>;
+            var origUrl = viewImg.getAttribute('data-nocrop') || <?php echo $can_original ? json_encode($photo['url_original']) : 'null'; ?>;
             if (!origUrl) return;
             origViewerImg.src = origUrl;
             origViewer.style.display = '';

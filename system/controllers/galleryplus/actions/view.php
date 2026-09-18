@@ -18,6 +18,8 @@ class actionGalleryplusView extends cmsAction {
 
         $show_adult_for_guests = (bool)($this->options['show_adult_to_guests'] ?? false);
 
+        $this->model->original_paid = $this->billingEnabledFeature('download_original');
+
         if (!empty($this->options['is_comments_photo'])) {
             $this->cms_template->addTplJSName('jquery-scroll');
             $this->cms_template->addTplJSName('comments');
@@ -51,6 +53,27 @@ class actionGalleryplusView extends cmsAction {
             }
             if (!empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult' && !$this->cms_user->id && $show_adult_for_guests) {
                 $is_blurred = true;
+            }
+        }
+
+        // Платный альбом без доступа: фото без флага preview показываем под блюром + paywall
+        $paid_locked = false;
+        $is_paid_blurred = false;
+        $buy_album_url = '';
+        $album_view_price = 0.0;
+        if (!empty($photo['album']['is_paid'])) {
+            $album_view_price = $this->billingPrice('view_album');
+            $is_paid_owner = $this->cms_user->id && (int)$photo['user_id'] === (int)$this->cms_user->id;
+            $paid_locked = $album_view_price > 0
+                && !$is_paid_owner
+                && !$this->cms_user->is_admin
+                && !($this->cms_user->id && $this->model->isAlbumAccessGranted($this->cms_user->id, (int)$photo['album_id']));
+            if ($paid_locked) {
+                $is_paid_blurred = empty($photo['album_preview']);
+                $back_url = href_to('galleryplus', 'buy_album', [(int)$photo['album_id']]);
+                $buy_album_url = $this->cms_user->id
+                    ? $back_url
+                    : href_to('auth', 'login', [], ['back' => $back_url]);
             }
         }
 
@@ -114,6 +137,18 @@ class actionGalleryplusView extends cmsAction {
 
         $adjacent = $this->model->getAdjacentPhotos($photo['id'], $photo['album_id']);
 
+        $can_original   = !empty($photo['can_original']);
+        $original_price = $this->billingPrice('download_original');
+        $buy_original_url = '';
+        if ($original_price > 0 && !$can_original) {
+            $buy_original_url = $this->cms_user->id
+                ? href_to('galleryplus', 'buy_original', [$photo['id']])
+                : href_to('auth', 'login', [], ['back' => href_to('galleryplus', 'buy_original', [$photo['id']])]);
+        }
+
+        $billing = $this->billing();
+        $billing_currency = $billing && !empty($billing->options) ? ($billing->options['currency'] ?? '') : '';
+
         // Похожие фото (по общим тегам, затем из того же альбома)
         $similar_limit = max(1, (int)($this->options['similar_photos_limit'] ?? 6));
         $similar_photos = [];
@@ -126,6 +161,16 @@ class actionGalleryplusView extends cmsAction {
                 $similar_limit
             );
         }
+        foreach ($similar_photos as &$sp) {
+            if (!$this->model->canDownloadOriginal($sp)) {
+                $sp['url_nocrop'] = $sp['url_original'] = '';
+            }
+            if ($paid_locked && empty($sp['album_preview'])) {
+                // Закрытые фото платного альбома: не отдаём big/оригинал даже в похожих
+                $sp['url_big'] = $sp['url_nocrop'] = $sp['url_original'] = '';
+            }
+        }
+        unset($sp);
 
         return $this->cms_template->render('view', [
             'photo'            => $photo,
@@ -138,6 +183,11 @@ class actionGalleryplusView extends cmsAction {
             'photo_tags'       => $photo_tags,
             'use_photo_tags'   => !empty($this->options['use_photo_tags']),
             'is_blurred'       => $is_blurred,
+            'paid_locked'      => $paid_locked,
+            'is_paid_blurred'  => $is_paid_blurred,
+            'album_view_price' => $album_view_price,
+            'album_view_price_spell' => $this->billingSpellPrice($album_view_price, $billing_currency),
+            'buy_album_url'    => $buy_album_url,
             'hide_exif'        => !empty($this->options['hide_exif']),
             'hide_map'         => !empty($this->options['hide_map']),
             'show_embed_codes' => !empty($this->options['show_embed_codes']),
@@ -146,6 +196,11 @@ class actionGalleryplusView extends cmsAction {
             'prev_photo'       => $adjacent['prev'],
             'next_photo'       => $adjacent['next'],
             'similar_photos'   => $similar_photos,
+            'can_original'     => $can_original,
+            'original_price'   => $original_price,
+            'original_price_spell' => $this->billingSpellPrice($original_price, $billing_currency),
+            'buy_original_url' => $buy_original_url,
+            'billing_currency' => $billing_currency,
         ]);
     }
 

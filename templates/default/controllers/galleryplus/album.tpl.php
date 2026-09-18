@@ -26,12 +26,16 @@
                 <?php } ?>
                 <?php
                     $album_status = '';
+                    if (!empty($album['is_paid'])) {
+                        $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_PAID ?? 'платный';
+                    } else {
                     switch ($album['privacy'] ?? '') {
                         case 'password': $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_PASSWORD ?? 'закрыт паролем'; break;
                         case 'friends':  $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_FRIENDS ?? 'для друзей'; break;
                         case 'users':    $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_USERS ?? 'для выбранных пользователей'; break;
                         case 'private':  $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_PRIVATE ?? 'только я'; break;
                         case 'adult':    $album_status = LANG_GALLERYPLUS_ALBUM_STATUS_ADULT ?? '18+'; break;
+                    }
                     }
                 ?>
                 <?php if ($album_status) { ?>
@@ -55,20 +59,87 @@
     </div>
 
     <?php if (!empty($locked)) { ?>
-        <div class="galleryplus-album-locked">
-            <div class="galleryplus-album-locked-icon">&#128274;</div>
-            <h2><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED; ?></h2>
-            <p><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED_HINT; ?></p>
-            <?php if ($album['privacy'] === 'password') { ?>
+
+        <?php if ($album['privacy'] === 'password') { ?>
+            <div class="galleryplus-album-locked">
+                <div class="galleryplus-album-locked-icon">&#128274;</div>
+                <h2><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED; ?></h2>
+                <p><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED_HINT; ?></p>
                 <form action="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" method="post" class="galleryplus-album-password-form">
                     <input type="hidden" name="csrf_token" value="<?php echo cmsForm::getCSRFToken(); ?>">
                     <input type="password" name="album_password" class="form-control" placeholder="<?php echo LANG_GALLERYPLUS_ALBUM_PASSWORD; ?>" required>
                     <button type="submit" class="btn btn-primary"><?php echo LANG_SUBMIT; ?></button>
                 </form>
-            <?php } else { ?>
-                <p><a href="<?php echo href_to('auth', 'login'); ?>"><?php echo LANG_LOG_IN; ?></a></p>
+            </div>
+        <?php } elseif (!empty($view_paid)) { ?>
+
+            <?php if ($photos) { ?>
+                <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>">
+                    <?php foreach ($photos as $photo) {
+                        $is_preview = !empty($photo['album_preview']);
+                        $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
+                        $is_adult = !empty($photo['is_adult']);
+                        if ($is_preview) {
+                            $author = htmlspecialchars($photo['user']['nickname'] ?? '');
+                            $avatar = $photo['user']['avatar'] ?? '';
+                            $obj = htmlspecialchars(json_encode([
+                                'id'       => $photo['id'],
+                                'url'      => $photo['url'],
+                                'src'      => $photo['url_big'],
+                                'nocrop'   => !empty($photo['can_original']) ? ($photo['url_nocrop'] ?: '') : '',
+                                'thumb'    => $photo['url_thumb'],
+                                'title'    => $title,
+                                'author'   => $author,
+                                'avatar'   => $avatar,
+                                'adult'    => $is_adult,
+                                'likes'    => $photo['likes_count'] ?? 0,
+                                'liked'    => !empty($photo['is_liked']),
+                                'favorite' => !empty($photo['is_favorite']),
+                                'owner_id' => $photo['user_id'],
+                                'comments' => $photo['comments'] ?? 0,
+                                'desc'     => $photo['content'] ?? '',
+                            ], JSON_UNESCAPED_UNICODE));
+                    ?>
+                            <div class="galleryplus-item<?php echo $is_adult ? ' galleryplus-item--adult' : ''; ?>" data-object="<?php echo $obj; ?>">
+                                <a href="<?php echo $photo['url']; ?>" class="galleryplus-viewer-link">
+                                    <img src="<?php echo $photo['url_thumb']; ?>" alt="<?php echo $title; ?>" loading="lazy" width="<?php echo $photo['width'] ?? 0; ?>" height="<?php echo $photo['height'] ?? 0; ?>" class="<?php echo $is_adult ? 'galleryplus-blurred' : ''; ?>">
+                                    <?php if ($is_adult) { ?><div class="galleryplus-adult-badge">18+</div><?php } ?>
+                                </a>
+                            </div>
+                        <?php } else { ?>
+                            <div class="galleryplus-item galleryplus-item--paid-blur">
+                                <a href="#galleryplus-paywall" class="galleryplus-paid-lock">
+                                    <img src="<?php echo $photo['url_thumb']; ?>" alt="<?php echo $title; ?>" loading="lazy" width="<?php echo $photo['width'] ?? 0; ?>" height="<?php echo $photo['height'] ?? 0; ?>" class="galleryplus-blurred">
+                                    <div class="galleryplus-paid-lock-icon">&#128274;</div>
+                                </a>
+                            </div>
+                        <?php }
+                    } ?>
+                </div>
+
+                <?php if ($has_next) { ?>
+                    <div class="galleryplus-loading" id="galleryplus-loading">
+                        <div class="galleryplus-spinner"></div>
+                    </div>
+                <?php } ?>
             <?php } ?>
-        </div>
+
+            <div class="galleryplus-paywall" id="galleryplus-paywall">
+                <div class="galleryplus-paywall-icon">&#128274;</div>
+                <h3><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED') ? LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED : 'Остальные фото платные'; ?></h3>
+                <p><?php echo sprintf(defined('LANG_GALLERYPLUS_BILLING_ALBUM_HINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_HINT : 'Открыто только %1$d из %2$d фото.', $preview_count ?? 0, $album_photo_count ?? 0); ?></p>
+                <a href="<?php echo $buy_url; ?>" class="galleryplus-btn galleryplus-buy-btn"><?php echo defined('LANG_GALLERYPLUS_BILLING_BUY_ALBUM') ? LANG_GALLERYPLUS_BILLING_BUY_ALBUM : 'Купить просмотр'; ?> (<?php echo $view_price_spell; ?>)</a>
+            </div>
+
+        <?php } else { ?>
+            <div class="galleryplus-album-locked">
+                <div class="galleryplus-album-locked-icon">&#128274;</div>
+                <h2><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED; ?></h2>
+                <p><?php echo LANG_GALLERYPLUS_ALBUM_LOCKED_HINT; ?></p>
+                <p><a href="<?php echo href_to('auth', 'login'); ?>"><?php echo LANG_LOG_IN; ?></a></p>
+            </div>
+        <?php } ?>
+
     <?php } else { ?>
 
         <?php if ($can_select) { ?>
@@ -107,7 +178,7 @@
                     'id'       => $photo['id'],
                     'url'      => $photo['url'],
                     'src'      => $photo['url_big'],
-                    'nocrop'   => $photo['url_nocrop'] ?: '',
+                    'nocrop'   => !empty($photo['can_original']) ? ($photo['url_nocrop'] ?: '') : '',
                     'thumb'    => $photo['url_thumb'],
                     'title'    => $title,
                     'author'   => $author,
@@ -146,6 +217,15 @@
                 </div>
             <?php } ?>
         </div>
+
+        <?php if (!empty($view_paid)) { ?>
+            <div class="galleryplus-paywall" id="galleryplus-paywall">
+                <div class="galleryplus-paywall-icon">&#128274;</div>
+                <h3><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED') ? LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED : 'Остальные фото платные'; ?></h3>
+                <p><?php echo sprintf(defined('LANG_GALLERYPLUS_BILLING_ALBUM_HINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_HINT : 'Открыты только первые %1$d из %2$d фото.', $preview_count ?? 3, $album_photo_count ?? 0); ?></p>
+                <a href="<?php echo $buy_url; ?>" class="galleryplus-btn galleryplus-buy-btn"><?php echo defined('LANG_GALLERYPLUS_BILLING_BUY_ALBUM') ? LANG_GALLERYPLUS_BILLING_BUY_ALBUM : 'Купить просмотр'; ?> (<?php echo $view_price_spell; ?>)</a>
+            </div>
+        <?php } ?>
 
         <?php if ($has_next) { ?>
             <div class="galleryplus-loading" id="galleryplus-loading">

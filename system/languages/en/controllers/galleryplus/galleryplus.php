@@ -118,11 +118,14 @@
     define('LANG_GALLERYPLUS_PRIVACY_PASSWORD_HELP','Leave empty to reset current password');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT',         '18+');
     define('LANG_GALLERYPLUS_PRIVACY_ADULT_HINT',   'Adult content. Blurred thumbnails, only logged-in users can view');
+    define('LANG_GALLERYPLUS_PRIVACY_PAID',          'Paid');
+    define('LANG_GALLERYPLUS_PRIVACY_PAID_HINT',     'Some photos are open, the rest are blurred until viewing is paid');
     define('LANG_GALLERYPLUS_ALBUM_STATUS_PASSWORD',  'closed by password');
     define('LANG_GALLERYPLUS_ALBUM_STATUS_FRIENDS',   'for friends');
     define('LANG_GALLERYPLUS_ALBUM_STATUS_USERS',     'for selected users');
     define('LANG_GALLERYPLUS_ALBUM_STATUS_PRIVATE',   'only me');
     define('LANG_GALLERYPLUS_ALBUM_STATUS_ADULT',     '18+');
+    define('LANG_GALLERYPLUS_ALBUM_STATUS_PAID',      'paid album');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD',      'Allow others to upload');
     define('LANG_GALLERYPLUS_ALBUM_ALLOW_UPLOAD_HINT', 'Other users will be able to upload photos to this album');
     define('LANG_GALLERYPLUS_ALBUM_SEARCH_PLACEHOLDER','Start typing album name...');
@@ -263,3 +266,31 @@
     define('LANG_GALLERYPLUS_FAVORITE_ADDED',      'Added to favorites');
     define('LANG_GALLERYPLUS_FAVORITE_REMOVED',    'Removed from favorites');
     define('LANG_GALLERYPLUS_SIMILAR',             'Similar photos');
+
+    define('LANG_GALLERYPLUS_BUY_ORIGINAL',        'Buy original');
+    define('LANG_GALLERYPLUS_BILLING_NOT_ENOUGH',  'Insufficient funds on your balance.');
+    define('LANG_GALLERYPLUS_BILLING_CHARGE_ERROR','Failed to charge for photo upload.');
+    define('LANG_GALLERYPLUS_BILLING_ERROR_TRY',   'Payment error, please try again.');
+    define('LANG_GALLERYPLUS_BILLING_BUY_SUCCESS', 'Purchase completed successfully.');
+    define('LANG_GALLERYPLUS_BILLING_UPLOAD_HINT', 'Cost of uploading one photo: %s');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_LOCKED','Rest of album photos are paid');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_HINT',  'Only the first %1$d of %2$d photos are shown.');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_LABEL', 'Photos to show without blur');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_HINT',  'Checked photos will be visible to everyone, the rest stay blurred until access is paid');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_EMPTY', 'No photos in the album yet. After uploading, return here to pick the open photos.');
+    define('LANG_GALLERYPLUS_BILLING_BUY_ALBUM',   'Buy view');
+    define('LANG_GALLERYPLUS_BILLING_BUY_ALBUM_TITLE', 'View album "%s"');
+    define('LANG_GALLERYPLUS_BILLING_BUY_ORIGINAL_TITLE', 'Original of photo "%s"');
+    define('LANG_GALLERYPLUS_BILLING_BUY_CONFIRM', 'Purchase confirmation');
+    define('LANG_GALLERYPLUS_BILLING_BUY_CONFIRM_PRICE', 'Price:');
+    define('LANG_GALLERYPLUS_BILLING_BUY_CONFIRM_BALANCE', 'Balance:');
+    define('LANG_GALLERYPLUS_BILLING_BUY_ALBUM_ITEM', 'Album:');
+    define('LANG_GALLERYPLUS_BILLING_BUY_ORIGINAL_ITEM', 'Photo:');
+    define('LANG_GALLERYPLUS_BILLING_BUY',         'Buy');
+
+    define('LANG_GALLERYPLUS_BILLING_TAB',              'Paid options');
+    define('LANG_GALLERYPLUS_BILLING_TAKE_PERCENT',     'Site takes a commission');
+    define('LANG_GALLERYPLUS_BILLING_TAKE_PERCENT_HINT','Deduct a commission from album access and original sales; the rest goes to the author');
+    define('LANG_GALLERYPLUS_BILLING_PERCENT',          'Site commission, %');
+    define('LANG_GALLERYPLUS_BILLING_PERCENT_HINT',     'Percentage of the purchase amount kept by the site (0–100)');
+    define('LANG_GALLERYPLUS_BILLING_AUTHOR_PAYOUT',    'Sale: %s');
