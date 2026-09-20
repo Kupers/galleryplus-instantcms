@@ -12,6 +12,7 @@ class modelGalleryplus extends cmsModel {
     public $adult_rating  = 0;
     public $user_rating   = 0;
     public $skip_visible_albums_filter = false;
+    public $skip_paid_filter = false;
 
     /**
      * При включении платного скачивания оригинала
@@ -374,7 +375,10 @@ class modelGalleryplus extends cmsModel {
         if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
         if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
         if ($album_id) {
+            // Счётчик для карточки/страницы альбома: считаем все фото альбома,
+            // платный фильтр тут не нужен, иначе для гостя счётчик показывает только preview
             $this->filterEqual('i.album_id', $album_id);
+            $this->skip_paid_filter = true;
         } elseif ($category_id) {
             $this->join('galleryplus_albums', 'a', 'i.album_id = a.id');
             $this->filterEqual('a.category_id', $category_id);
@@ -382,6 +386,7 @@ class modelGalleryplus extends cmsModel {
         $current_user_id = cmsUser::get('id');
         $this->filterVisibleAlbums($current_user_id, $include_adult_for_guests);
         $count = $this->getCount('galleryplus_photos');
+        $this->skip_paid_filter = false;
         $this->resetFilters();
         return $count;
     }
@@ -754,7 +759,9 @@ class modelGalleryplus extends cmsModel {
         } else {
             $this->filter("gp_a.privacy = 'public'");
         }
-        $this->filterPaidAlbumPhotos($user_id);
+        if (!$this->skip_paid_filter) {
+            $this->filterPaidAlbumPhotos($user_id);
+        }
         return $this;
     }
 

@@ -175,6 +175,45 @@ class galleryplus extends cmsFrontend {
     }
 
     /**
+     * Наименьшая положительная цена действия среди всех групп.
+     * Нужна для paywall гостю, у которого группа (0) в прайсе не задана.
+     */
+    public function billingAnyPositivePrice($name) {
+        $b = $this->billing();
+        if (!$b) { return 0.0; }
+        list(, $action) = $b->getPriceAndAction('galleryplus', $name);
+        if (!$action) { return 0.0; }
+        $found = 0.0;
+        foreach ((array)$action['prices'] as $price) {
+            $price = (float)$price;
+            if ($price > 0 && ($found <= 0 || $price < $found)) {
+                $found = $price;
+            }
+        }
+        return $found;
+    }
+
+    /**
+     * Цена, по которой альбом считается платным и показывается в paywall.
+     * Гостю возвращается минимальная цена действия view_album, даже если для
+     * его группы она не задана — иначе незарегистрированные обходили бы оплату.
+     */
+    public function albumLockPrice($album, $user_id = 0) {
+        $custom = isset($album['price']) ? trim((string)$album['price']) : '';
+        if ($custom !== '' && is_numeric($custom)) {
+            $price = (float)$custom;
+            if ($price >= 0) { return $price; }
+        }
+        $price = $this->billingPrice('view_album', $user_id);
+        if ($price > 0) { return $price; }
+        if (!$user_id) {
+            $price = $this->billingAnyPositivePrice('view_album');
+            if ($price > 0) { return $price; }
+        }
+        return 0.0;
+    }
+
+    /**
      * Услуга активна глобально (хотя бы для одной группы цена > 0).
      * Используется для гейтинга url-ов оригинала.
      */

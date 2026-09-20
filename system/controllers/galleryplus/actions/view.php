@@ -62,7 +62,7 @@ class actionGalleryplusView extends cmsAction {
         $buy_album_url = '';
         $album_view_price = 0.0;
         if (!empty($photo['album']['is_paid'])) {
-            $album_view_price = $this->albumViewPrice($photo['album']);
+            $album_view_price = $this->albumLockPrice($photo['album'], $this->cms_user->id);
             $is_paid_owner = $this->cms_user->id && (int)$photo['user_id'] === (int)$this->cms_user->id;
             $paid_locked = $album_view_price > 0
                 && !$is_paid_owner
@@ -144,6 +144,14 @@ class actionGalleryplusView extends cmsAction {
             $buy_original_url = $this->cms_user->id
                 ? href_to('galleryplus', 'buy_original', [$photo['id']])
                 : href_to('auth', 'login', [], ['back' => href_to('galleryplus', 'buy_original', [$photo['id']])]);
+        }
+
+        if ($paid_locked && empty($photo['album_preview'])) {
+            // Закрытые фото платного альбома: не отдаём big/оригинал. Preview-фото показываем бесплатно
+            $can_original = false;
+            $original_price = 0.0;
+            $buy_original_url = '';
+            $photo['url_big'] = $photo['url_nocrop'] = $photo['url_original'] = '';
         }
 
         $billing = $this->billing();

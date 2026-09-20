@@ -52,11 +52,24 @@ class actionGalleryplusServe extends cmsAction {
             }
         }
 
-        // Платный оригинал: nocrop/original доступны только оплатившим
-        if (($preset === 'nocrop' || $preset === 'original') && $this->billingEnabledFeature('download_original')) {
+        // Платный оригинал: nocrop/original доступны только оплатившим.
+        // Для платного альбома дополнительно требуется доступ к альбому (гостю закрыто).
+        if ($preset === 'nocrop' || $preset === 'original') {
             $uid = (int)$this->cms_user->id;
             $is_owner = $uid && (int)$photo['user_id'] === $uid;
-            $allowed = $this->cms_user->is_admin || $is_owner || ($uid && $this->model->isOriginalAccessGranted($uid, $photo_id));
+            $allowed = $this->cms_user->is_admin || $is_owner;
+            if (!$allowed) {
+                $album_is_paid = $this->albumLockPrice($album, $this->cms_user->id) > 0;
+                $has_album_access = $uid && $this->model->isAlbumAccessGranted($uid, (int)$photo['album_id']);
+                if ($album_is_paid) {
+                    $allowed = $has_album_access;
+                    if ($allowed && $this->billingEnabledFeature('download_original')) {
+                        $allowed = $uid && $this->model->isOriginalAccessGranted($uid, (int)$photo['id']);
+                    }
+                } else {
+                    $allowed = !$this->billingEnabledFeature('download_original') || ($uid && $this->model->isOriginalAccessGranted($uid, (int)$photo['id']));
+                }
+            }
             if (!$allowed) {
                 return cmsCore::error404();
             }
