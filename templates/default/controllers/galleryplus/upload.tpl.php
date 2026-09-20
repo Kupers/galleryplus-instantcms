@@ -118,6 +118,12 @@
                             <input type="radio" id="priv-paid" name="settings-privacy" value="paid" class="custom-control-input">
                             <label class="custom-control-label" for="priv-paid"><strong><?php echo LANG_GALLERYPLUS_PRIVACY_PAID ?? 'Платный'; ?></strong></label>
                         </div>
+                        <?php if (!empty($allow_user_price)) { ?>
+                        <div class="galleryplus-privacy-sub-input" id="priv-price-input" style="display:none">
+                            <input type="text" id="settings-price" class="form-control" placeholder="<?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT : 'Цена просмотра (пусто — из админки)'; ?>">
+                            <small class="text-muted"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT : '0 — бесплатное просмотр; пусто — цена админа из Биллинга'; ?></small>
+                        </div>
+                        <?php } ?>
                     </div>
                 </div>
                 <div class="galleryplus-settings-section">
@@ -193,11 +199,15 @@
     var privRadios = document.querySelectorAll('#galleryplus-album-settings input[name="settings-privacy"]');
     var privUsersInput = document.getElementById('priv-users-input');
     var privPasswordInput = document.getElementById('priv-password-input');
+    var privPriceInput = document.getElementById('priv-price-input');
 
     privRadios.forEach(function(r) {
         r.addEventListener('change', function() {
             privUsersInput.style.display = this.value === 'users' ? '' : 'none';
             privPasswordInput.style.display = this.value === 'password' ? '' : 'none';
+            if (privPriceInput) {
+                privPriceInput.style.display = this.value === 'paid' ? '' : 'none';
+            }
         });
     });
 
@@ -265,6 +275,7 @@
             var pubRadio = document.getElementById('priv-public');
             if (pubRadio) { pubRadio.checked = true; }
             if (settingsAllowUpload) { settingsAllowUpload.checked = false; }
+            if (privPriceInput) { privPriceInput.style.display = 'none'; document.getElementById('settings-price').value = ''; }
             privUsersInput.style.display = 'none';
             privPasswordInput.style.display = 'none';
         } else {
@@ -362,6 +373,9 @@
             }
             if (checkedPrivacy.value === 'password') {
                 data.append('password', document.getElementById('settings-password').value);
+            }
+            if (checkedPrivacy.value === 'paid' && privPriceInput) {
+                data.append('price', document.getElementById('settings-price').value);
             }
         }
 

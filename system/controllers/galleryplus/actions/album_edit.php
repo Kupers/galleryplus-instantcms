@@ -64,6 +64,23 @@ class actionGalleryplusAlbumEdit extends cmsAction {
                 }
             }
 
+            // Пер-альбомная цена просмотра (если разрешена админом)
+            $allow_user_price = !empty($this->options['billing_allow_user_price']);
+            if ($allow_user_price) {
+                if ($privacy === 'paid') {
+                    $raw_price = trim((string)$this->request->get('price', ''));
+                    if ($raw_price === '') {
+                        $update['price'] = null;
+                    } else {
+                        $raw_price = str_replace(',', '.', $raw_price);
+                        $price     = is_numeric($raw_price) ? (float)$raw_price : 0.0;
+                        $update['price'] = round(max(0.0, min(99999999, $price)), 2);
+                    }
+                } else {
+                    $update['price'] = null;
+                }
+            }
+
             if ($privacy === 'password' && $password) {
                 $update['privacy_password'] = password_hash($password, PASSWORD_DEFAULT);
             } elseif ($privacy !== 'password') {
@@ -132,6 +149,8 @@ class actionGalleryplusAlbumEdit extends cmsAction {
             $album_tags = $tags_model->getTagsForTarget('galleryplus', 'album', $album['id']);
         }
 
+        $allow_user_price = !empty($this->options['billing_allow_user_price']);
+
         return $this->cms_template->render('album_edit', [
             'album'      => $album,
             'user'       => $this->cms_user,
@@ -139,6 +158,7 @@ class actionGalleryplusAlbumEdit extends cmsAction {
             'edit_photos' => $edit_photos,
             'use_album_tags' => $use_album_tags,
             'album_tags' => $album_tags,
+            'allow_user_price' => $allow_user_price,
         ]);
     }
 

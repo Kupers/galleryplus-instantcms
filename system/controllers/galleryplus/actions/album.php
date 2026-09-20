@@ -117,7 +117,7 @@ class actionGalleryplusAlbum extends cmsAction {
 
         $this->model->original_paid = $this->billingEnabledFeature('download_original');
 
-        $view_price     = $this->billingPrice('view_album');
+        $view_price     = $this->albumViewPrice($album);
         $view_paid      = !empty($album['is_paid']) && $view_price > 0 && !$is_owner && !$this->cms_user->is_admin;
         $has_view_access = !$view_paid || ($this->cms_user->id && $this->model->isAlbumAccessGranted($this->cms_user->id, $album['id']));
 

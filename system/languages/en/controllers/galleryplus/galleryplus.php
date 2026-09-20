@@ -294,3 +294,8 @@
     define('LANG_GALLERYPLUS_BILLING_PERCENT',          'Site commission, %');
     define('LANG_GALLERYPLUS_BILLING_PERCENT_HINT',     'Percentage of the purchase amount kept by the site (0–100)');
     define('LANG_GALLERYPLUS_BILLING_AUTHOR_PAYOUT',    'Sale: %s');
+    define('LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE',     'Allow users to set their album price');
+    define('LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE_HINT','Album owners can set their own viewing price; if none is set, the admin price from Billing is used');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE',      'Album view price');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT', 'Leave empty to use the admin price from Billing; 0 — free viewing');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT', 'The price applies to all users. The site commission is deducted from each sale, the rest goes to you.');

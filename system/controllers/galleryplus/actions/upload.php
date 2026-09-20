@@ -86,6 +86,7 @@ class actionGalleryplusUpload extends cmsAction {
             'use_photo_tags' => !empty($this->options['use_photo_tags']),
             'add_price'   => $add_price,
             'add_price_spell' => $this->billingSpellPrice($add_price, $billing_currency),
+            'allow_user_price' => !empty($this->options['billing_allow_user_price']),
         ]);
     }
 
@@ -114,6 +115,8 @@ class actionGalleryplusUpload extends cmsAction {
         $is_paid = ($privacy === 'paid') ? 1 : 0;
         if ($is_paid) { $privacy = 'public'; }
 
+        $allow_user_price = !empty($this->options['billing_allow_user_price']);
+
         $privacy_users = null;
         $privacy_password = null;
         if ($privacy === 'users') {
@@ -134,6 +137,16 @@ class actionGalleryplusUpload extends cmsAction {
             }
         }
 
+        $album_price = null;
+        if ($is_paid && $allow_user_price) {
+            $raw_price = trim((string)$this->request->get('price', ''));
+            if ($raw_price !== '') {
+                $raw_price = str_replace(',', '.', $raw_price);
+                $price     = is_numeric($raw_price) ? (float)$raw_price : 0.0;
+                $album_price = round(max(0.0, min(99999999, $price)), 2);
+            }
+        }
+
         $album_id = $this->model->insert('galleryplus_albums', [
             'title'          => strip_tags($title),
             'slug'           => $slug,
@@ -145,6 +158,7 @@ class actionGalleryplusUpload extends cmsAction {
             'category_id'    => (int)$this->request->get('category_id', 0),
             'allow_upload'   => (int)$this->request->get('allow_upload', 0),
             'is_paid'        => $is_paid,
+            'price'          => $album_price,
             'date_pub'       => null,
         ]);
 
@@ -217,6 +231,22 @@ class actionGalleryplusUpload extends cmsAction {
                 $update['privacy_users'] = $user_ids ? implode(',', $user_ids) : null;
             } else {
                 $update['privacy_users'] = null;
+            }
+            // Пер-альбомная цена просмотра (если разрешена админом)
+            $allow_user_price = !empty($this->options['billing_allow_user_price']);
+            if ($allow_user_price) {
+                if ($is_paid) {
+                    $raw_price = trim((string)$this->request->get('price', ''));
+                    if ($raw_price === '') {
+                        $update['price'] = null;
+                    } else {
+                        $raw_price = str_replace(',', '.', $raw_price);
+                        $price     = is_numeric($raw_price) ? (float)$raw_price : 0.0;
+                        $update['price'] = round(max(0.0, min(99999999, $price)), 2);
+                    }
+                } else {
+                    $update['price'] = null;
+                }
             }
         }
 

@@ -298,3 +298,8 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_BILLING_PERCENT',          'Процент сайта, %');
     define('LANG_GALLERYPLUS_BILLING_PERCENT_HINT',     'Сколько процентов от суммы покупки остаётся сайту (0–100)');
     define('LANG_GALLERYPLUS_BILLING_AUTHOR_PAYOUT',    'Продажа: %s');
+    define('LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE',     'Разрешить пользователям назначать цену на свои альбомы');
+    define('LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE_HINT','Владелец сможет задать свою цену просмотра альбома; если цена не задана, используется цена админа из Биллинга');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE',      'Цена просмотра альбома');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT', 'Пусто — использовать цену админа из Биллинга; 0 — бесплатный просмотр');
+    define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT', 'Цена действует для всех пользователей. С каждой продажи удерживается процент сайта, остальное зачисляется вам.');

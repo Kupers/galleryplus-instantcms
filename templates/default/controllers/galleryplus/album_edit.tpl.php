@@ -154,6 +154,13 @@
                         <small class="text-muted"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_EMPTY') ? LANG_GALLERYPLUS_BILLING_ALBUM_PREVIEW_EMPTY : 'В альбоме пока нет фото. После загрузки вернитесь сюда, чтобы выбрать открытые фото.'; ?></small>
                     <?php } ?>
                 </div>
+                <?php if (!empty($allow_user_price)) { ?>
+                <div class="form-group">
+                    <label for="galleryplus-album-price"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE') ? LANG_GALLERYPLUS_BILLING_ALBUM_PRICE : 'Цена просмотра альбома'; ?></label>
+                    <input type="text" id="galleryplus-album-price" name="price" class="form-control" value="<?php $ap = $album['price'] ?? null; echo ($ap !== null && $ap !== '') ? htmlspecialchars((string)$ap) : ''; ?>" placeholder="<?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT : 'Пусто — цена из админки Биллинга'; ?>">
+                    <small class="text-muted"><?php echo defined('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT') ? LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT : 'Цена действует для всех пользователей. С продажи удерживается процент сайта.'; ?></small>
+                </div>
+                <?php } ?>
             </div>
         </div>
 

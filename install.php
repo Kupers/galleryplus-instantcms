@@ -41,6 +41,9 @@ function after_install_package() {
     // Set default controller options
     try {
         $options_yaml = "---\npreset_small: galleryplus_thumb\npreset_big: galleryplus_big\nordering: date_pub\norderto: desc\nlimit: 24\nview_all: [ ]\nlike: [ ]\nseo_h1: \"\"\nseo_title: \"\"\nseo_keys: \"\"\nseo_desc: \"\"\nnaming_scheme: mixed\nmax_file_size: 0\nmax_width: 0\nmax_height: 0\ndefault_mode: infinite\nshow_adult_in_feed: 1\nshow_adult_to_guests: 1\nis_comments_photo: 1\nis_comments_album: null\nshow_original: 1\npreset_nocrop: galleryplus_nocrop\nuse_categories: 1\nuse_album_tags: 1\nuse_photo_tags: 1\nupload_karma: 0\nadult_karma: 0\nadult_rating: 0\nhide_empty_albums: 1\nhide_exif: null\nshow_embed_codes: 1\nhide_map: null\nshow_lightbox_desc: 1\nlogging_enabled: 1
+billing_take_percent: 0
+billing_percent: 0
+billing_allow_user_price: 0
 map_center_lat: 59.938933
 map_center_lng: 30.315721\n";
         @$db->query("UPDATE `{#}controllers` SET `options` = '" . $db->escape($options_yaml) . "' WHERE `name` = 'galleryplus'");
@@ -71,6 +74,9 @@ map_center_lng: 30.315721\n";
         }
         if (!$has('is_paid')) {
             @$db->query("ALTER TABLE `{#}galleryplus_albums` ADD `is_paid` tinyint(1) NOT NULL DEFAULT '0' AFTER `allow_upload`");
+        }
+        if (!$has('price')) {
+            @$db->query("ALTER TABLE `{#}galleryplus_albums` ADD `price` decimal(10,2) DEFAULT NULL AFTER `is_paid`");
         }
 
         $photo_table_fields = $db->getTableFields('galleryplus_photos');

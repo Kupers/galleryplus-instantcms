@@ -146,11 +146,32 @@ class galleryplus extends cmsFrontend {
     /**
      * Списание за действие. Внутри processAction проверяет открытую
      * транзакцию: если она запущена на billing-модели, коммит не делается.
+     * При передаче $amount списывается своя сумма (пер-альбомная цена);
+     * запись в журнал сохраняет привязку к billing-действию.
      */
-    public function billingCharge($name, $user_id) {
+    public function billingCharge($name, $user_id, $amount = null) {
         $b = $this->billing();
         if (!$b || !$user_id) { return true; }
-        return $b->processAction('galleryplus', $name, $user_id);
+        if ($amount === null) {
+            return $b->processAction('galleryplus', $name, $user_id);
+        }
+        $amount = (float)$amount;
+        if ($amount <= 0) { return true; }
+        list(, $action) = $b->getPriceAndAction('galleryplus', $name, $user_id);
+        if (!$action) { return true; }
+        return $b->model->decrementUserBalance($user_id, $amount, $action['title'], (int)$action['id']);
+    }
+
+    /**
+     * Цена просмотра альбома: своя цена владельца (поле price), если задана,
+     * иначе — глобальная цена админа из Биллинга.
+     */
+    public function albumViewPrice($album) {
+        $custom = $album['price'] ?? null;
+        if ($custom === null || $custom === '' || !is_numeric($custom)) {
+            return $this->billingPrice('view_album');
+        }
+        return (float)$custom;
     }
 
     /**

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_albums` (
   `privacy_users` text,
   `allow_upload` tinyint(1) NOT NULL DEFAULT '0',
   `is_paid` tinyint(1) NOT NULL DEFAULT '0',
+  `price` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `slug` (`slug`),
   KEY `user_id` (`user_id`,`date_pub`),

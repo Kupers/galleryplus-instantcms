@@ -33,7 +33,7 @@ class actionGalleryplusBuyAlbum extends cmsAction {
         $billing = $this->billing();
         if (!$billing) { return $this->redirect($album_url); }
 
-        $price = $this->billingPrice('view_album');
+        $price = $this->albumViewPrice($album);
         if ($price <= 0) { return $this->redirect($album_url); }
 
         $billing_model = $billing->model;
@@ -72,7 +72,7 @@ class actionGalleryplusBuyAlbum extends cmsAction {
             return $this->redirectTo('galleryplus', 'buy_album', [$album_id]);
         }
 
-        $success = $this->billingCharge('view_album', $this->cms_user->id);
+        $success = $this->billingCharge('view_album', $this->cms_user->id, $price);
 
         if ($success) {
 

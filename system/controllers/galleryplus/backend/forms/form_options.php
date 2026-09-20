@@ -286,6 +286,12 @@ class formGalleryplusOptions extends cmsForm {
                         'rules'   => [['min', 0], ['max', 100]],
                     ]),
 
+                    new fieldCheckbox('billing_allow_user_price', [
+                        'title'   => LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE,
+                        'hint'    => LANG_GALLERYPLUS_BILLING_ALLOW_USER_PRICE_HINT,
+                        'default' => 0,
+                    ]),
+
                 ]
             ],
 

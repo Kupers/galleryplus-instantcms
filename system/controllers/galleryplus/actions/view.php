@@ -62,7 +62,7 @@ class actionGalleryplusView extends cmsAction {
         $buy_album_url = '';
         $album_view_price = 0.0;
         if (!empty($photo['album']['is_paid'])) {
-            $album_view_price = $this->billingPrice('view_album');
+            $album_view_price = $this->albumViewPrice($photo['album']);
             $is_paid_owner = $this->cms_user->id && (int)$photo['user_id'] === (int)$this->cms_user->id;
             $paid_locked = $album_view_price > 0
                 && !$is_paid_owner
