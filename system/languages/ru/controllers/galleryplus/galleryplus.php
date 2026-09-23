@@ -11,6 +11,7 @@
     define('LANG_GALLERYPLUS_TAB_ABOUT',        'Описание');
     define('LANG_GALLERYPLUS_TAB_EXIF',         'EXIF');
     define('LANG_GALLERYPLUS_NO_DESC',          'Нет описания');
+    define('LANG_GALLERYPLUS_MAP_MORE',         'Подробнее');
     define('LANG_GALLERYPLUS_NO_EXIF',          'Нет EXIF-данных');
     define('LANG_GALLERYPLUS_IN_ALBUM',         'В альбоме');
     define('LANG_GALLERYPLUS_PHOTOS',           'фото');
@@ -255,6 +256,10 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG_HINT', 'Координаты центра карты по умолчанию (долгота)');
     define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC',      'Определять местоположение пользователя');
     define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT', 'Центр карты ставится по геолокации посетителя (по IP, без запроса); если определить не удалось — используется заданный центр');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC',      'Показывать описание в попапе');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC_HINT', 'Выводить текст описания фотографии под миниатюрой маркера');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT',     'Лимит символов описания');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT_HINT','0 — выводить описание целиком');
 
     define('LANG_GALLERYPLUS_WIDGET_ALBUMS',        'Альбомы');
     define('LANG_GALLERYPLUS_WIDGET_PHOTOS',        'Последние фото');

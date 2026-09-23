@@ -2731,12 +2731,14 @@ body.galleryplus-selecting .galleryplus-item > .galleryplus-checkbox-wrap {
 }
 .galleryplus-map-popup .leaflet-popup-content {
     margin: 0 !important;
+    width: 160px;
 }
 .galleryplus-map-popup-thumb {
     width: 120px;
     height: 90px;
     object-fit: cover;
     display: block;
+    margin: 0 auto;
     cursor: pointer;
 }
 .galleryplus-map-popup-link {
@@ -2744,6 +2746,28 @@ body.galleryplus-selecting .galleryplus-item > .galleryplus-checkbox-wrap {
     color: inherit;
     font-weight: 600;
     font-size: 13px;
+    display: block;
+}
+.galleryplus-map-popup-desc {
+    display: block;
+    padding: 6px 10px;
+    color: #555;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+    max-height: 84px;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.galleryplus-map-popup-more {
+    display: block;
+    padding: 6px 10px 8px;
+    color: #4a6fa5;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
 }
 .galleryplus-edit-map-section {
     margin-top: 16px;

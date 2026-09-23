@@ -93,7 +93,7 @@ FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `{#}images_presets` WHERE `name` = 'galleryplus_thumb');
 
 INSERT INTO `{#}images_presets` (`name`, `title`, `width`, `height`, `quality`, `is_square`, `is_internal`, `convert_format`)
-SELECT 'galleryplus_big', 'Gallery+ big', NULL, 700, 85, 0, NULL, 'webp'
+SELECT 'galleryplus_big', 'Gallery+ big', NULL, 960, 85, 0, NULL, 'webp'
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `{#}images_presets` WHERE `name` = 'galleryplus_big');
 

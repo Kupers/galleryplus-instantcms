@@ -56,6 +56,19 @@ class formWidgetGalleryplusMapOptions extends cmsForm {
                         'hint' => LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT,
                         'default' => 0,
                     ]),
+                    new fieldCheckbox('options:show_description', [
+                        'title' => LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC,
+                        'hint' => LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC_HINT,
+                        'default' => 1,
+                    ]),
+                    new fieldNumber('options:desc_chars_limit', [
+                        'title' => LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT,
+                        'default' => 300,
+                        'hint' => LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT_HINT,
+                        'rules' => [
+                            ['min', 0],
+                        ]
+                    ]),
                 ]
             ]
         ];

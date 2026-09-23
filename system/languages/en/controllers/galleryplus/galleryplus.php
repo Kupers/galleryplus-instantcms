@@ -11,6 +11,7 @@
     define('LANG_GALLERYPLUS_TAB_ABOUT',        'About');
     define('LANG_GALLERYPLUS_TAB_EXIF',         'EXIF');
     define('LANG_GALLERYPLUS_NO_DESC',          'No description');
+    define('LANG_GALLERYPLUS_MAP_MORE',         'Read more');
     define('LANG_GALLERYPLUS_NO_EXIF',          'No EXIF data');
     define('LANG_GALLERYPLUS_IN_ALBUM',         'In album');
     define('LANG_GALLERYPLUS_PHOTOS',           'photos');
@@ -251,6 +252,10 @@
     define('LANG_GALLERYPLUS_MAP_CENTER_LNG_HINT', 'Default map center coordinates (longitude)');
     define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC',      'Detect user location');
     define('LANG_GALLERYPLUS_WIDGET_MAP_USER_LOC_HINT', 'Map center is set by visitor geolocation (by IP, without prompt); if detection fails, the configured center is used');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC',      'Show description in popup');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_SHOW_DESC_HINT', 'Show photo description text under the marker thumbnail');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT',     'Description length limit (chars)');
+    define('LANG_GALLERYPLUS_WIDGET_MAP_DESC_LIMIT_HINT','0 — show full description');
 
     define('LANG_GALLERYPLUS_WIDGET_ALBUMS',        'Albums');
     define('LANG_GALLERYPLUS_WIDGET_PHOTOS',        'Latest photos');

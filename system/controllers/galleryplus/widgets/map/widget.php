@@ -17,7 +17,7 @@ class widgetGalleryplusMap extends cmsWidget {
 
         $db = cmsDatabase::getInstance();
 
-        $sql = "SELECT i.id, i.title, i.slug, i.exif, i.image, i.user_id,
+        $sql = "SELECT i.id, i.title, i.slug, i.exif, i.image, i.user_id, i.content AS description,
                        u.nickname AS user_nickname, u.slug AS user_slug
                 FROM {#}galleryplus_photos AS i
                 LEFT JOIN {#}users AS u ON u.id = i.user_id
@@ -55,6 +55,9 @@ class widgetGalleryplusMap extends cmsWidget {
             return false;
         }
 
+        $show_description = (bool)$this->getOption('show_description', 1);
+        $desc_chars_limit = (int)$this->getOption('desc_chars_limit', 300);
+
         $photos = [];
         foreach ($rows as $row) {
             $exif = cmsModel::yamlToArray($row['exif']);
@@ -83,15 +86,27 @@ class widgetGalleryplusMap extends cmsWidget {
                 $title = $orig ? pathinfo($orig, PATHINFO_FILENAME) : 'photo-' . $row['id'];
             }
 
+            $description = '';
+            if ($show_description) {
+                $description = (string)($row['description'] ?? '');
+                if ($description !== '') {
+                    if ($desc_chars_limit > 0 && mb_strlen($description) > $desc_chars_limit) {
+                        $description = mb_substr($description, 0, $desc_chars_limit) . '…';
+                    }
+                    $description = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+                }
+            }
+
             $photos[] = [
-                'id'       => $row['id'],
-                'title'    => $title,
-                'slug'     => $slug,
-                'url'      => href_to('galleryplus', $slug) . '.html',
-                'lat'      => $lat,
-                'lon'      => $lon,
-                'thumb'    => html_image_src($image, 'galleryplus_thumb', true),
-                'user'     => [
+                'id'          => $row['id'],
+                'title'       => $title,
+                'slug'        => $slug,
+                'url'         => href_to('galleryplus', $slug) . '.html',
+                'lat'         => $lat,
+                'lon'         => $lon,
+                'thumb'       => html_image_src($image, 'galleryplus_thumb', true),
+                'description' => $description,
+                'user'        => [
                     'nickname' => $row['user_nickname'],
                     'slug'     => $row['user_slug'],
                 ],

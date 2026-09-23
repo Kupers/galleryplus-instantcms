@@ -37,7 +37,11 @@ $this->addTplCSSName('galleryplus');
     var photos = <?php echo json_encode($photos, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?: '[]'; ?>;
 
     photos.forEach(function(p) {
-        var popupContent = '<a href="' + p.url + '"><img src="' + p.thumb + '" alt="' + p.title.replace(/"/g, '&quot;') + '" class="galleryplus-map-popup-thumb"></a>';
+        var popupContent = '<a href="' + p.url + '" class="galleryplus-map-popup-link">'
+            + '<img src="' + p.thumb + '" alt="' + p.title.replace(/"/g, '&quot;') + '" class="galleryplus-map-popup-thumb">'
+            + (p.description ? '<span class="galleryplus-map-popup-desc">' + p.description + '</span>' : '')
+            + '<span class="galleryplus-map-popup-more"><?php echo LANG_GALLERYPLUS_MAP_MORE ?? 'Подробнее'; ?> &rarr;</span>'
+            + '</a>';
         var marker = L.marker([p.lat, p.lon], {
             icon: L.divIcon({
                 html: '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.3)"><img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover;display:block"></div>',

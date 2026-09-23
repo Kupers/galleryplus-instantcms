@@ -179,11 +179,11 @@ map_center_lng: 30.315721\n";
         }
     } catch (\Throwable $e) {}
 
-    // Preset migration: update galleryplus_big to WebP height 700
+    // Preset migration: update galleryplus_big to WebP height 960
     try {
         $preset_exists = $db->fetchAssoc($db->query("SELECT id FROM `{#}images_presets` WHERE `name` = 'galleryplus_big'"));
         if ($preset_exists) {
-            @$db->query("UPDATE `{#}images_presets` SET `width` = NULL, `height` = 700, `quality` = 85, `convert_format` = 'webp' WHERE `name` = 'galleryplus_big'");
+            @$db->query("UPDATE `{#}images_presets` SET `width` = NULL, `height` = 960, `quality` = 85, `convert_format` = 'webp' WHERE `name` = 'galleryplus_big'");
         }
     } catch (\Throwable $e) {}
 
