@@ -199,7 +199,7 @@
     <?php } ?>
 </div>
 
-<div id="galleryplus-viewer" class="galleryplus-viewer galleryplus-viewer--hide" data-cover="1" data-show-desc="<?php echo !empty($show_lightbox_desc) ? '1' : '0'; ?>" data-current-user="<?php echo $user->id; ?>">
+<div id="galleryplus-viewer" class="galleryplus-viewer galleryplus-viewer--hide" data-cover="1" data-show-desc="<?php echo !empty($show_lightbox_desc) ? '1' : '0'; ?>" data-truncate-desc="<?php echo !empty($truncate_lightbox_desc) ? '1' : '0'; ?>" data-desc-limit="<?php echo (int)$lightbox_desc_limit; ?>" data-current-user="<?php echo $user->id; ?>">
     <div class="galleryplus-viewer-bg"></div>
 
     <div class="galleryplus-viewer-top">
@@ -214,11 +214,14 @@
     </div>
 
     <a href="" class="galleryplus-viewer-title" target="_blank">
-        <svg class="galleryplus-viewer-title-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M8 8h8v8m-4-4l8-8"/></svg>
+        <span class="galleryplus-viewer-title-icon"><?php echo string_replace_svg_icons('{regular%share-square}'); ?></span>
         <span class="galleryplus-viewer-title-text"></span>
     </a>
 
-    <div class="galleryplus-viewer-desc"></div>
+    <div class="galleryplus-viewer-desc">
+        <span class="galleryplus-viewer-desc-text"></span>
+        <button class="galleryplus-viewer-desc-toggle" style="display:none" data-full-label="<?php echo LANG_GALLERYPLUS_SHOW_FULL_DESC ?? 'Show full'; ?>" data-collapse-label="<?php echo LANG_GALLERYPLUS_COLLAPSE_DESC ?? 'Collapse'; ?>"><?php echo LANG_GALLERYPLUS_SHOW_FULL_DESC ?? 'Show full'; ?></button>
+    </div>
 
     <button class="galleryplus-viewer-nav galleryplus-viewer-prev" title="<?php echo LANG_GALLERYPLUS_PREV ?? 'Previous'; ?>"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <button class="galleryplus-viewer-nav galleryplus-viewer-next" title="<?php echo LANG_GALLERYPLUS_NEXT ?? 'Next'; ?>"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -229,10 +232,10 @@
             <span class="galleryplus-viewer-author"></span>
         </div>
         <div class="galleryplus-viewer-bottom-right">
-            <button class="galleryplus-viewer-like" data-target-id="" data-target-type="photo" title="<?php echo LANG_GALLERYPLUS_LIKE ?? 'Like'; ?>"><span class="galleryplus-viewer-like-icon">&#9825;</span> <span class="galleryplus-viewer-like-count">0</span></button>
-            <button class="galleryplus-viewer-fav" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>">&#9734;</button>
-            <button class="galleryplus-viewer-comments" title="<?php echo LANG_GALLERYPLUS_COMMENTS ?? 'Comments'; ?>"><span class="galleryplus-viewer-comments-icon">&#9993;</span> <span class="galleryplus-viewer-comments-count">0</span></button>
-            <button class="galleryplus-viewer-share" title="<?php echo LANG_GALLERYPLUS_SHARE ?? 'Поделиться'; ?>"><svg class="galleryplus-share-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+            <button class="galleryplus-viewer-like" data-target-id="" data-target-type="photo" title="<?php echo LANG_GALLERYPLUS_LIKE ?? 'Like'; ?>"><span class="galleryplus-viewer-like-icon"><?php echo string_replace_svg_icons('{solid%heart}'); ?></span> <span class="galleryplus-viewer-like-count">0</span></button>
+            <button class="galleryplus-viewer-fav" title="<?php echo defined('LANG_GALLERYPLUS_FAVORITE') ? LANG_GALLERYPLUS_FAVORITE : 'В избранное'; ?>"><span class="galleryplus-viewer-fav-icon"><?php echo string_replace_svg_icons('{regular%star}'); ?></span></button>
+            <button class="galleryplus-viewer-comments" title="<?php echo LANG_GALLERYPLUS_COMMENTS ?? 'Comments'; ?>"><span class="galleryplus-viewer-comments-icon"><?php echo string_replace_svg_icons('{regular%comment-dots}'); ?></span> <span class="galleryplus-viewer-comments-count">0</span></button>
+            <button class="galleryplus-viewer-share" title="<?php echo LANG_GALLERYPLUS_SHARE ?? 'Поделиться'; ?>"><?php echo string_replace_svg_icons('{solid%share-alt}'); ?></button>
         </div>
     </div>
 

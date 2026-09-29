@@ -111,6 +111,8 @@ class actionGalleryplusIndex extends cmsAction {
             'use_album_tags'   => !empty($this->options['use_album_tags']),
             'use_photo_tags'   => !empty($this->options['use_photo_tags']),
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
+            'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
         ]);
     }
 
@@ -206,6 +208,8 @@ class actionGalleryplusIndex extends cmsAction {
             'use_album_tags'   => $use_album_tags,
             'use_photo_tags'   => !empty($this->options['use_photo_tags']),
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
+            'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
         ]);
     }
 

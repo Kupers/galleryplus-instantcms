@@ -212,6 +212,12 @@
     define('LANG_GALLERYPLUS_HIDE_MAP_HINT',           'Hide the interactive map on the photo view page');
     define('LANG_GALLERYPLUS_LIGHTBOX_DESC',           'Show description in lightbox');
     define('LANG_GALLERYPLUS_LIGHTBOX_DESC_HINT',      'Display the photo description under the title in fullscreen view');
+    define('LANG_GALLERYPLUS_TRUNCATE_DESC',           'Truncate description in lightbox');
+    define('LANG_GALLERYPLUS_TRUNCATE_DESC_HINT',      'Shorten long descriptions and show a "Show full" button');
+    define('LANG_GALLERYPLUS_DESC_LIMIT',              'Description character limit');
+    define('LANG_GALLERYPLUS_DESC_LIMIT_HINT',         'Maximum number of characters before truncation (0 — no truncation)');
+    define('LANG_GALLERYPLUS_SHOW_FULL_DESC',          'Show full');
+    define('LANG_GALLERYPLUS_COLLAPSE_DESC',           'Collapse');
 
     define('LANG_GALLERYPLUS_WIDGET_MAP_HEIGHT',       'Map height');
     define('LANG_GALLERYPLUS_WIDGET_MAP_ZOOM',         'Default zoom');

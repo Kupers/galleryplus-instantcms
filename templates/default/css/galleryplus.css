@@ -705,9 +705,11 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
 
 @media (max-width: 640px) {
     .galleryplus-header { flex-direction: column; align-items: flex-start; }
-    .galleryplus-toolbar { gap: 8px; flex-wrap: wrap; }
+    .galleryplus-toolbar { gap: 8px; flex-wrap: wrap; width: 100%; min-width: 0; }
     .galleryplus-tab { padding: 6px 10px; font-size: 13px; }
     .galleryplus-tab-label { display: none; }
+    .galleryplus-tabs { flex-wrap: wrap; min-width: 0; }
+    .galleryplus-toolbar-right { flex-wrap: wrap; min-width: 0; }
 }
 
 /* --- Upload page --- */
@@ -1179,6 +1181,13 @@ html[data-idle] .galleryplus-viewer-top {
 .galleryplus-viewer-title-icon {
     flex-shrink: 0;
     opacity: .8;
+    display: inline-flex;
+    align-items: center;
+}
+
+.galleryplus-viewer-title-icon .icms-svg-icon {
+    width: 14px;
+    height: 14px;
 }
 
 .galleryplus-viewer:hover .galleryplus-viewer-title,
@@ -1194,13 +1203,17 @@ html[data-idle] .galleryplus-viewer-title {
     position: absolute;
     bottom: 108px; left: 0; right: 0;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    max-width: min(600px, 80%);
+    margin: 0 auto;
+    padding: 0 16px;
     color: #fff;
     font-size: 13px;
     line-height: 1.45;
     text-align: center;
-    padding: 0 16px;
-    max-width: min(600px, 80%);
-    margin: 0 auto;
     text-shadow: 0 1px 3px rgba(0,0,0,.7);
     pointer-events: none;
     opacity: 0;
@@ -1214,6 +1227,91 @@ html[data-idle] .galleryplus-viewer-title {
 
 html[data-idle] .galleryplus-viewer-desc {
     opacity: 0 !important;
+}
+
+.galleryplus-viewer-desc-toggle {
+    display: inline-block;
+    padding: 4px 14px;
+    border: 1px solid rgba(255,255,255,.45);
+    border-radius: 14px;
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background .2s;
+}
+
+.galleryplus-viewer-desc-toggle:hover {
+    background: rgba(0,0,0,.7);
+}
+
+/* --- Light image (auto-detected): dark text on light background --- */
+.galleryplus-viewer--light .galleryplus-viewer-top {
+    background: none;
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-title {
+    color: #111;
+    text-shadow: 0 1px 3px rgba(255,255,255,.6), 0 0 8px rgba(255,255,255,.4);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-desc {
+    color: #111;
+    text-shadow: 0 1px 3px rgba(255,255,255,.7), 0 0 8px rgba(255,255,255,.45);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-desc-toggle {
+    border-color: rgba(0,0,0,.35);
+    background: rgba(255,255,255,.65);
+    color: #111;
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-desc-toggle:hover {
+    background: rgba(255,255,255,.92);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-bottom {
+    background: none;
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-author {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.65), 0 0 8px rgba(0,0,0,.35);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-like,
+.galleryplus-viewer--light .galleryplus-viewer-comments,
+.galleryplus-viewer--light .galleryplus-viewer-share {
+    color: #fff;
+    background: rgba(0,0,0,.35);
+    opacity: .95;
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-like:hover,
+.galleryplus-viewer--light .galleryplus-viewer-comments:hover,
+.galleryplus-viewer--light .galleryplus-viewer-share:hover {
+    background: rgba(0,0,0,.55);
+    opacity: 1;
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-close {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.65), 0 0 8px rgba(0,0,0,.35);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-nav {
+    color: #fff;
+    background: rgba(0,0,0,.35);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-nav:hover {
+    background: rgba(0,0,0,.55);
+}
+
+.galleryplus-viewer--light .galleryplus-viewer-nav svg {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
 }
 
 .galleryplus-viewer-close {
@@ -1370,6 +1468,10 @@ html[data-idle] .galleryplus-viewer-bottom {
     opacity: 1;
 }
 
+.galleryplus-viewer-like.liked .galleryplus-viewer-like-icon {
+    color: #e74c3c;
+}
+
 .galleryplus-viewer-like.disabled {
     opacity: .4;
     cursor: default;
@@ -1381,8 +1483,32 @@ html[data-idle] .galleryplus-viewer-bottom {
     line-height: 1;
 }
 
+.galleryplus-viewer-like-icon,
+.galleryplus-viewer-comments-icon,
+.galleryplus-viewer-fav-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.galleryplus-viewer-like-icon .icms-svg-icon,
+.galleryplus-viewer-comments-icon .icms-svg-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.galleryplus-viewer-fav-icon .icms-svg-icon {
+    width: 20px;
+    height: 20px;
+}
+
 .galleryplus-share-icon {
     display: block;
+}
+
+.galleryplus-viewer-share .icms-svg-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
 }
 
 /* --- Body lock --- */
@@ -2911,4 +3037,17 @@ body.galleryplus-selecting .galleryplus-item .galleryplus-fav-btn--card {
 }
 .galleryplus-similar-grid .galleryplus-item {
     margin-bottom: 0;
+}
+
+/* ─── Мобильная сетка вплотную к краям (как на amateur.spb.ru) ───
+   Выталкиваем контейнер плиток на всю ширину вьюпорта,
+   отступая на 2px с каждой стороны. */
+@media (max-width: 767.98px) {
+    .galleryplus-grid,
+    .galleryplus-albums-grid {
+        width: calc(100vw - 4px);
+        width: calc(100dvw - 4px);
+        margin-left: calc(50% - 50vw + 2px);
+        margin-right: calc(50% - 50vw + 2px);
+    }
 }

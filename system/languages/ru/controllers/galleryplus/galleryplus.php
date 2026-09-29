@@ -216,6 +216,12 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_HIDE_MAP_HINT',           'Скрывать интерактивную карту на странице просмотра фото');
     define('LANG_GALLERYPLUS_LIGHTBOX_DESC',           'Показывать описание в лайтбоксе');
     define('LANG_GALLERYPLUS_LIGHTBOX_DESC_HINT',      'Отображать описание фотографии под названием в полноэкранном просмотре');
+    define('LANG_GALLERYPLUS_TRUNCATE_DESC',           'Сокращать описание в лайтбоксе');
+    define('LANG_GALLERYPLUS_TRUNCATE_DESC_HINT',      'Обрезать длинное описание и показывать кнопку «Показать полностью»');
+    define('LANG_GALLERYPLUS_DESC_LIMIT',              'Лимит символов описания');
+    define('LANG_GALLERYPLUS_DESC_LIMIT_HINT',         'Максимальное количество символов перед сокращением (0 — не сокращать)');
+    define('LANG_GALLERYPLUS_SHOW_FULL_DESC',          'Показать полностью');
+    define('LANG_GALLERYPLUS_COLLAPSE_DESC',           'Свернуть');
 
     define('LANG_GALLERYPLUS_WIDGET_MAP_HEIGHT',       'Высота карты');
     define('LANG_GALLERYPLUS_WIDGET_MAP_ZOOM',         'Масштаб по умолчанию');

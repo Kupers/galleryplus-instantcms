@@ -227,6 +227,8 @@ class actionGalleryplusAlbum extends cmsAction {
             'album_tags'      => $album_tags,
             'can_upload'      => $can_upload,
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
+            'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'     => $user_albums,
         ]);
     }
@@ -292,6 +294,8 @@ class actionGalleryplusAlbum extends cmsAction {
             'album_tags'       => [],
             'can_upload'       => false,
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
+            'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
+            'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'      => [],
         ]);
     }

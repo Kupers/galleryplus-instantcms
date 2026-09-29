@@ -142,6 +142,19 @@ class formGalleryplusOptions extends cmsForm {
                         'default' => 1,
                     ]),
 
+                    new fieldCheckbox('truncate_lightbox_desc', [
+                        'title'   => LANG_GALLERYPLUS_TRUNCATE_DESC,
+                        'hint'    => LANG_GALLERYPLUS_TRUNCATE_DESC_HINT,
+                        'default' => 1,
+                    ]),
+
+                    new fieldNumber('lightbox_desc_limit', [
+                        'title'   => LANG_GALLERYPLUS_DESC_LIMIT,
+                        'hint'    => LANG_GALLERYPLUS_DESC_LIMIT_HINT,
+                        'default' => 300,
+                        'rules'   => [['min', 0]],
+                    ]),
+
                     new fieldCheckbox('hide_exif', [
                         'title'   => LANG_GALLERYPLUS_HIDE_EXIF,
                         'hint'    => LANG_GALLERYPLUS_HIDE_EXIF_HINT,
