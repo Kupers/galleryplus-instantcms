@@ -469,7 +469,7 @@
         var dot = name.lastIndexOf('.');
         if (dot > 0) { name = name.substring(0, dot); }
         name = name.replace(/[-_]+/g, ' ').trim();
-        return truncateTitle(name, 15);
+        return truncateTitle(name, 120);
     }
 
     function uploadFile(file) {
@@ -486,6 +486,7 @@
         var tagsFieldInit = <?php echo !empty($use_photo_tags) ? 'true' : 'false'; ?>;
         item.innerHTML = '<div class="galleryplus-upload-item-preview"><div class="galleryplus-upload-item-spinner"></div></div>'
             + '<div class="galleryplus-upload-item-info">'
+            + '<div class="galleryplus-upload-item-title-hint">' + (<?php echo json_encode(defined('LANG_GALLERYPLUS_PHOTO_TITLE_HINT') ? constant('LANG_GALLERYPLUS_PHOTO_TITLE_HINT') : 'Вы можете изменить название фото', JSON_UNESCAPED_UNICODE); ?>) + '</div>'
             + '<input type="text" name="title[' + Date.now() + ']" class="galleryplus-upload-item-title" placeholder="' + (<?php echo json_encode(LANG_GALLERYPLUS_PHOTO_TITLE ?? 'Photo title'); ?>) + '" value="' + htmlspecialchars(autoTitle) + '">'
             + tagsField
             + '<div class="galleryplus-upload-item-error"></div>'

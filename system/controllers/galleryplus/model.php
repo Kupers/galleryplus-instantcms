@@ -28,7 +28,7 @@ class modelGalleryplus extends cmsModel {
         return $this->approved_filter_disabled;
     }
 
-    public function getPhotos($page = 1, $perpage = 24, $category_id = 0, $include_adult_for_guests = false) {
+    public function getPhotos($page = 1, $perpage = 24, $category_id = 0, $include_adult_for_guests = false, $show_adult = true) {
         $this->joinUser();
         if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
         if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
@@ -38,7 +38,7 @@ class modelGalleryplus extends cmsModel {
             $this->join('galleryplus_albums', 'a', 'i.album_id = a.id');
             $this->filterEqual('a.category_id', $category_id);
         }
-        $this->filterVisibleAlbums($current_user_id, $include_adult_for_guests);
+        $this->filterVisibleAlbums($current_user_id, $include_adult_for_guests, $show_adult);
 
         $this->limitPagePlus($page, $perpage);
         $result = $this->get('galleryplus_photos', function ($item, $model) {
@@ -370,7 +370,7 @@ class modelGalleryplus extends cmsModel {
         return $row ? (int) $row['cnt'] : 0;
     }
 
-    public function getPhotosCount($album_id = null, $category_id = 0, $include_adult_for_guests = false) {
+    public function getPhotosCount($album_id = null, $category_id = 0, $include_adult_for_guests = false, $show_adult = true) {
         $this->joinUser();
         if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
         if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
@@ -384,7 +384,7 @@ class modelGalleryplus extends cmsModel {
             $this->filterEqual('a.category_id', $category_id);
         }
         $current_user_id = cmsUser::get('id');
-        $this->filterVisibleAlbums($current_user_id, $include_adult_for_guests);
+        $this->filterVisibleAlbums($current_user_id, $include_adult_for_guests, $show_adult);
         $count = $this->getCount('galleryplus_photos');
         $this->skip_paid_filter = false;
         $this->resetFilters();
@@ -749,7 +749,7 @@ class modelGalleryplus extends cmsModel {
         }
     }
 
-    public function filterVisibleAlbums($user_id = 0, $include_adult_for_guests = false) {
+    public function filterVisibleAlbums($user_id = 0, $include_adult_for_guests = false, $show_adult = true) {
         if ($this->skip_visible_albums_filter) { return $this; }
         $this->joinInner('galleryplus_albums', 'gp_a', 'gp_a.id = i.album_id');
         if ($user_id) {
@@ -758,6 +758,12 @@ class modelGalleryplus extends cmsModel {
             $this->filter("(gp_a.privacy = 'public' OR gp_a.privacy = 'adult')");
         } else {
             $this->filter("gp_a.privacy = 'public'");
+        }
+        // Adult-контент: скрываем фото adult-альбомов, недоступных пользователю
+        // (зеркало applyAdultFilter — чтобы границы пагинации совпадали с видимым множеством).
+        if (!$show_adult) {
+            $uid = (int)$user_id;
+            $this->filter("(gp_a.privacy <> 'adult' OR gp_a.user_id = {$uid})");
         }
         if (!$this->skip_paid_filter) {
             $this->filterPaidAlbumPhotos($user_id);

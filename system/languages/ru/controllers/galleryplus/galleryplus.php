@@ -197,6 +197,7 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_USE_PHOTO_TAGS',       'Тэги к фото');
     define('LANG_GALLERYPLUS_USE_PHOTO_TAGS_HINT',  'Разрешить пользователям добавлять тэги к фотографиям');
     define('LANG_GALLERYPLUS_TAGS_HINT',            'Ключевые слова через запятую');
+    define('LANG_GALLERYPLUS_PHOTO_TITLE_HINT',     'Вы можете изменить название фото');
 
     define('LANG_GALLERYPLUS_HIDE_EMPTY_ALBUMS',       'Скрывать пустые альбомы');
     define('LANG_GALLERYPLUS_HIDE_EMPTY_ALBUMS_HINT',  'Альбомы без фотографий не будут отображаться на главной странице галереи');

@@ -65,14 +65,16 @@ class actionGalleryplusIndex extends cmsAction {
 
         $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;
         $include_adult_for_guests = !$this->cms_user->id && $show_adult_to_guests;
+        $show_adult_in_feed = array_key_exists('show_adult_in_feed', $this->options) ? (bool)$this->options['show_adult_in_feed'] : true;
+        $show_adult = ($show_adult_in_feed && $this->cms_user->id) || !empty($show_adult_to_guests);
 
         $total = $category_id
-            ? $this->model->getPhotosCount(null, $category_id, $include_adult_for_guests)
-            : $this->model->getPhotosCount(null, 0, $include_adult_for_guests);
+            ? $this->model->getPhotosCount(null, $category_id, $include_adult_for_guests, $show_adult)
+            : $this->model->getPhotosCount(null, 0, $include_adult_for_guests, $show_adult);
 
         $this->applyExploreOrder($explore);
 
-        $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests);
+        $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests, $show_adult);
         if (!$photos) { $photos = []; }
         $has_next = count($photos) > $perpage;
         if ($has_next) { array_pop($photos); }
@@ -219,9 +221,11 @@ class actionGalleryplusIndex extends cmsAction {
 
         $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;
         $include_adult_for_guests = !$this->cms_user->id && $show_adult_to_guests;
+        $show_adult_in_feed = array_key_exists('show_adult_in_feed', $this->options) ? (bool)$this->options['show_adult_in_feed'] : true;
+        $show_adult = ($show_adult_in_feed && $this->cms_user->id) || !empty($show_adult_to_guests);
 
         $perpage = $this->options['limit'] ?? 24;
-        $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests);
+        $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests, $show_adult);
         if (!$photos) { $photos = []; }
         $has_next = count($photos) > $perpage;
         if ($has_next) { array_pop($photos); }

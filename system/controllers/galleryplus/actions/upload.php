@@ -530,10 +530,10 @@ class actionGalleryplusUpload extends cmsAction {
             $result['big_url'] = $this->cms_config->upload_host . '/' . ($result['paths'][$preset_big_name] ?? reset($result['paths']));
 
             if ($auto_approve) {
-                // Auto-fill title from original filename (truncated to 15 chars)
+                // Auto-fill title from original filename (full name, without truncation)
                 $orig_filename = $_FILES['file']['name'] ?? 'photo';
                 $clean_name = pathinfo($orig_filename, PATHINFO_FILENAME);
-                $auto_title = mb_strlen($clean_name) > 15 ? mb_substr($clean_name, 0, 15) . '...' : $clean_name;
+                $auto_title = mb_strlen($clean_name) > 120 ? mb_substr($clean_name, 0, 120) : $clean_name;
                 $slug = $this->generateSlug($auto_title, $photo_id);
                 $this->model->updatePhoto($photo_id, ['title' => $auto_title, 'slug' => $slug]);
                 $result['paths'] = array_merge($result['paths'], ['slug' => $slug]);
@@ -648,7 +648,13 @@ class actionGalleryplusUpload extends cmsAction {
     private function generateSlug($title, $id) {
         $slug = $title ? lang_slug($title) : 'photo';
         if (!$slug) { $slug = 'photo'; }
-        $slug .= '-' . $id;
+        $suffix = '-' . $id;
+        $max_len = 100 - mb_strlen($suffix);
+        if (mb_strlen($slug) > $max_len) {
+            $slug = mb_substr($slug, 0, $max_len);
+        }
+        $slug = trim($slug, '-/');
+        $slug .= $suffix;
         return $slug;
     }
 

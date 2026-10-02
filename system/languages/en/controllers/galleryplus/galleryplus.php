@@ -193,6 +193,7 @@
     define('LANG_GALLERYPLUS_USE_PHOTO_TAGS',       'Tags for photos');
     define('LANG_GALLERYPLUS_USE_PHOTO_TAGS_HINT',  'Allow users to add tags to photos');
     define('LANG_GALLERYPLUS_TAGS_HINT',            'Keywords, comma separated');
+    define('LANG_GALLERYPLUS_PHOTO_TITLE_HINT',     'You can change the photo name');
 
     define('LANG_GALLERYPLUS_HIDE_EMPTY_ALBUMS',       'Hide empty albums');
     define('LANG_GALLERYPLUS_HIDE_EMPTY_ALBUMS_HINT',  'Albums with no photos will not be shown on the gallery main page');

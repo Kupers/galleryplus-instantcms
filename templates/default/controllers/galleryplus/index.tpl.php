@@ -289,6 +289,7 @@
                         grid.dataset.page = page;
                         grid.dataset.hasNext = hasNext ? '1' : '0';
                         if (typeof galleryplusMasonry === 'function') galleryplusMasonry(grid);
+                        window.dispatchEvent(new CustomEvent('galleryplus:more-loaded'));
                     }
                 } catch(e) {}
             }
@@ -308,6 +309,8 @@
         if (entries[0].isIntersecting) loadMore();
     }, { rootMargin: '200px' });
     observer.observe(sentinel);
+
+    window.galleryplusLoadMore = loadMore;
 })();
 </script>
 <?php } ?>

@@ -229,6 +229,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
 
     var currentItem = null;
     var idleTimer = null;
+    var pendingNext = false;
 
     // ---- Auto light/dark theme + text bounds in the lightbox ----
     function getLightboxBrightness(img) {
@@ -244,15 +245,14 @@ window.galleryplusMasonry = function(container, itemSelector) {
             if (!ctx) return null;
             ctx.drawImage(img, 0, 0, cw, ch);
             var data = ctx.getImageData(0, 0, cw, ch).data;
-            var sum = 0, weight = 0;
+            var sum = 0, count = 0, startRow = Math.floor(ch * 0.6);
             for (var i = 0; i < data.length; i += 4) {
-                var lum = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
                 var row = Math.floor((i / 4) / cw);
-                var w = (row >= Math.floor(ch * 0.75)) ? 2 : 1;
-                sum += lum * w;
-                weight += w;
+                if (row < startRow) continue;
+                sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+                count++;
             }
-            return weight ? sum / weight : null;
+            return count ? sum / count : null;
         } catch (e) { return null; }
     }
 
@@ -522,9 +522,11 @@ window.galleryplusMasonry = function(container, itemSelector) {
         document.body.classList.add('galleryplus-viewer-open');
         updateNavButtons();
         resetIdle();
+        prefetchNext();
     }
 
     function closeViewer() {
+        var closingItem = currentItem;
         viewer.classList.remove('galleryplus-viewer--show');
         viewer.classList.add('galleryplus-viewer--hide');
         document.body.classList.remove('galleryplus-viewer-open');
@@ -533,6 +535,14 @@ window.galleryplusMasonry = function(container, itemSelector) {
         document.documentElement.removeAttribute('data-idle');
         closeCommentsPanel();
         viewerSharePopup.classList.remove('galleryplus-viewer-share-popup--show');
+        // Keep the feed scrolled to the photo that was open
+        if (closingItem && closingItem.isConnected) {
+            var stickyOffset = 80;
+            setTimeout(function() {
+                var top = closingItem.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({ top: Math.max(0, top - stickyOffset), behavior: 'smooth' });
+            }, 60);
+        }
     }
 
     // ---- Description expand/collapse ----
@@ -564,6 +574,27 @@ window.galleryplusMasonry = function(container, itemSelector) {
         viewer.classList.toggle('galleryplus-viewer--nav-next', !!next);
     }
 
+    function hasNextPage() {
+        var g = document.getElementById('galleryplus-grid');
+        return !!(g && g.dataset.hasNext === '1' && typeof window.galleryplusLoadMore === 'function');
+    }
+
+    function lastGridItem() {
+        var g = document.getElementById('galleryplus-grid');
+        if (!g) return null;
+        var items = g.querySelectorAll('.galleryplus-item');
+        return items.length ? items[items.length - 1] : null;
+    }
+
+    // Preload the next page from inside the lightbox when near the end
+    function prefetchNext() {
+        if (!currentItem || !hasNextPage()) return;
+        var last = lastGridItem();
+        if (last && (currentItem === last || currentItem.nextElementSibling === null)) {
+            window.galleryplusLoadMore();
+        }
+    }
+
     function navigate(dir) {
         if (!currentItem) return;
         var sibling = dir === 'prev' ? currentItem.previousElementSibling : currentItem.nextElementSibling;
@@ -572,6 +603,9 @@ window.galleryplusMasonry = function(container, itemSelector) {
         }
         if (sibling) {
             openViewer(sibling);
+        } else if (dir === 'next' && hasNextPage()) {
+            pendingNext = true;
+            window.galleryplusLoadMore();
         }
     }
 
@@ -696,6 +730,15 @@ window.galleryplusMasonry = function(container, itemSelector) {
     // Reset idle on viewer move
     viewer.addEventListener('mousemove', resetIdle);
     viewer.addEventListener('mousedown', resetIdle);
+
+    // Continue navigation / refresh arrows after the next page is appended
+    window.addEventListener('galleryplus:more-loaded', function() {
+        updateNavButtons();
+        if (pendingNext) {
+            pendingNext = false;
+            navigate('next');
+        }
+    });
 
     // Keyboard
     document.addEventListener('keydown', function(e) {

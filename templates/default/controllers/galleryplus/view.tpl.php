@@ -49,6 +49,10 @@
     </div>
 
     <div class="galleryplus-view-sidebar">
+        <div class="galleryplus-view-title">
+            <h1><?php html($photo['title'] ?? ''); ?></h1>
+        </div>
+
         <div class="galleryplus-view-nav galleryplus-view-nav--sidebar">
             <?php $has_prev = !empty($prev_photo); $has_next = !empty($next_photo); ?>
             <?php if ($has_prev || $has_next) { ?>

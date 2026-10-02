@@ -286,6 +286,29 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     transform: scale(1.03);
 }
 
+/* --- Search results grid --- */
+.galleryplus-search-results {
+    margin-top: 20px;
+}
+
+.galleryplus-search-results .galleryplus-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    opacity: 1;
+}
+
+.galleryplus-search-results .galleryplus-item {
+    flex: 0 0 calc(33.333% - 8px);
+    aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 767px) {
+    .galleryplus-search-results .galleryplus-item {
+        flex: 0 0 calc(50% - 6px);
+    }
+}
+
 .galleryplus-item-title {
     display: block;
     font-size: 14px;
@@ -363,6 +386,19 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
 .galleryplus-view-sidebar {
     width: 320px;
     flex-shrink: 0;
+}
+
+.galleryplus-view-title {
+    margin-bottom: 14px;
+}
+
+.galleryplus-view-title h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--primary, #3867d6);
+    word-break: break-word;
 }
 
 .galleryplus-view-meta {
@@ -855,16 +891,27 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
 }
 
 .galleryplus-upload-item-title {
+    display: block;
     width: 100%;
-    border: none;
+    padding: 4px 8px;
     font-size: 14px;
-    padding: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     outline: none;
     box-sizing: border-box;
 }
 
 .galleryplus-upload-item-title:focus {
-    border-bottom: 1px solid #1a73e8;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.15rem rgba(0,123,255,.25);
+}
+
+.galleryplus-upload-item-title-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.4;
 }
 
 .galleryplus-upload-item-error {
@@ -2860,22 +2907,23 @@ body.galleryplus-selecting .galleryplus-item > .galleryplus-checkbox-wrap {
     width: 160px;
 }
 .galleryplus-map-popup-thumb {
-    width: 120px;
-    height: 90px;
-    object-fit: cover;
+    width: 160px;
+    height: auto;
     display: block;
-    margin: 0 auto;
     cursor: pointer;
 }
 .galleryplus-map-popup-link {
+    display: block;
+    width: 160px;
     text-decoration: none;
     color: inherit;
     font-weight: 600;
     font-size: 13px;
-    display: block;
 }
 .galleryplus-map-popup-desc {
     display: block;
+    width: 160px;
+    box-sizing: border-box;
     padding: 6px 10px;
     color: #555;
     font-weight: 400;
