@@ -4,6 +4,9 @@
 Gallery+ — full-featured gallery with masonry grid, infinite scroll, lightbox, 6 album privacy levels (password, 18+ included), categories, tags, likes, EXIF/GPS, Leaflet maps, embed codes, and 5 widgets
 AJAX likes, collaborative albums, bcrypt password protection, adult content with karma gate, XMP description extraction, no-crop WebP preset instead of storing originals, 3 view modes (albums, infinite scroll, paged), custom lightbox (swipe/likes/comments/shares), 5 widgets (Random, Photos, Albums, Categories, Map), Leaflet geo-maps, admin cleanup tool
 
+Gallery+ — многофункциональная галерея с masonry-сеткой, бесконечной прокруткой, лайтбоксом, 6 уровнями приватности альбомов (в т.ч. пароль и 18+), категориями, тегами, лайками, EXIF/GPS, картами Leaflet, кодами для вставки и 5 виджетами
+AJAX-лайки, совместные альбомы, защита паролем bcrypt, взрослый контент с карма-гейтом, извлечение описаний из XMP, пресет WebP без обрезки вместо хранения оригиналов, 3 режима просмотра (альбомы, бесконечная прокрутка, страницы), собственный лайтбокс (свайп/лайки/комментарии/шэринг), 5 виджетов (Случайные, Фото, Альбомы, Категории, Карта), геокарты Leaflet, инструмент очистки в админке
+
 ### Paid features (v1.2.0, works with the InstantCMS Billing component)
 
 - Paid photo upload (`add_photo`) — per-photo price, charged from the user's balance
