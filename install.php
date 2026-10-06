@@ -251,5 +251,28 @@ map_center_lng: 30.315721\n";
         }
     } catch (\Throwable $e) {}
 
+    // Регистрация событий контроллера (хуки)
+    try {
+        $hooks = [
+            'frontpage',
+            'frontpage_types',
+            'comments_targets',
+            'fulltext_search',
+            'tags_search',
+            'tags_search_subjects',
+            'user_tab_info',
+            'user_tab_show',
+        ];
+
+        $ordering = (int)$db->fetchAssoc($db->query("SELECT MAX(`ordering`) AS m FROM `{#}events`"))['m'];
+
+        foreach ($hooks as $event_name) {
+            $exists = $db->fetchAssoc($db->query("SELECT id FROM `{#}events` WHERE `listener` = 'galleryplus' AND `event` = '" . $db->escape($event_name) . "'"));
+            if ($exists) { continue; }
+            $ordering++;
+            @$db->query("INSERT INTO `{#}events` (`event`, `listener`, `ordering`, `is_enabled`) VALUES ('" . $db->escape($event_name) . "', 'galleryplus', " . $ordering . ", 1)");
+        }
+    } catch (\Throwable $e) {}
+
     return true;
 }

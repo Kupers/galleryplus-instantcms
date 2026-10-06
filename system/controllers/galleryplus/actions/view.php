@@ -198,6 +198,7 @@ class actionGalleryplusView extends cmsAction {
             'buy_album_url'    => $buy_album_url,
             'hide_exif'        => !empty($this->options['hide_exif']),
             'hide_map'         => !empty($this->options['hide_map']),
+            'show_copy_desc'   => !empty($this->options['show_copy_desc']),
             'show_embed_codes' => !empty($this->options['show_embed_codes']),
             'gps_lat'          => $gps_lat,
             'gps_lon'          => $gps_lon,

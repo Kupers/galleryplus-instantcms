@@ -168,7 +168,169 @@ a.galleryplus-btn.galleryplus-upload-btn {
 
 a.galleryplus-btn.galleryplus-upload-btn:hover {
     background: #1557b0 !important;
-    border-color: #1557b0 !important;
+    color: #fff !important;
+}
+
+/* --- Tag filter (сортировка по тегам) --- */
+.galleryplus-tagfilter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+    margin: -4px 0 16px;
+}
+
+.galleryplus-tagfilter-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+}
+
+.galleryplus-tagfilter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a73e8;
+    background: rgba(26, 115, 232, .08);
+    border: 1px solid rgba(26, 115, 232, .2);
+    white-space: nowrap;
+    max-width: 240px;
+}
+
+.galleryplus-tagfilter-chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.galleryplus-tagfilter-chip-remove {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #1a73e8;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+    opacity: .6;
+    transition: opacity .15s;
+}
+
+.galleryplus-tagfilter-chip-remove:hover { opacity: 1; }
+
+.galleryplus-tagfilter-add {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 50%;
+    border: 1px dashed #bbb;
+    background: transparent;
+    color: #888;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.galleryplus-tagfilter-add:hover {
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+.galleryplus-tagfilter-field {
+    position: relative;
+    flex: 1 1 220px;
+    min-width: 160px;
+    max-width: 420px;
+}
+
+.galleryplus-tagfilter-input {
+    width: 100%;
+    padding: 7px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.galleryplus-tagfilter-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, .12);
+}
+
+.galleryplus-tagfilter-suggest {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    max-height: 260px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+}
+
+.galleryplus-tagfilter-suggest.open { display: block; }
+
+.galleryplus-tagfilter-suggest-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 7px 12px;
+    border: 0;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.galleryplus-tagfilter-suggest-item:hover,
+.galleryplus-tagfilter-suggest-item.active {
+    background: rgba(26, 115, 232, .08);
+}
+
+.galleryplus-tagfilter-reset {
+    font-size: 13px;
+    color: #999;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.galleryplus-tagfilter-reset:hover {
+    color: #1a73e8;
+    text-decoration: underline;
+}
+
+.galleryplus-tagfilter-input--error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, .18);
+}
+
+.galleryplus-tagfilter--loading .galleryplus-tagfilter-input {
+    opacity: .55;
+    cursor: progress;
+}
+
+.galleryplus-tagfilter--loading .galleryplus-tagfilter-suggest {
+    opacity: .55;
+}
+
+.galleryplus-empty-tagfilter {
+    display: block;
+    margin-bottom: 8px;
 }
 
 /* --- Grid (JS masonry) --- */
@@ -647,6 +809,29 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     padding: 0 16px;
 }
 
+.galleryplus-desc-copy {
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fafafa;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.galleryplus-desc-copy:hover {
+    background: #fff;
+    border-color: #bbb;
+}
+
+.galleryplus-desc-copy[disabled] {
+    opacity: .7;
+    cursor: default;
+}
+
 /* --- Embed table --- */
 .galleryplus-embed-table {
     width: 100%;
@@ -746,6 +931,9 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     .galleryplus-tab-label { display: none; }
     .galleryplus-tabs { flex-wrap: wrap; min-width: 0; }
     .galleryplus-toolbar-right { flex-wrap: wrap; min-width: 0; }
+    .galleryplus-tagfilter { gap: 6px; }
+    .galleryplus-tagfilter-field { flex: 1 1 100%; max-width: none; }
+    .galleryplus-tagfilter-chip { max-width: 160px; }
 }
 
 /* --- Upload page --- */
@@ -2561,7 +2749,7 @@ img.galleryplus-viewer-blurred {
     top: 1px;
     width: 6px;
     height: 10px;
-    border: solid #fff;
+    border: solid #000;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }

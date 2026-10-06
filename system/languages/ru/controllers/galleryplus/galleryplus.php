@@ -3,6 +3,7 @@
     define('LANG_GALLERYPLUS_CONTROLLER',       'Галерея+');
     define('LANG_GALLERYPLUS_TITLE',            'Галерея');
     define('LANG_GALLERYPLUS_DESC',             'Все изображения');
+    define('LANG_GALLERYPLUS_FRONTPAGE',        'Галерея+');
     define('LANG_GALLERYPLUS_RECENT',           'Новые');
     define('LANG_GALLERYPLUS_POPULAR',          'Популярные');
     define('LANG_GALLERYPLUS_TRENDING',         'Обсуждаемые');
@@ -223,6 +224,10 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_DESC_LIMIT_HINT',         'Максимальное количество символов перед сокращением (0 — не сокращать)');
     define('LANG_GALLERYPLUS_SHOW_FULL_DESC',          'Показать полностью');
     define('LANG_GALLERYPLUS_COLLAPSE_DESC',           'Свернуть');
+    define('LANG_GALLERYPLUS_SHOW_COPY_DESC',          'Показывать кнопку «Копировать описание»');
+    define('LANG_GALLERYPLUS_SHOW_COPY_DESC_HINT',     'Показывать кнопку копирования описания во вкладке «О фото» на странице просмотра фото');
+    define('LANG_GALLERYPLUS_COPY_DESC',               'Копировать описание');
+    define('LANG_GALLERYPLUS_COPY_DESC_COPIED',        'Описание скопировано');
 
     define('LANG_GALLERYPLUS_WIDGET_MAP_HEIGHT',       'Высота карты');
     define('LANG_GALLERYPLUS_WIDGET_MAP_ZOOM',         'Масштаб по умолчанию');
@@ -315,3 +320,9 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE',      'Цена просмотра альбома');
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT', 'Пусто — использовать цену админа из Биллинга; 0 — бесплатный просмотр');
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT', 'Цена действует для всех пользователей. С каждой продажи удерживается процент сайта, остальное зачисляется вам.');
+
+define('LANG_GALLERYPLUS_TAG_FILTER',          '# сортировка по тегам');
+define('LANG_GALLERYPLUS_TAG_FILTER_ADD',      'Добавить тег');
+define('LANG_GALLERYPLUS_TAG_FILTER_REMOVE',   'Убрать тег');
+define('LANG_GALLERYPLUS_TAG_FILTER_RESET',    'Сбросить');
+define('LANG_GALLERYPLUS_TAG_FILTER_EMPTY',    'Ничего не найдено по этим тегам');

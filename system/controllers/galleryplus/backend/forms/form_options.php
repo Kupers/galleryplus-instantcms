@@ -155,6 +155,12 @@ class formGalleryplusOptions extends cmsForm {
                         'rules'   => [['min', 0]],
                     ]),
 
+                    new fieldCheckbox('show_copy_desc', [
+                        'title'   => LANG_GALLERYPLUS_SHOW_COPY_DESC,
+                        'hint'    => LANG_GALLERYPLUS_SHOW_COPY_DESC_HINT,
+                        'default' => 0,
+                    ]),
+
                     new fieldCheckbox('hide_exif', [
                         'title'   => LANG_GALLERYPLUS_HIDE_EXIF,
                         'hint'    => LANG_GALLERYPLUS_HIDE_EXIF_HINT,

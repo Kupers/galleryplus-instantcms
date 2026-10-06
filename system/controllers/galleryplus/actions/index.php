@@ -8,6 +8,7 @@ class actionGalleryplusIndex extends cmsAction {
         $mode = $this->request->get('mode', $this->options['default_mode'] ?? 'albums');
         $explore = $this->request->get('explore', 'recent');
         $category_slug = $this->request->get('category', '');
+        $tags_param = (string)$this->request->get('tags', '');
 
         $user = $this->cms_user;
 
@@ -57,8 +58,12 @@ class actionGalleryplusIndex extends cmsAction {
             return $this->showAlbums($page, $category_id);
         }
 
+        $active_tags = $this->resolveActiveTags($tags_param);
+        $tag_ids     = array_column($active_tags, 'id');
+        $show_tag_filter = !empty($this->options['use_photo_tags']) && cmsCore::isModelExists('tags');
+
         if ($this->request->isAjax() && $page > 1) {
-            return $this->loadMore($page, $explore, $category_id);
+            return $this->loadMore($page, $explore, $category_id, $tag_ids);
         }
 
         $perpage = $this->options['limit'] ?? 24;
@@ -68,11 +73,14 @@ class actionGalleryplusIndex extends cmsAction {
         $show_adult_in_feed = array_key_exists('show_adult_in_feed', $this->options) ? (bool)$this->options['show_adult_in_feed'] : true;
         $show_adult = ($show_adult_in_feed && $this->cms_user->id) || !empty($show_adult_to_guests);
 
+        $this->applyTagFilter($tag_ids);
+
         $total = $category_id
             ? $this->model->getPhotosCount(null, $category_id, $include_adult_for_guests, $show_adult)
             : $this->model->getPhotosCount(null, 0, $include_adult_for_guests, $show_adult);
 
         $this->applyExploreOrder($explore);
+        $this->applyTagFilter($tag_ids);
 
         $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests, $show_adult);
         if (!$photos) { $photos = []; }
@@ -96,6 +104,12 @@ class actionGalleryplusIndex extends cmsAction {
 
         $can_select = $this->canSelect();
 
+        $tag_filter = $this->buildTagFilter($mode, $explore, $category_slug, $active_tags);
+
+        if ($this->request->isAjax() && $this->request->get('gp_filter', '') !== '') {
+            return $this->filterResult($photos, $has_next, $mode, $perpage, $total, $current_category, $tag_filter);
+        }
+
         return $this->cms_template->render('index', [
             'photos'           => $photos,
             'mode'             => $mode,
@@ -112,10 +126,135 @@ class actionGalleryplusIndex extends cmsAction {
             'use_categories'   => $use_categories,
             'use_album_tags'   => !empty($this->options['use_album_tags']),
             'use_photo_tags'   => !empty($this->options['use_photo_tags']),
+            'show_tag_filter'  => $show_tag_filter,
+            'active_tags'      => $active_tags,
+            'tags_query'       => $tag_filter['query'],
+            'tag_filter_base'  => $tag_filter['base'],
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
             'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
         ]);
+    }
+
+    /**
+     * AJAX-ответ на смену тегов: карточки первой страницы + пагинация + пустое состояние.
+     * Страница целиком не перерисовывается — JS заменяет содержимое сетки и пересобирает раскладку.
+     */
+    private function filterResult($photos, $has_next, $mode, $perpage, $total, $current_category, $tag_filter) {
+
+        $html = '';
+        foreach ($photos as $photo) {
+            $html .= $this->renderPhotoCard($photo);
+        }
+
+        $pagination = '';
+        if ($mode === 'paged' && $total > $perpage) {
+            $query = ['mode' => 'paged'];
+            if (!empty($current_category)) { $query['category'] = $current_category['slug']; }
+            if (!empty($tag_filter['tags'])) { $query['tags'] = $tag_filter['tags']; }
+            $pagination = html_pagebar(1, $perpage, $total, href_to('galleryplus'), $query);
+        }
+
+        $empty_html = '';
+        if (!$photos) {
+            $msg    = defined('LANG_GALLERYPLUS_TAG_FILTER_EMPTY') ? LANG_GALLERYPLUS_TAG_FILTER_EMPTY : 'Ничего не найдено по этим тегам';
+            $reset  = defined('LANG_GALLERYPLUS_TAG_FILTER_RESET') ? LANG_GALLERYPLUS_TAG_FILTER_RESET : 'Сбросить';
+            $base   = htmlspecialchars($tag_filter['base']);
+            $empty_html = '<div class="galleryplus-empty"><span class="galleryplus-empty-tagfilter">' . htmlspecialchars($msg) . '</span>'
+                . '<a class="galleryplus-tagfilter-reset" href="' . $base . '">' . htmlspecialchars($reset) . '</a></div>';
+        }
+
+        return $this->cms_template->renderJSON([
+            'html'       => $html,
+            'page'       => $mode === 'infinite' ? 2 : 1,
+            'has_next'   => $mode === 'infinite' ? (bool)$has_next : false,
+            'total'      => (int)$total,
+            'mode'       => $mode,
+            'empty'      => !$photos,
+            'empty_html' => $empty_html,
+            'pagination' => $pagination,
+        ]);
+    }
+
+    /**
+     * Разбирает ?tags=a,b,c в список существующих тегов (id + название).
+     * Несуществующие/пустые отбрасываются, максимум 10 штук.
+     */
+    private function resolveActiveTags($raw) {
+
+        $result = [];
+
+        $raw = trim((string)$raw);
+        if ($raw === '' || $raw === false) { return $result; }
+        if (!cmsCore::isModelExists('tags')) { return $result; }
+
+        $names = preg_split('/[,\s]+/u', $raw);
+        $names = array_slice(array_filter(array_map('trim', $names), function($v) {
+            return $v !== '' && $v !== '#';
+        }), 0, 10);
+
+        if (!$names) { return $result; }
+
+        $tags_model = cmsCore::getModel('tags');
+
+        foreach ($names as $name) {
+            $name = ltrim($name, '#');
+            if ($name === '') { continue; }
+            $row = $tags_model->getTagByTag($name);
+            if (!$row || empty($row['id'])) { continue; }
+            $id = (int)$row['id'];
+            $result[$id] = [
+                'id'  => $id,
+                'tag' => $row['tag'],
+            ];
+        }
+
+        return array_values($result);
+    }
+
+    /**
+     * Фильтр по тегам: фото, у которых есть ЛЮБОЙ из выбранных тегов.
+     * Условие подставляется подзапросом, поэтому дубликатов строк не бывает.
+     */
+    private function applyTagFilter(array $tag_ids) {
+
+        if (empty($tag_ids)) { return; }
+
+        $ids = implode(',', array_map('intval', $tag_ids));
+
+        $this->model->filter(
+            "i.id IN (SELECT tb.target_id FROM {#}tags_bind tb" .
+            " WHERE tb.target_controller = 'galleryplus'" .
+            " AND tb.target_subject = 'photo'" .
+            " AND tb.tag_id IN ({$ids}))"
+        );
+    }
+
+    /**
+     * Базовая ссылка для переходов фильтра (текущий режим/сортировка/категория)
+     * и готовая query-строка с выбранными тегами.
+     */
+    private function buildTagFilter($mode, $explore, $category_slug, array $active_tags) {
+
+        $qs = [];
+        if ($mode && $mode !== 'albums') { $qs['mode'] = $mode; }
+        if ($explore && $explore !== 'recent') { $qs['explore'] = $explore; }
+        if ($category_slug) { $qs['category'] = $category_slug; }
+
+        $base = href_to('galleryplus');
+        if ($qs) { $base .= '?' . http_build_query($qs); }
+
+        $query = '';
+        if ($active_tags) {
+            $names = array_map(function($t) { return $t['tag']; }, $active_tags);
+            $query = '&tags=' . rawurlencode(implode(',', $names));
+        }
+
+        return [
+            'base'  => $base,
+            'query' => $query,
+            'tags'  => $active_tags ? implode(',', array_map(function($t) { return $t['tag']; }, $active_tags)) : '',
+        ];
     }
 
     public function showAlbums($page, $category_id = 0) {
@@ -215,7 +354,7 @@ class actionGalleryplusIndex extends cmsAction {
         ]);
     }
 
-    public function loadMore($page, $explore = 'recent', $category_id = 0) {
+    public function loadMore($page, $explore = 'recent', $category_id = 0, array $tag_ids = []) {
         $this->model->original_paid = $this->billingEnabledFeature('download_original');
         $this->applyExploreOrder($explore);
 
@@ -225,6 +364,7 @@ class actionGalleryplusIndex extends cmsAction {
         $show_adult = ($show_adult_in_feed && $this->cms_user->id) || !empty($show_adult_to_guests);
 
         $perpage = $this->options['limit'] ?? 24;
+        $this->applyTagFilter($tag_ids);
         $photos = $this->model->getPhotos($page, $perpage, $category_id, $include_adult_for_guests, $show_adult);
         if (!$photos) { $photos = []; }
         $has_next = count($photos) > $perpage;

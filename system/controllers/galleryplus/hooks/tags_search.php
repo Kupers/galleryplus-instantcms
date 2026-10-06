@@ -32,14 +32,16 @@ class onGalleryplusTagsSearch extends cmsAction {
 
     private function searchAlbums($tag, $page_url) {
 
-        $perpage = $this->options['limit'] ?? 24;
-        $page = $this->request->get('page', 1);
+        $perpage = (int)($this->options['limit'] ?? 24);
+        $page = max(1, (int)$this->request->get('page', 1));
+
+        $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;
+        $include_adult_for_guests = !$this->cms_user->id && $show_adult_to_guests;
 
         $this->model
             ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'album' AND t.target_controller = 'galleryplus'")
             ->filterEqual('t.tag_id', $tag['id']);
-        $total = $this->model->getCount('galleryplus_albums');
-        $this->model->resetFilters();
+        $total = $this->model->getAlbumsCount($this->cms_user->id, $include_adult_for_guests);
 
         $this->model
             ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'album' AND t.target_controller = 'galleryplus'")
@@ -49,6 +51,7 @@ class onGalleryplusTagsSearch extends cmsAction {
         $this->model->resetFilters();
 
         if (!$albums) { $albums = []; }
+        if (count($albums) > $perpage) { array_pop($albums); }
 
         foreach ($albums as &$a) {
             $a['is_owner'] = $this->cms_user->id && $a['user_id'] == $this->cms_user->id;
@@ -99,7 +102,7 @@ class onGalleryplusTagsSearch extends cmsAction {
 
         if ($total > $perpage) {
             $html .= '<div class="galleryplus-pagination">';
-            $html .= html_pagebar($page, $total, $perpage, $page_url . '&page=%s');
+            $html .= html_pagebar($page, $perpage, $total, $page_url);
             $html .= '</div>';
         }
 
@@ -108,28 +111,56 @@ class onGalleryplusTagsSearch extends cmsAction {
 
     private function searchPhotos($tag, $page_url) {
 
-        $perpage = $this->options['limit'] ?? 24;
-        $page = $this->request->get('page', 1);
-
-        $this->model
-            ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'photo' AND t.target_controller = 'galleryplus'")
-            ->filterEqual('t.tag_id', $tag['id']);
-        $total = $this->model->getCount('galleryplus_photos');
-        $this->model->resetFilters();
-
-        $this->model
-            ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'photo' AND t.target_controller = 'galleryplus'")
-            ->filterEqual('t.tag_id', $tag['id']);
+        $perpage = (int)($this->options['limit'] ?? 24);
+        $page = max(1, (int)$this->request->get('page', 1));
 
         $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;
         $include_adult_for_guests = !$this->cms_user->id && $show_adult_to_guests;
+
+        $this->model
+            ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'photo' AND t.target_controller = 'galleryplus'")
+            ->filterEqual('t.tag_id', $tag['id']);
+        $total = $this->model->getPhotosCount(null, 0, $include_adult_for_guests, true);
+
+        $this->model
+            ->join('tags_bind', 't', "t.target_id = i.id AND t.target_subject = 'photo' AND t.target_controller = 'galleryplus'")
+            ->filterEqual('t.tag_id', $tag['id']);
 
         $photos = $this->model->getPhotos($page, $perpage, 0, $include_adult_for_guests);
         $this->model->resetFilters();
 
         if (!$photos) { $photos = []; }
+        if (count($photos) > $perpage) { array_pop($photos); }
 
-        $html = '<div class="galleryplus-grid">';
+        $can_select = $this->canSelect();
+        $user_albums = [];
+        if ($can_select && $this->cms_user->id) {
+            $user_albums = $this->model->getUserAlbumsList($this->cms_user->id);
+        }
+
+        $html = '';
+
+        if ($can_select) {
+            $html .= '<div class="galleryplus-selection-bar" id="galleryplus-selection-bar" style="display:none">';
+            $html .= '<label class="galleryplus-select-all-label">';
+            $html .= '<input type="checkbox" id="galleryplus-select-all">';
+            $html .= '<span class="galleryplus-checkbox"></span>';
+            $html .= '<span>' . (LANG_GALLERYPLUS_SELECT_ALL ?? 'Select all') . '</span>';
+            $html .= '</label>';
+            $html .= '<span class="galleryplus-selection-count" id="galleryplus-selection-count"></span>';
+            if ($user_albums) {
+                $html .= '<select class="form-control galleryplus-move-select" id="galleryplus-move-album" style="width:auto;display:none;padding:2px 8px;font-size:13px;">';
+                $html .= '<option value="">' . (LANG_GALLERYPLUS_MOVE_TO_ALBUM ?? 'Переместить в альбом') . '...</option>';
+                foreach ($user_albums as $ua) {
+                    $html .= '<option value="' . (int)$ua['id'] . '">' . htmlspecialchars($ua['title']) . '</option>';
+                }
+                $html .= '</select>';
+            }
+            $html .= '<button class="galleryplus-btn galleryplus-delete-btn" id="galleryplus-delete-btn" style="display:none">&#128465; ' . (LANG_GALLERYPLUS_DELETE ?? 'Delete') . '</button>';
+            $html .= '</div>';
+        }
+
+        $html .= '<div class="galleryplus-grid" id="galleryplus-grid" data-is-guest="' . (empty($this->cms_user->id) ? '1' : '0') . '" data-login-url="' . htmlspecialchars(href_to('auth', 'login'), ENT_QUOTES) . '">';
         if ($photos) {
             foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
@@ -153,6 +184,12 @@ class onGalleryplusTagsSearch extends cmsAction {
                 ], JSON_UNESCAPED_UNICODE));
                 $adult_class = $is_adult ? ' galleryplus-item--adult' : '';
                 $html .= '<div class="galleryplus-item' . $adult_class . '" data-object="' . $obj . '">';
+                if ($can_select) {
+                    $html .= '<label class="galleryplus-checkbox-wrap">';
+                    $html .= '<input type="checkbox" class="galleryplus-select-cb" data-id="' . (int)$photo['id'] . '">';
+                    $html .= '<span class="galleryplus-checkbox"></span>';
+                    $html .= '</label>';
+                }
                 $html .= '<a href="' . $photo['url'] . '" class="galleryplus-viewer-link">';
                 $html .= '<img src="' . $photo['url_thumb'] . '" alt="' . $title . '" loading="lazy" width="' . ($photo['width'] ?? 0) . '" height="' . ($photo['height'] ?? 0) . '" class="' . ($is_adult ? 'galleryplus-blurred' : '') . '">';
                 if ($is_adult) { $html .= '<div class="galleryplus-adult-badge">18+</div>'; }
@@ -171,11 +208,149 @@ class onGalleryplusTagsSearch extends cmsAction {
 
         if ($total > $perpage) {
             $html .= '<div class="galleryplus-pagination">';
-            $html .= html_pagebar($page, $total, $perpage, $page_url . '&page=%s');
+            $html .= html_pagebar($page, $perpage, $total, $page_url);
             $html .= '</div>';
         }
 
+        if ($can_select) {
+            $save_url = href_to('galleryplus', 'save');
+            $confirm_delete = addslashes(LANG_GALLERYPLUS_CONFIRM_DELETE ?? 'Delete selected photos?');
+            $confirm_move = addslashes(LANG_GALLERYPLUS_CONFIRM_MOVE ?? 'Переместить выбранные фото?');
+            $html .= '<script>
+(function() {
+    var bar = document.getElementById("galleryplus-selection-bar");
+    if (!bar) return;
+    var selectAll = document.getElementById("galleryplus-select-all");
+    var countEl = document.getElementById("galleryplus-selection-count");
+    var deleteBtn = document.getElementById("galleryplus-delete-btn");
+    var moveSelect = document.getElementById("galleryplus-move-album");
+    var grid = document.getElementById("galleryplus-grid");
+    var saveUrl = "' . htmlspecialchars($save_url, ENT_QUOTES) . '";
+
+    function getChecked() { return document.querySelectorAll(".galleryplus-select-cb:checked"); }
+
+    function updateBar() {
+        var n = getChecked().length;
+        if (n === 0) { bar.style.display = "none"; document.body.classList.remove("galleryplus-selecting"); return; }
+        bar.style.display = "";
+        document.body.classList.add("galleryplus-selecting");
+        countEl.textContent = n;
+        deleteBtn.style.display = "";
+        if (moveSelect) moveSelect.style.display = "";
+    }
+
+    function clearSelection() {
+        selectAll.checked = false;
+        var cbs = document.querySelectorAll(".galleryplus-select-cb");
+        for (var i = 0; i < cbs.length; i++) cbs[i].checked = false;
+        updateBar();
+    }
+
+    function removeItems(cbs) {
+        for (var i = 0; i < cbs.length; i++) {
+            var item = cbs[i].closest(".galleryplus-item");
+            if (item) item.remove();
+        }
+        if (typeof galleryplusMasonry === "function" && grid) galleryplusMasonry(grid);
+    }
+
+    bar.addEventListener("change", function(e) {
+        if (e.target === selectAll) {
+            var cbs = document.querySelectorAll(".galleryplus-select-cb");
+            for (var i = 0; i < cbs.length; i++) cbs[i].checked = selectAll.checked;
+        }
+        updateBar();
+    });
+
+    if (grid) grid.addEventListener("change", function(e) {
+        if (e.target.classList.contains("galleryplus-select-cb")) updateBar();
+    });
+
+    deleteBtn.addEventListener("click", function() {
+        var cbs = getChecked();
+        if (!cbs.length) return;
+        if (!confirm("' . $confirm_delete . '")) return;
+        var ids = [];
+        for (var i = 0; i < cbs.length; i++) ids.push(parseInt(cbs[i].getAttribute("data-id")));
+        deleteBtn.disabled = true;
+        var fd = new FormData();
+        fd.append("action", "delete_photos");
+        fd.append("ids", ids.join(","));
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", saveUrl, true);
+        xhr.onload = function() {
+            deleteBtn.disabled = false;
+            if (xhr.status === 200) {
+                try { var r = JSON.parse(xhr.responseText); } catch (e) { return; }
+                if (r.success) {
+                    removeItems(cbs);
+                    clearSelection();
+                } else if (r.error) {
+                    alert(r.error);
+                }
+            }
+        };
+        xhr.send(fd);
+    });
+
+    if (moveSelect) {
+        moveSelect.addEventListener("change", function() {
+            var targetAlbumId = parseInt(moveSelect.value);
+            if (!targetAlbumId) return;
+            var cbs = getChecked();
+            if (!cbs.length) { moveSelect.value = ""; return; }
+            if (!confirm("' . $confirm_move . '")) { moveSelect.value = ""; return; }
+            var ids = [];
+            for (var i = 0; i < cbs.length; i++) ids.push(parseInt(cbs[i].getAttribute("data-id")));
+            var fd = new FormData();
+            fd.append("action", "move_photos");
+            fd.append("ids", ids.join(","));
+            fd.append("new_album_id", targetAlbumId);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", saveUrl, true);
+            xhr.onload = function() {
+                moveSelect.value = "";
+                if (xhr.status === 200) {
+                    try { var r = JSON.parse(xhr.responseText); } catch (e) { return; }
+                    if (r.success) {
+                        removeItems(cbs);
+                        clearSelection();
+                    } else if (r.error) {
+                        alert(r.error);
+                    }
+                }
+            };
+            xhr.send(fd);
+        });
+    }
+})();
+</script>';
+        }
+
+        ob_start();
+        $this->cms_template->renderControllerChild('galleryplus', 'viewer', [
+            'show_lightbox_desc'      => !empty($this->options['show_lightbox_desc']),
+            'truncate_lightbox_desc'  => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
+            'lightbox_desc_limit'     => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
+            'user'                    => $this->cms_user,
+        ]);
+        $html .= ob_get_clean();
+
         return $html;
+    }
+
+    private function canSelect() {
+        if (!$this->cms_user->id) { return false; }
+        if ($this->cms_user->is_admin) { return true; }
+        try {
+            if (cmsCore::isModelExists('moderation')) {
+                $mod = cmsCore::getModel('moderation');
+                if ($mod && method_exists($mod, 'userIsContentModerator')) {
+                    return $mod->userIsContentModerator('galleryplus', $this->cms_user->id);
+                }
+            }
+        } catch (\Throwable $e) {}
+        return false;
     }
 
 }

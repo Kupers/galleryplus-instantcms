@@ -77,8 +77,8 @@ class actionGalleryplusEdit extends cmsAction {
             $this->model->update('galleryplus_photos', $photo_id, $update);
 
             if (!empty($new_album_id) && !empty($old_album_id) && $new_album_id !== $old_album_id) {
-                $this->model->updateAlbumPhotosCount($old_album_id);
-                $this->model->updateAlbumPhotosCount($new_album_id);
+                $this->model->recalcAlbumPhotosCount($old_album_id);
+                $this->model->recalcAlbumPhotosCount($new_album_id);
             }
 
             if ($this->request->get('exif_delete')) {

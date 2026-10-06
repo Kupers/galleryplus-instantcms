@@ -495,7 +495,7 @@
             + '<div class="galleryplus-upload-item-progress"><div class="galleryplus-upload-item-bar"></div></div>';
         uploadList.appendChild(item);
         if (tagsFieldInit && typeof initAutocomplete === 'function') {
-            initAutocomplete(photoTagId, false, '/tags/autocomplete', false, ', ');
+            initAutocomplete(photoTagId, true, '/tags/autocomplete', false, ', ');
         }
 
         var reader = new FileReader();
@@ -574,7 +574,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     <?php if (!empty($use_album_tags)) { ?>
     if (typeof initAutocomplete === 'function') {
-        initAutocomplete('album-settings-tags', false, '/tags/autocomplete', false, ', ');
+        initAutocomplete('album-settings-tags', true, '/tags/autocomplete', false, ', ');
     }
     <?php } ?>
 });

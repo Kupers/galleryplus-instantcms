@@ -161,6 +161,9 @@ function uninstall_package() {
     $db->query("DELETE FROM `{$prefix}users_tabs` WHERE controller = 'galleryplus' AND name = 'albums'");
     $db->query("DELETE FROM `{$prefix}users_tabs` WHERE controller = 'galleryplus' AND name = 'favorites'");
 
+    // Remove controller events (hooks)
+    $db->query("DELETE FROM `{$prefix}events` WHERE listener = 'galleryplus'");
+
     // Drop database tables
     $tables = [
         $prefix . 'galleryplus_albums',

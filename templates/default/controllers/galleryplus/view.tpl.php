@@ -132,6 +132,9 @@
         <div class="galleryplus-tab-pane active" data-tab="about">
             <?php if (!empty($photo['content'])) { ?>
                 <p><?php echo $photo['content']; ?></p>
+                <?php if (!empty($show_copy_desc)) { ?>
+                    <button type="button" class="galleryplus-desc-copy" data-copy-desc data-copied="<?php echo defined('LANG_GALLERYPLUS_COPY_DESC_COPIED') ? LANG_GALLERYPLUS_COPY_DESC_COPIED : 'Описание скопировано'; ?>"><?php echo defined('LANG_GALLERYPLUS_COPY_DESC') ? LANG_GALLERYPLUS_COPY_DESC : 'Копировать описание'; ?></button>
+                <?php } ?>
             <?php } else { ?>
                 <p class="text-muted"><?php echo LANG_GALLERYPLUS_NO_DESC ?? 'No description'; ?></p>
             <?php } ?>
@@ -336,6 +339,44 @@
         });
     }
 })();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.querySelector('.galleryplus-desc-copy[data-copy-desc]');
+    if (!btn) return;
+    var descEl = document.querySelector('.galleryplus-tab-pane[data-tab="about"] p');
+    if (!descEl) return;
+
+    function copyText(text, done) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function() { done(true); }, function() { done(false); });
+            return;
+        }
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        done(ok);
+    }
+
+    btn.addEventListener('click', function() {
+        btn.disabled = true;
+        var orig = btn.textContent;
+        copyText(descEl.textContent.trim(), function(ok) {
+            if (ok) {
+                btn.textContent = btn.getAttribute('data-copied') || 'Описание скопировано';
+            }
+            setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 1600);
+        });
+    });
+});
 </script>
 
 <?php if (($gps_lat !== null && $gps_lon !== null) && empty($hide_map)) { ?>

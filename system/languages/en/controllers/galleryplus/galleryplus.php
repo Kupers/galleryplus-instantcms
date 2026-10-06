@@ -3,6 +3,7 @@
     define('LANG_GALLERYPLUS_CONTROLLER',       'Gallery+');
     define('LANG_GALLERYPLUS_TITLE',            'Gallery');
     define('LANG_GALLERYPLUS_DESC',             'All images');
+    define('LANG_GALLERYPLUS_FRONTPAGE',        'Gallery+');
     define('LANG_GALLERYPLUS_RECENT',           'Recent');
     define('LANG_GALLERYPLUS_POPULAR',          'Popular');
     define('LANG_GALLERYPLUS_TRENDING',         'Trending');
@@ -219,6 +220,10 @@
     define('LANG_GALLERYPLUS_DESC_LIMIT_HINT',         'Maximum number of characters before truncation (0 — no truncation)');
     define('LANG_GALLERYPLUS_SHOW_FULL_DESC',          'Show full');
     define('LANG_GALLERYPLUS_COLLAPSE_DESC',           'Collapse');
+    define('LANG_GALLERYPLUS_SHOW_COPY_DESC',          'Show the "Copy description" button');
+    define('LANG_GALLERYPLUS_SHOW_COPY_DESC_HINT',     'Show a button to copy the photo description in the "About" tab on the photo view page');
+    define('LANG_GALLERYPLUS_COPY_DESC',               'Copy description');
+    define('LANG_GALLERYPLUS_COPY_DESC_COPIED',        'Description copied');
 
     define('LANG_GALLERYPLUS_WIDGET_MAP_HEIGHT',       'Map height');
     define('LANG_GALLERYPLUS_WIDGET_MAP_ZOOM',         'Default zoom');
@@ -311,3 +316,9 @@
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE',      'Album view price');
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_HINT', 'Leave empty to use the admin price from Billing; 0 — free viewing');
     define('LANG_GALLERYPLUS_BILLING_ALBUM_PRICE_SUBHINT', 'The price applies to all users. The site commission is deducted from each sale, the rest goes to you.');
+
+define('LANG_GALLERYPLUS_TAG_FILTER',          '# sort by tags');
+define('LANG_GALLERYPLUS_TAG_FILTER_ADD',      'Add tag');
+define('LANG_GALLERYPLUS_TAG_FILTER_REMOVE',   'Remove tag');
+define('LANG_GALLERYPLUS_TAG_FILTER_RESET',    'Reset');
+define('LANG_GALLERYPLUS_TAG_FILTER_EMPTY',    'Nothing found for these tags');
