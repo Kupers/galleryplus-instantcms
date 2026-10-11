@@ -31,6 +31,8 @@ class widgetGalleryplusPhotos extends cmsWidget {
             return $item;
         }, false);
 
+        $photos = $model->applyAdultFilter($photos, $current_user_id);
+
         if (!$photos) { return false; }
 
         return [

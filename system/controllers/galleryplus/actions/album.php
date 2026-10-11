@@ -66,6 +66,7 @@ class actionGalleryplusAlbum extends cmsAction {
                     'locked' => true,
                     'can_select' => false,
                     'category' => null,
+                    'adult_lock' => $this->isAdultLocked(),
                 ]);
             }
 
@@ -87,6 +88,7 @@ class actionGalleryplusAlbum extends cmsAction {
                     'locked'   => true,
                     'can_select' => false,
                     'category' => null,
+                    'adult_lock' => $this->isAdultLocked(),
                 ]);
             } elseif ($album['privacy'] === 'adult') {
                 if (!$this->cms_user->id) {
@@ -231,6 +233,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'     => $user_albums,
             'use_photo_tags'  => !empty($this->options['use_photo_tags']) && cmsCore::isModelExists('tags'),
+            'adult_lock'      => $this->isAdultLocked(),
         ]);
     }
 
@@ -299,6 +302,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'      => [],
             'use_photo_tags'   => false,
+            'adult_lock'       => $this->isAdultLocked(),
         ]);
     }
 

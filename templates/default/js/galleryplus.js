@@ -1143,9 +1143,33 @@ window.galleryplusMasonry = function(container, itemSelector) {
         try { return JSON.parse(item.getAttribute('data-object')); } catch(e) { return null; }
     }
 
-    function isGuest() {
-        var grid = document.getElementById('galleryplus-grid');
+    function findGrid(link) {
+        if (link) {
+            var g = link.closest('.galleryplus-grid, .galleryplus-similar-grid');
+            if (g) return g;
+        }
+        return document.getElementById('galleryplus-grid');
+    }
+
+    function isGuest(link) {
+        var grid = findGrid(link);
         return grid ? grid.dataset.isGuest === '1' : true;
+    }
+
+    function isAdultLocked(link) {
+        var grid = findGrid(link);
+        return grid ? grid.dataset.adultLock === '1' : false;
+    }
+
+    function galleryplusToast(msg) {
+        var t = document.createElement('div');
+        t.className = 'galleryplus-toast';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function() { t.classList.add('show'); }, 10);
+        setTimeout(function() {
+            if (t.parentNode) t.parentNode.removeChild(t);
+        }, 3000);
     }
 
     // ---- Share popup ----
@@ -1311,8 +1335,9 @@ window.galleryplusMasonry = function(container, itemSelector) {
             history.pushState({ galleryplusViewer: true }, '', window.location.href);
             viewerStatePushed = true;
         }
-        var guest = isGuest();
-        if (obj.adult && guest) {
+        var guest = isGuest(item);
+        var adultBlur = obj.adult && (guest || isAdultLocked(item));
+        if (adultBlur) {
             viewerImg.src = obj.src;
             viewerImg.alt = obj.title;
             viewerImg.classList.add('galleryplus-viewer-blurred');
@@ -1488,7 +1513,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
         }, 2500);
     }
 
-    // Click on image → open viewer (or redirect guests for adult content)
+    // Click on image → open viewer (or redirect guests / warn age-locked users for adult content)
     document.addEventListener('click', function(e) {
         var link = e.target.closest('.galleryplus-viewer-link');
         if (!link) return;
@@ -1496,12 +1521,17 @@ window.galleryplusMasonry = function(container, itemSelector) {
         if (!item) return;
         var obj = getObject(item);
         if (obj && obj.adult) {
-            var grid = document.getElementById('galleryplus-grid');
-            var isGuest = grid ? grid.dataset.isGuest === '1' : true;
-            if (isGuest) {
+            var gridUrl = findGrid(link);
+            var adultGuest = gridUrl ? gridUrl.dataset.isGuest === '1' : true;
+            var loginUrl = gridUrl && gridUrl.dataset.loginUrl ? gridUrl.dataset.loginUrl : '/auth/login';
+            if (adultGuest) {
                 e.preventDefault();
-                var loginUrl = grid ? (grid.dataset.loginUrl || '/auth/login') : '/auth/login';
                 window.location.href = loginUrl;
+                return;
+            }
+            if (gridUrl && gridUrl.dataset.adultLock === '1') {
+                e.preventDefault();
+                galleryplusToast(gridUrl.dataset.adultWarn || 'Контент для взрослых. Укажите дату рождения в профиле');
                 return;
             }
         }

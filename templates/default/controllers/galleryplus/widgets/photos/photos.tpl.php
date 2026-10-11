@@ -8,10 +8,13 @@ $this->addTplCSS('controllers/galleryplus/styles');
 ?>
 
 <div class="galleryplus-grid">
-<?php foreach ($photos as $photo): ?>
-    <div class="galleryplus-item">
+<?php foreach ($photos as $photo):
+    $widget_adult = !empty($photo['is_adult']);
+?>
+    <div class="galleryplus-item<?php echo $widget_adult ? ' galleryplus-item--adult' : ''; ?>">
         <a href="<?php echo $photo['url']; ?>" class="galleryplus-item-link">
-            <img src="<?php echo $photo['url_thumb']; ?>" alt="<?php echo htmlspecialchars($photo['title'] ?? $photo['filename']); ?>" />
+            <img src="<?php echo $photo['url_thumb']; ?>" alt="<?php echo htmlspecialchars($photo['title'] ?? $photo['filename']); ?>" class="<?php echo $widget_adult ? 'galleryplus-blurred' : ''; ?>" />
+            <?php if ($widget_adult): ?><div class="galleryplus-adult-badge">18+</div><?php endif; ?>
         </a>
         <div class="galleryplus-item-overlay">
             <a href="<?php echo $photo['url']; ?>" class="galleryplus-item-title"><?php echo htmlspecialchars($photo['title'] ?? $photo['filename']); ?></a>

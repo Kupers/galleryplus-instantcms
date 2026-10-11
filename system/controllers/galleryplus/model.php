@@ -867,6 +867,141 @@ class modelGalleryplus extends cmsModel {
         return $this;
     }
 
+    protected static $adult_lock_cache = [];
+    protected static $adult_birth_field = null;
+
+    /**
+     * Зарегистрировано ли в профиле пользователей поле birth_date.
+     * Если поля нет — возрастной гейт не применяется (graceful fallback):
+     * иначе на сайтах без этого поля все обычные пользователи оказались бы
+     * заблокированы без возможности подтвердить возраст.
+     */
+    protected function adultBirthFieldExists() {
+        if (self::$adult_birth_field !== null) {
+            return self::$adult_birth_field;
+        }
+        $exists = false;
+        try {
+            $res = $this->db->query("SELECT id FROM {#}users_fields WHERE name = 'birth_date' LIMIT 1");
+            $exists = $res ? (bool)$this->db->numRows($res) : false;
+        } catch (Throwable $e) {
+            $exists = false;
+        }
+        self::$adult_birth_field = $exists;
+        return $exists;
+    }
+
+    /**
+     * Пользователь подтвердил возраст 18+ (или является админом/модератором).
+     * Гость или авторизованный без даты рождения / младше 18 — false.
+     * Если поля birth_date в профиле нет — гейт не применяется (true).
+     */
+    public function isAdultConfirmed($user_id = 0) {
+        if (!$user_id) { $user_id = (int)cmsUser::get('id'); }
+        if (isset(self::$adult_lock_cache[$user_id])) {
+            return self::$adult_lock_cache[$user_id];
+        }
+        $confirmed = false;
+        if ($user_id) {
+            if ($user_id === (int)cmsUser::get('id') && cmsUser::isAdmin()) {
+                $confirmed = true;
+            } elseif (cmsCore::isModelExists('moderation')) {
+                $mod = cmsCore::getModel('moderation');
+                if ($mod && method_exists($mod, 'userIsContentModerator')) {
+                    $confirmed = (bool)$mod->userIsContentModerator('galleryplus', $user_id);
+                }
+            }
+            if (!$confirmed) {
+                if (!$this->adultBirthFieldExists()) {
+                    // Поля birth_date нет — возрастной гейт не применяется.
+                    $confirmed = true;
+                } else {
+                    $birth_date = cmsUser::get('birth_date');
+                    if ($birth_date && is_string($birth_date)) {
+                        $ts = strtotime($birth_date);
+                        if ($ts && $ts > 0) {
+                            $confirmed = (int)date('Ymd') - (int)date('Ymd', $ts) >= 180000;
+                        }
+                    }
+                }
+            }
+        }
+        self::$adult_lock_cache[$user_id] = $confirmed;
+        return $confirmed;
+    }
+
+    /**
+     * 1 — возраст не подтверждён (снимать блюр нельзя), 0 — подтверждён.
+     */
+    public function isAdultLocked($user_id = 0) {
+        return $this->isAdultConfirmed($user_id) ? 0 : 1;
+    }
+
+    /**
+     * Фильтр видимого множества фото в купе с adult-блюром (зеркало прежней
+     * логики frontend::applyAdultFilter).
+     * - владельцу альбома 18+ блюр не ставится;
+     * - при опции hide_adult_for_underage карточки 18+ полностью скрываются
+     *   для пользователей без подтверждённого возраста;
+     * - гостям без show_adult_to_guests adult-фото не отдаются вовсе.
+     */
+    public function applyAdultFilter($photos, $user_id = 0) {
+        if (!$photos) { return $photos; }
+        if (!$user_id) { $user_id = (int)cmsUser::get('id'); }
+
+        $options = cmsController::loadOptions('galleryplus');
+        $show_in_feed = array_key_exists('show_adult_in_feed', $options) ? (bool)$options['show_adult_in_feed'] : true;
+        $show_to_guests = $options['show_adult_to_guests'] ?? 0;
+
+        if (!$show_in_feed && !$user_id && !$show_to_guests) {
+            return [];
+        }
+
+        $album_ids = array_unique(array_filter(array_map(function($p) {
+            return $p['album_id'] ?? 0;
+        }, $photos)));
+
+        $adult_albums = [];
+        if ($album_ids) {
+            $ids = implode(',', array_map('intval', $album_ids));
+            $result = $this->db->query("SELECT id, privacy, user_id FROM {#}galleryplus_albums WHERE id IN ({$ids})");
+            $rows = $result ? $this->db->fetchAll($result) : [];
+            if ($rows) {
+                foreach ($rows as $row) {
+                    if ($row['privacy'] === 'adult') {
+                        $adult_albums[(int)$row['id']] = (int)$row['user_id'];
+                    }
+                }
+            }
+        }
+
+        $show_adult = ($show_in_feed && $user_id) || ($show_to_guests);
+        $hide_underage = !empty($options['hide_adult_for_underage']);
+        $adult_confirmed = $this->isAdultConfirmed($user_id);
+
+        $result = [];
+        foreach ($photos as $p) {
+            $aid = $p['album_id'] ?? 0;
+            if (isset($adult_albums[$aid])) {
+                $owner_id = $adult_albums[$aid];
+                if ($user_id && $user_id == $owner_id) {
+                    $p['is_adult'] = false;
+                    $result[] = $p;
+                } elseif ($show_adult) {
+                    if ($hide_underage && !$adult_confirmed) {
+                        continue;
+                    }
+                    $p['is_adult'] = true;
+                    $result[] = $p;
+                }
+            } else {
+                $result[] = $p;
+            }
+        }
+
+        return $result;
+    }
+
     public function isAlbumProtected($album) {
         return !empty($album['privacy']) && $album['privacy'] !== 'public';
     }
@@ -1356,7 +1491,11 @@ class modelGalleryplus extends cmsModel {
         $this->joinUser();
         if (!$this->privacy_filter_disabled) { $this->filterPrivacy(); }
         if (!$this->approved_filter_disabled) { $this->filterApprovedOnly(); }
-        $this->skip_visible_albums_filter = true; // в page видимость уже проверена у текущего фото
+        // Похожие фото (в т.ч. найденные по общим тегам из других альбомов)
+        // фильтруем по видимости альбомов: public/adult/свои (для гостей +adult,
+        // если show_adult_to_guests). Adult-альбомы остаются видимыми — блюр ставит
+        // applyAdultFilter() в view.php.
+        $this->filterVisibleAlbums($user_id, $include_adult_for_guests, true);
 
         $this->filterNotEqual('i.id', $photo_id);
 
@@ -1394,7 +1533,6 @@ class modelGalleryplus extends cmsModel {
             return $item;
         }, false);
         $this->resetFilters();
-        $this->skip_visible_albums_filter = false;
 
         return $result ?: [];
     }

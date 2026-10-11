@@ -52,8 +52,13 @@
         <?php if ($is_blurred) { ?>
             <div class="galleryplus-adult-badge galleryplus-adult-badge--view">18+</div>
             <div class="galleryplus-view-adult-overlay">
-                <p><?php echo defined('LANG_GALLERYPLUS_ADULT_LOGIN') ? LANG_GALLERYPLUS_ADULT_LOGIN : 'Войдите, чтобы посмотреть это фото'; ?></p>
-                <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit"><?php echo defined('LANG_LOGIN') ? LANG_LOGIN : 'Войти'; ?></a>
+                <?php if (!empty($is_age_locked)) { ?>
+                    <p><?php echo defined('LANG_GALLERYPLUS_ADULT_AGE') ? LANG_GALLERYPLUS_ADULT_AGE : 'Контент для взрослых. Укажите дату рождения в профиле (нужно быть старше 18 лет)'; ?></p>
+                    <a href="<?php echo href_to('users', $user->id, 'edit'); ?>" class="button-submit"><?php echo defined('LANG_GALLERYPLUS_ADULT_AGE_SET') ? LANG_GALLERYPLUS_ADULT_AGE_SET : 'Указать дату рождения'; ?></a>
+                <?php } else { ?>
+                    <p><?php echo defined('LANG_GALLERYPLUS_ADULT_LOGIN') ? LANG_GALLERYPLUS_ADULT_LOGIN : 'Войдите, чтобы посмотреть это фото'; ?></p>
+                    <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit"><?php echo defined('LANG_LOGIN') ? LANG_LOGIN : 'Войти'; ?></a>
+                <?php } ?>
             </div>
         <?php } ?>
         <?php if ($is_paid_blurred) { ?>
@@ -105,7 +110,11 @@
                 <a href="<?php echo href_to('galleryplus', 'edit', [$photo['id']]); ?>" class="galleryplus-action-btn galleryplus-action-btn--edit"><?php echo defined('LANG_GALLERYPLUS_EDIT') ? LANG_GALLERYPLUS_EDIT : 'Редактировать'; ?></a>
             <?php } ?>
             <?php if ($is_blurred) { ?>
-                <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit galleryplus-view-login-btn"><?php echo defined('LANG_GALLERYPLUS_VIEW_FULL') ? LANG_GALLERYPLUS_VIEW_FULL : 'Войти для просмотра'; ?></a>
+                <?php if (!empty($is_age_locked)) { ?>
+                    <a href="<?php echo href_to('users', $user->id, 'edit'); ?>" class="button-submit"><?php echo defined('LANG_GALLERYPLUS_ADULT_AGE_SET') ? LANG_GALLERYPLUS_ADULT_AGE_SET : 'Указать дату рождения'; ?></a>
+                <?php } else { ?>
+                    <a href="<?php echo href_to('auth', 'login'); ?>" class="button-submit galleryplus-view-login-btn"><?php echo defined('LANG_GALLERYPLUS_VIEW_FULL') ? LANG_GALLERYPLUS_VIEW_FULL : 'Войти для просмотра'; ?></a>
+                <?php } ?>
             <?php } elseif ($is_paid_blurred) { ?>
                 <a href="<?php echo $buy_album_url; ?>" class="galleryplus-btn galleryplus-buy-btn"><?php echo defined('LANG_GALLERYPLUS_BILLING_BUY_ALBUM') ? LANG_GALLERYPLUS_BILLING_BUY_ALBUM : 'Купить просмотр'; ?> (<?php echo $album_view_price_spell; ?>)</a>
             <?php } else { ?>
@@ -220,10 +229,11 @@
 <?php if (!empty($similar_photos)) { ?>
     <div class="galleryplus-similar">
         <div class="galleryplus-similar-title"><?php echo defined('LANG_GALLERYPLUS_SIMILAR') ? LANG_GALLERYPLUS_SIMILAR : 'Похожие фото'; ?></div>
-        <div class="galleryplus-grid galleryplus-similar-grid" id="galleryplus-similar-grid">
+        <div class="galleryplus-grid galleryplus-similar-grid" id="galleryplus-similar-grid" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php foreach ($similar_photos as $sp) {
                 $spt = htmlspecialchars($sp['title'] ?: ($sp['filename'] ?? ''));
                 $similar_paid_locked = !empty($paid_locked) && empty($sp['url_big']) && empty($sp['album_preview']);
+                $similar_adult = !empty($sp['is_adult']);
             ?>
                 <?php if ($similar_paid_locked) { ?>
                     <div class="galleryplus-item galleryplus-item--paid-blur">
@@ -233,7 +243,7 @@
                         </a>
                     </div>
                 <?php } else { ?>
-                <div class="galleryplus-item" data-object="<?php echo htmlspecialchars(json_encode([
+                <div class="galleryplus-item<?php echo $similar_adult ? ' galleryplus-item--adult' : ''; ?>" data-object="<?php echo htmlspecialchars(json_encode([
                     'id'       => $sp['id'],
                     'url'      => $sp['url'],
                     'src'      => $sp['url_big'],
@@ -242,7 +252,7 @@
                     'title'    => $spt,
                     'author'   => htmlspecialchars($sp['user']['nickname'] ?? ''),
                     'avatar'   => $sp['user']['avatar'] ?? '',
-                    'adult'    => false,
+                    'adult'    => $similar_adult,
                     'likes'    => 0,
                     'liked'    => false,
                     'favorite' => false,
@@ -251,7 +261,8 @@
                     'desc'     => $sp['content'] ?? '',
                 ], JSON_UNESCAPED_UNICODE)); ?>">
                     <a href="<?php echo $sp['url']; ?>" class="galleryplus-viewer-link">
-                        <img src="<?php echo $sp['url_thumb']; ?>" alt="<?php echo $spt; ?>" loading="lazy" width="<?php echo $sp['width'] ?? 0; ?>" height="<?php echo $sp['height'] ?? 0; ?>">
+                        <img src="<?php echo $sp['url_thumb']; ?>" alt="<?php echo $spt; ?>" loading="lazy" width="<?php echo $sp['width'] ?? 0; ?>" height="<?php echo $sp['height'] ?? 0; ?>" class="<?php echo $similar_adult ? 'galleryplus-blurred' : ''; ?>">
+                        <?php if ($similar_adult) { ?><div class="galleryplus-adult-badge">18+</div><?php } ?>
                     </a>
                     <div class="galleryplus-item-overlay">
                         <a href="<?php echo $sp['url']; ?>" class="galleryplus-item-overlay-title"><?php echo $spt; ?></a>

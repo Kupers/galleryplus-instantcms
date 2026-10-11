@@ -129,6 +129,8 @@ class onGalleryplusTagsSearch extends cmsAction {
         $photos = $this->model->getPhotos($page, $perpage, 0, $include_adult_for_guests);
         $this->model->resetFilters();
 
+        $photos = $this->applyAdultFilter($photos);
+
         if (!$photos) { $photos = []; }
         if (count($photos) > $perpage) { array_pop($photos); }
 
@@ -160,7 +162,7 @@ class onGalleryplusTagsSearch extends cmsAction {
             $html .= '</div>';
         }
 
-        $html .= '<div class="galleryplus-grid" id="galleryplus-grid" data-is-guest="' . (empty($this->cms_user->id) ? '1' : '0') . '" data-login-url="' . htmlspecialchars(href_to('auth', 'login'), ENT_QUOTES) . '">';
+        $html .= '<div class="galleryplus-grid" id="galleryplus-grid" data-is-guest="' . (empty($this->cms_user->id) ? '1' : '0') . '" data-login-url="' . htmlspecialchars(href_to('auth', 'login'), ENT_QUOTES) . '" data-adult-lock="' . (int)$this->isAdultLocked() . '" data-adult-warn="' . htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES) . '">';
         if ($photos) {
             foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));

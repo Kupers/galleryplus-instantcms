@@ -136,6 +136,12 @@ class formGalleryplusOptions extends cmsForm {
                         'default' => 0,
                     ]),
 
+                    new fieldCheckbox('hide_adult_for_underage', [
+                        'title'   => LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE,
+                        'hint'    => LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE_HINT,
+                        'default' => 0,
+                    ]),
+
                     new fieldCheckbox('show_lightbox_desc', [
                         'title'   => LANG_GALLERYPLUS_LIGHTBOX_DESC,
                         'hint'    => LANG_GALLERYPLUS_LIGHTBOX_DESC_HINT,

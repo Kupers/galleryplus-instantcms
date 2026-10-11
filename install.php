@@ -56,7 +56,7 @@ function after_install_package() {
     // ОБНОВЛЕНИЕ: настройки админа сохраняются (в т.ч. выключенные чекбоксы = null) —
     // ядро при componentUpdate подставляет дефолты вместо null, поэтому восстанавливаем.
     try {
-        $options_yaml = "---\npreset_small: galleryplus_thumb\npreset_big: galleryplus_big\nordering: date_pub\norderto: desc\nlimit: 24\nview_all: [ ]\nlike: [ ]\nseo_h1: \"\"\nseo_title: \"\"\nseo_keys: \"\"\nseo_desc: \"\"\nnaming_scheme: mixed\nmax_file_size: 0\nmax_width: 0\nmax_height: 0\ndefault_mode: infinite\nshow_adult_in_feed: 1\nshow_adult_to_guests: 1\nis_comments_photo: 1\nis_comments_album: null\nshow_original: 1\npreset_nocrop: galleryplus_nocrop\nuse_categories: 1\nuse_album_tags: 1\nuse_photo_tags: 1\nupload_karma: 0\nadult_karma: 0\nadult_rating: 0\nhide_empty_albums: 1\nhide_exif: null\nshow_embed_codes: 1\nhide_map: null\nshow_lightbox_desc: 1\nlogging_enabled: 1
+        $options_yaml = "---\npreset_small: galleryplus_thumb\npreset_big: galleryplus_big\nordering: date_pub\norderto: desc\nlimit: 24\nview_all: [ ]\nlike: [ ]\nseo_h1: \"\"\nseo_title: \"\"\nseo_keys: \"\"\nseo_desc: \"\"\nnaming_scheme: mixed\nmax_file_size: 0\nmax_width: 0\nmax_height: 0\ndefault_mode: infinite\nshow_adult_in_feed: 1\nshow_adult_to_guests: 1\nhide_adult_for_underage: 0\nis_comments_photo: 1\nis_comments_album: null\nshow_original: 1\npreset_nocrop: galleryplus_nocrop\nuse_categories: 1\nuse_album_tags: 1\nuse_photo_tags: 1\nupload_karma: 0\nadult_karma: 0\nadult_rating: 0\nhide_empty_albums: 1\nhide_exif: null\nshow_embed_codes: 1\nhide_map: null\nshow_lightbox_desc: 1\nlogging_enabled: 1
 billing_take_percent: 0
 billing_percent: 0
 billing_allow_user_price: 0

@@ -74,7 +74,7 @@
         <?php } elseif (!empty($view_paid)) { ?>
 
             <?php if ($photos) { ?>
-                <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>">
+                <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
                     <?php foreach ($photos as $photo) {
                         $is_preview = !empty($photo['album_preview']);
                         $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
@@ -186,7 +186,7 @@
             </div>
         <?php } ?>
 
-        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>">
+        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
                 $author = htmlspecialchars($photo['user']['nickname'] ?? '');

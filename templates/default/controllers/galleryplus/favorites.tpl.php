@@ -17,7 +17,7 @@
     <?php if (empty($photos)) { ?>
         <div class="galleryplus-empty"><?php echo defined('LANG_GALLERYPLUS_NO_FAVORITES') ? LANG_GALLERYPLUS_NO_FAVORITES : 'В избранном пока пусто.'; ?></div>
     <?php } else { ?>
-        <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'favorites'); ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>">
+        <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'favorites'); ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
                 $author = htmlspecialchars($photo['user']['nickname'] ?? '');

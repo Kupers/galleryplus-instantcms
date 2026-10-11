@@ -44,6 +44,7 @@ class actionGalleryplusView extends cmsAction {
         }
 
         $is_blurred = false;
+        $is_age_locked = false;
         if (!empty($photo['album'])) {
             if (!$this->model->canAccessAlbum($photo['album'], $this->cms_user->id, $this->model->user_karma, $this->model->adult_karma, $show_adult_for_guests, $this->model->user_rating, $this->model->adult_rating)) {
                 if (!$this->cms_user->id) {
@@ -53,6 +54,14 @@ class actionGalleryplusView extends cmsAction {
             }
             if (!empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult' && !$this->cms_user->id && $show_adult_for_guests) {
                 $is_blurred = true;
+            }
+            // Возрастной гейт: залогиненному пользователю без подтверждённого возраста
+            // 18+ (младше 18 или не указана дата рождения) фото не размоется нигде.
+            // Владелец и админ/модератор подтверждены всегда (isAdultConfirmed).
+            if (!$is_blurred && !empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult'
+                && $this->cms_user->id && (int)$photo['user_id'] !== (int)$this->cms_user->id && !$this->isAdultConfirmed()) {
+                $is_blurred  = true;
+                $is_age_locked = true;
             }
         }
 
@@ -180,6 +189,9 @@ class actionGalleryplusView extends cmsAction {
         }
         unset($sp);
 
+        // Похожие фото из взрослых (18+) альбомов показываем с блюром, как в галерее/альбоме
+        $similar_photos = $this->applyAdultFilter($similar_photos);
+
         return $this->cms_template->render('view', [
             'photo'            => $photo,
             'user'             => $this->cms_user,
@@ -191,6 +203,8 @@ class actionGalleryplusView extends cmsAction {
             'photo_tags'       => $photo_tags,
             'use_photo_tags'   => !empty($this->options['use_photo_tags']),
             'is_blurred'       => $is_blurred,
+            'is_age_locked'    => $is_age_locked,
+            'adult_lock'       => $this->isAdultLocked(),
             'paid_locked'      => $paid_locked,
             'is_paid_blurred'  => $is_paid_blurred,
             'album_view_price' => $album_view_price,

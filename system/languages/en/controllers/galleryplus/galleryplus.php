@@ -134,8 +134,13 @@
         define('LANG_GALLERYPLUS_ALBUM_CREATE',            'Create album');
     define('LANG_GALLERYPLUS_SHOW_ADULT_IN_FEED',     'Show 18+ content in feed');
     define('LANG_GALLERYPLUS_SHOW_ADULT_IN_FEED_HINT','When enabled, adult photos appear blurred. Registered users can click to view');
-    define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS',   'Show 18+ to unregistered users');
+define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS',   'Show 18+ to unregistered users');
     define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS_HINT','Guests see blurred thumbnails; clicking redirects to login page');
+    define('LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE',   'Hide 18+ blurred content from users under 18');
+    define('LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE_HINT','Users under 18 or without a birth date in profile see no 18+ cards at all — not even blurred thumbnails. Blur is never removed anywhere. Administrators and moderators are exempt');
+    define('LANG_GALLERYPLUS_ADULT_AGE_WARN',      'Adult content. Set your birth date in your profile to view');
+    define('LANG_GALLERYPLUS_ADULT_AGE',           'Adult content. Set your birth date in your profile to view (you must be 18+)');
+    define('LANG_GALLERYPLUS_ADULT_AGE_SET',       'Set birth date');
     define('LANG_GALLERYPLUS_ALBUM_TITLE_REQUIRED',   'Album name is required');
     define('LANG_GALLERYPLUS_COMMENTS_LIKES',         'Comments & Likes');
     define('LANG_GALLERYPLUS_COMMENTS_PHOTO',         'Photo comments');

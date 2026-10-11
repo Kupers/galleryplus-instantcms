@@ -198,7 +198,7 @@
 
     <?php } else { ?>
 
-        <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-mode="<?php echo $mode; ?>" data-is-guest="<?php echo !empty($is_guest) ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>">
+        <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-mode="<?php echo $mode; ?>" data-is-guest="<?php echo !empty($is_guest) ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php if ($photos) { ?>
                 <?php foreach ($photos as $photo) {
                     $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));

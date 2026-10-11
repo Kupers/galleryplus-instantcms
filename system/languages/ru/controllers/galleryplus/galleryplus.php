@@ -134,8 +134,13 @@
     define('LANG_GALLERYPLUS_ALBUM_CREATE',            'Создать альбом');
     define('LANG_GALLERYPLUS_SHOW_ADULT_IN_FEED',     'Показывать контент 18+ в ленте');
     define('LANG_GALLERYPLUS_SHOW_ADULT_IN_FEED_HINT','Когда включено, фото 18+ отображаются размытыми. Зарегистрированные пользователи могут нажать для просмотра');
-    define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS',   'Показывать 18+ неавторизованным');
+define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS',   'Показывать 18+ неавторизованным');
     define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS_HINT','Гости видят размытые миниатюры; при нажатии перенаправляются на страницу входа');
+    define('LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE',   'Не показывать 18+ под блюром пользователям младше 18');
+    define('LANG_GALLERYPLUS_HIDE_ADULT_FOR_UNDERAGE_HINT','Пользователи младше 18 или не указавшие дату рождения в профиле не видят карточки 18+ вовсе — даже размытые миниатюры. Блюр не снимается нигде. Администраторы и модераторы — исключение');
+    define('LANG_GALLERYPLUS_ADULT_AGE_WARN',      'Контент для взрослых. Укажите дату рождения в профиле для просмотра');
+    define('LANG_GALLERYPLUS_ADULT_AGE',           'Контент для взрослых. Для просмотра укажите дату рождения в профиле (нужно быть старше 18 лет)');
+    define('LANG_GALLERYPLUS_ADULT_AGE_SET',       'Указать дату рождения');
     define('LANG_GALLERYPLUS_ALBUM_TITLE_REQUIRED',   'Название альбома обязательно');
     define('LANG_GALLERYPLUS_COMMENTS_LIKES',         'Комментарии и лайки');
     define('LANG_GALLERYPLUS_COMMENTS_PHOTO',         'Комментарии к фото');
