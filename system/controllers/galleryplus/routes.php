@@ -7,6 +7,10 @@ function routes_galleryplus() {
             'action'  => 'comments_html',
         ],
         [
+            'pattern' => '/^galleryplus\/suggest$/i',
+            'action'  => 'suggest',
+        ],
+        [
             'pattern' => '/^galleryplus\/favorites$/i',
             'action'  => 'favorites',
         ],

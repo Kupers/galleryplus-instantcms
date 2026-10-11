@@ -265,14 +265,25 @@ class actionGalleryplusIndex extends cmsAction {
         $show_adult_to_guests = $this->options['show_adult_to_guests'] ?? 0;
         $include_adult_for_guests = !$user->id && $show_adult_to_guests;
 
+        $title  = trim((string)$this->request->get('title', ''));
+        $author = trim((string)$this->request->get('author', ''));
+
+        // Текстовые фильтры (название/автор) сбрасываются внутри колбэков загрузки,
+        // поэтому выставляем их заново перед каждым запросом (список и счётчик).
+        $this->applyAlbumTextFilters($title, $author);
         if ($category_id) {
             $albums = $this->model->getAlbumsByCategory($category_id, $page, $perpage, $user->id, $include_adult_for_guests);
-            $total = $this->model->getAlbumsCountByCategory($category_id, $user->id, $include_adult_for_guests);
         } else {
             $albums = $this->model->getAlbums($page, $perpage, $user->id, $include_adult_for_guests);
-            $total = $this->model->getAlbumsCount($user->id, $include_adult_for_guests);
         }
         if (!$albums) { $albums = []; }
+
+        $this->applyAlbumTextFilters($title, $author);
+        if ($category_id) {
+            $total = $this->model->getAlbumsCountByCategory($category_id, $user->id, $include_adult_for_guests);
+        } else {
+            $total = $this->model->getAlbumsCount($user->id, $include_adult_for_guests);
+        }
 
         if (!isset($this->options['hide_empty_albums']) || !empty($this->options['hide_empty_albums'])) {
             $albums = array_values(array_filter($albums, function($a) {
@@ -333,25 +344,139 @@ class actionGalleryplusIndex extends cmsAction {
             unset($a);
         }
 
+        $can_select = $this->canSelect();
+
+        // Данные панели фильтра по названию и автору
+        $base_qs = ['mode' => 'albums'];
+        if ($current_category) { $base_qs['category'] = $current_category['slug']; }
+        $album_base = href_to('galleryplus') . '?' . http_build_query($base_qs);
+
+        $album_filter = [
+            'show'         => true,
+            'autocomplete' => href_to('galleryplus', 'suggest'),
+            'base'         => $album_base,
+            'title'        => $title,
+            'author'       => $author,
+            'active'       => ($title !== '' || $author !== ''),
+        ];
+
+        $pag_query = $base_qs;
+        if ($title !== '')  { $pag_query['title'] = $title; }
+        if ($author !== '') { $pag_query['author'] = $author; }
+        $pagination = $total > $perpage
+            ? html_pagebar($page, $perpage, $total, href_to('galleryplus'), $pag_query)
+            : '';
+
+        if ($this->request->isAjax() && $this->request->get('gp_filter', '') !== '') {
+            $html = '';
+            foreach ($albums as $a) {
+                $html .= $this->renderAlbumCard($a, $can_select, $use_album_tags);
+            }
+            return $this->cms_template->renderJSON([
+                'html'       => $html,
+                'empty'      => !$albums,
+                'empty_html' => $albums ? '' : $this->renderAlbumsEmpty($album_filter),
+                'pagination' => $pagination,
+            ]);
+        }
+
         return $this->cms_template->render('index', [
-            'albums'           => $albums,
-            'mode'             => 'albums',
-            'page'             => $page,
-            'has_next'         => false,
-            'total'            => $total,
-            'perpage'          => $perpage,
-            'user'             => $this->cms_user,
-            'explore'          => 'recent',
-            'can_select'       => $this->canSelect(),
-            'current_category' => $current_category,
-            'categories'       => $categories,
-            'use_categories'   => $use_categories,
-            'use_album_tags'   => $use_album_tags,
-            'use_photo_tags'   => !empty($this->options['use_photo_tags']),
+            'albums'            => $albums,
+            'mode'              => 'albums',
+            'page'              => $page,
+            'has_next'          => false,
+            'total'             => $total,
+            'perpage'           => $perpage,
+            'user'              => $this->cms_user,
+            'explore'           => 'recent',
+            'can_select'        => $can_select,
+            'current_category'  => $current_category,
+            'categories'        => $categories,
+            'use_categories'    => $use_categories,
+            'use_album_tags'    => $use_album_tags,
+            'use_photo_tags'    => !empty($this->options['use_photo_tags']),
+            'album_filter'      => $album_filter,
+            'albums_pagination' => $pagination,
             'show_lightbox_desc' => !empty($this->options['show_lightbox_desc']),
             'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
         ]);
+    }
+
+    private function applyAlbumTextFilters($title, $author) {
+        if ($title !== '')  { $this->model->filterAlbumsByTitle($title); }
+        if ($author !== '') { $this->model->filterAlbumsByAuthor($author); }
+    }
+
+    private function renderAlbumsEmpty($album_filter) {
+
+        if (!empty($album_filter['active'])) {
+            $msg   = defined('LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY') ? LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY : 'Ничего не найдено';
+            $reset = defined('LANG_GALLERYPLUS_ALBUM_FILTER_RESET') ? LANG_GALLERYPLUS_ALBUM_FILTER_RESET : 'Сбросить';
+            return '<div class="galleryplus-empty"><span class="galleryplus-empty-tagfilter">' . htmlspecialchars($msg) . '</span>'
+                . '<a class="galleryplus-albumfilter-reset" href="' . htmlspecialchars($album_filter['base']) . '">' . htmlspecialchars($reset) . '</a></div>';
+        }
+
+        $msg = defined('LANG_GALLERYPLUS_NO_ALBUMS') ? LANG_GALLERYPLUS_NO_ALBUMS : (defined('LANG_GALLERYPLUS_EMPTY') ? LANG_GALLERYPLUS_EMPTY : 'No albums yet.');
+        return '<div class="galleryplus-empty">' . htmlspecialchars($msg) . '</div>';
+    }
+
+    private function renderAlbumCard($a, $can_select, $use_album_tags) {
+
+        $is_adult_album = ($a['privacy'] ?? '') === 'adult';
+        $show_blur = $is_adult_album && empty($a['can_view_adult']);
+
+        $id    = (int)($a['id'] ?? 0);
+        $title = htmlspecialchars($a['title'] ?? '');
+        $href  = htmlspecialchars($a['url'] ?? '');
+
+        $cover = $a['cover_url'] ?? '';
+        $cw = (int)($a['cover_width'] ?? 0);
+        $ch = (int)($a['cover_height'] ?? 0);
+
+        $no_photos  = defined('LANG_GALLERYPLUS_NO_PHOTOS') ? LANG_GALLERYPLUS_NO_PHOTOS : 'No photos';
+        $photos_lng = defined('LANG_GALLERYPLUS_PHOTOS') ? LANG_GALLERYPLUS_PHOTOS : 'photos';
+
+        $html = '<a href="' . $href . '" class="galleryplus-album-card' . ($show_blur ? ' galleryplus-album-card--adult' : '') . '" data-album-id="' . $id . '">';
+
+        if ($can_select) {
+            $html .= '<label class="galleryplus-checkbox-wrap galleryplus-checkbox-wrap--album">'
+                . '<input type="checkbox" class="galleryplus-select-cb galleryplus-select-cb--album" data-id="' . $id . '">'
+                . '<span class="galleryplus-checkbox"></span></label>';
+        }
+
+        $html .= '<div class="galleryplus-album-cover">';
+        if ($show_blur) {
+            $html .= '<img src="' . htmlspecialchars($cover) . '" alt="" loading="lazy" class="galleryplus-blurred" data-width="' . $cw . '" data-height="' . $ch . '" style="' . ($cover ? '' : 'display:none;') . '">';
+            $html .= '<div class="galleryplus-adult-badge">18+</div>';
+            if (!$cover) {
+                $html .= '<div class="galleryplus-album-cover-empty" style="position:relative;z-index:1;">' . htmlspecialchars($no_photos) . '</div>';
+            }
+        } elseif ($cover) {
+            $html .= '<img src="' . htmlspecialchars($cover) . '" alt="' . $title . '" loading="lazy" data-width="' . $cw . '" data-height="' . $ch . '">';
+        } else {
+            $html .= '<div class="galleryplus-album-cover-empty">' . htmlspecialchars($no_photos) . '</div>';
+        }
+
+        $html .= '<div class="galleryplus-album-info">';
+        $html .= '<span class="galleryplus-album-title">' . $title . '</span>';
+        if ($show_blur) { $html .= '<span class="galleryplus-album-adult-label">18+</span>'; }
+        $html .= '<span class="galleryplus-album-count">' . (int)($a['photo_count'] ?? 0) . ' ' . htmlspecialchars($photos_lng) . '</span>';
+        $html .= '<span class="galleryplus-album-likes">&#10084; ' . (int)($a['likes_count'] ?? 0) . '</span>';
+        if (!empty($a['user']['nickname'])) {
+            $html .= '<span class="galleryplus-album-user">' . htmlspecialchars($a['user']['nickname']) . '</span>';
+        }
+        if ($use_album_tags && !empty($a['tags'])) {
+            $html .= '<div class="galleryplus-album-tags">';
+            foreach ($a['tags'] as $tag) {
+                $t = is_array($tag) ? ($tag['title'] ?? $tag['name'] ?? '') : $tag;
+                $html .= '<span class="galleryplus-tag-link">' . htmlspecialchars($t) . '</span>';
+            }
+            $html .= '</div>';
+        }
+        $html .= '</div></div></a>';
+
+        return $html;
     }
 
     public function loadMore($page, $explore = 'recent', $category_id = 0, array $tag_ids = []) {

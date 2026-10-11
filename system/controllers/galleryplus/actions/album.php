@@ -230,6 +230,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'     => $user_albums,
+            'use_photo_tags'  => !empty($this->options['use_photo_tags']) && cmsCore::isModelExists('tags'),
         ]);
     }
 
@@ -297,6 +298,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'truncate_lightbox_desc' => isset($this->options['truncate_lightbox_desc']) ? !empty($this->options['truncate_lightbox_desc']) : 1,
             'lightbox_desc_limit' => isset($this->options['lightbox_desc_limit']) ? (int)$this->options['lightbox_desc_limit'] : 300,
             'user_albums'      => [],
+            'use_photo_tags'   => false,
         ]);
     }
 

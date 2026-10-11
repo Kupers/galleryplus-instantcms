@@ -157,6 +157,11 @@
     define('LANG_GALLERYPLUS_MOVE_TO_ALBUM', 'Move to album');
     define('LANG_GALLERYPLUS_CONFIRM_MOVE', 'Move selected photos?');
 
+    define('LANG_GALLERYPLUS_ADD_TAGS',         'Tags');
+    define('LANG_GALLERYPLUS_ADD_TAGS_EMPTY',   'Enter at least one tag');
+    define('LANG_GALLERYPLUS_ADD_TAGS_APPLIED', 'Tags added');
+    define('LANG_GALLERYPLUS_ADD_TAGS_ERROR',   'Could not add tags');
+
     define('LANG_GALLERYPLUS_DELETE_EXIF',             'Delete EXIF');
     define('LANG_GALLERYPLUS_EXIF_CAMERA',            'Camera');
     define('LANG_GALLERYPLUS_EXIF_DATE',              'Date');
@@ -322,3 +327,8 @@ define('LANG_GALLERYPLUS_TAG_FILTER_ADD',      'Add tag');
 define('LANG_GALLERYPLUS_TAG_FILTER_REMOVE',   'Remove tag');
 define('LANG_GALLERYPLUS_TAG_FILTER_RESET',    'Reset');
 define('LANG_GALLERYPLUS_TAG_FILTER_EMPTY',    'Nothing found for these tags');
+
+define('LANG_GALLERYPLUS_ALBUM_FILTER_TITLE',  'Album title');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_AUTHOR', 'Author');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_RESET',  'Reset');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY',  'Nothing found');

@@ -108,6 +108,33 @@
 
     <?php if ($is_albums) { ?>
 
+        <?php if (!empty($album_filter) && !empty($album_filter['show'])) {
+            $af_title = defined('LANG_GALLERYPLUS_ALBUM_FILTER_TITLE') ? LANG_GALLERYPLUS_ALBUM_FILTER_TITLE : 'Название альбома';
+            $af_author = defined('LANG_GALLERYPLUS_ALBUM_FILTER_AUTHOR') ? LANG_GALLERYPLUS_ALBUM_FILTER_AUTHOR : 'Автор';
+            $af_reset = defined('LANG_GALLERYPLUS_ALBUM_FILTER_RESET') ? LANG_GALLERYPLUS_ALBUM_FILTER_RESET : 'Сбросить';
+        ?>
+        <div class="galleryplus-tagfilter galleryplus-albumfilter" id="galleryplus-albumfilter"
+             data-autocomplete="<?php echo htmlspecialchars($album_filter['autocomplete']); ?>"
+             data-base="<?php echo htmlspecialchars($album_filter['base']); ?>"
+             data-title="<?php echo htmlspecialchars($album_filter['title']); ?>"
+             data-author="<?php echo htmlspecialchars($album_filter['author']); ?>">
+
+            <div class="galleryplus-tagfilter-field">
+                <input type="text" class="galleryplus-tagfilter-input galleryplus-albumfilter-input" data-field="title" autocomplete="off"
+                       placeholder="<?php echo htmlspecialchars($af_title); ?>" value="<?php echo htmlspecialchars($album_filter['title']); ?>">
+                <div class="galleryplus-tagfilter-suggest galleryplus-albumfilter-suggest" data-suggest="title"></div>
+            </div>
+
+            <div class="galleryplus-tagfilter-field">
+                <input type="text" class="galleryplus-tagfilter-input galleryplus-albumfilter-input" data-field="author" autocomplete="off"
+                       placeholder="<?php echo htmlspecialchars($af_author); ?>" value="<?php echo htmlspecialchars($album_filter['author']); ?>">
+                <div class="galleryplus-tagfilter-suggest galleryplus-albumfilter-suggest" data-suggest="author"></div>
+            </div>
+
+            <a class="galleryplus-tagfilter-reset galleryplus-albumfilter-reset" href="<?php echo htmlspecialchars($album_filter['base']); ?>"<?php echo $album_filter['active'] ? '' : ' style="display:none"'; ?>><?php echo htmlspecialchars($af_reset); ?></a>
+        </div>
+        <?php } ?>
+
         <div class="galleryplus-albums-grid" id="galleryplus-albums-grid">
             <?php if (!empty($albums)) { ?>
                 <?php foreach ($albums as $a) {
@@ -154,15 +181,20 @@
                     </a>
                 <?php } ?>
             <?php } else { ?>
-                <div class="galleryplus-empty"><?php echo defined('LANG_GALLERYPLUS_EMPTY') ? LANG_GALLERYPLUS_EMPTY : 'No images yet.'; ?></div>
+                <div class="galleryplus-empty">
+                    <?php if (!empty($album_filter['active'])) { ?>
+                        <span class="galleryplus-empty-tagfilter"><?php echo defined('LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY') ? LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY : 'Ничего не найдено'; ?></span>
+                        <a class="galleryplus-tagfilter-reset galleryplus-albumfilter-reset" href="<?php echo htmlspecialchars($album_filter['base']); ?>"><?php echo defined('LANG_GALLERYPLUS_ALBUM_FILTER_RESET') ? LANG_GALLERYPLUS_ALBUM_FILTER_RESET : 'Сбросить'; ?></a>
+                    <?php } else { ?>
+                        <?php echo defined('LANG_GALLERYPLUS_NO_ALBUMS') ? LANG_GALLERYPLUS_NO_ALBUMS : (defined('LANG_GALLERYPLUS_EMPTY') ? LANG_GALLERYPLUS_EMPTY : 'No albums yet.'); ?>
+                    <?php } ?>
+                </div>
             <?php } ?>
         </div>
 
-        <?php if ($total > $perpage) { ?>
-            <div class="galleryplus-pagination">
-                <?php echo html_pagebar($page, $perpage, $total, href_to('galleryplus'), array_merge(['mode' => 'albums'], $current_category ? ['category' => $current_category['slug']] : [])); ?>
-            </div>
-        <?php } ?>
+        <div class="galleryplus-pagination" id="galleryplus-albums-pagination"<?php echo empty($albums_pagination) ? ' style="display:none"' : ''; ?>>
+            <?php echo $albums_pagination ?? ''; ?>
+        </div>
 
     <?php } else { ?>
 

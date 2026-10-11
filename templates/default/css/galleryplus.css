@@ -333,6 +333,18 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     margin-bottom: 8px;
 }
 
+/* --- Album filter (название / автор) --- */
+.galleryplus-albumfilter .galleryplus-tagfilter-field {
+    max-width: 320px;
+}
+
+.galleryplus-albumfilter .galleryplus-tagfilter-input {
+    padding-left: 32px;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+}
+
 /* --- Grid (JS masonry) --- */
 .galleryplus-grid {
     position: relative;
@@ -594,6 +606,8 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
 
 .galleryplus-view-actions {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     margin-bottom: 16px;
 }
@@ -2855,6 +2869,67 @@ body.galleryplus-selecting .galleryplus-item > .galleryplus-checkbox-wrap {
 .galleryplus-delete-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* --- Assign tags to selected photos --- */
+.galleryplus-tags-btn {
+    background: #1a73e8;
+    color: #fff;
+}
+
+.galleryplus-tags-btn:hover {
+    background: #155ab6;
+}
+
+.galleryplus-tags-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+    margin: -8px 0 16px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.galleryplus-tags-chips:empty {
+    display: none;
+}
+
+.galleryplus-tags-field {
+    flex: 1 1 260px;
+    max-width: 480px;
+}
+
+.galleryplus-tags-cancel {
+    background: #eee;
+    color: #333;
+}
+
+.galleryplus-tags-cancel:hover {
+    background: #e0e0e0;
+}
+
+.galleryplus-tags-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 32px;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(0, 0, 0, .82);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+}
+
+.galleryplus-tags-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 /* --- Widget: Categories --- */

@@ -2,6 +2,19 @@
 
 function install_package() {
 
+    // При обновлении ICMS пересобирает опции контроллера (componentUpdate) и
+    // применяет значения по умолчанию к полям со значением null (выключенные чекбоксы).
+    // Запоминаем текущие опции ДО обновления, чтобы восстановить их в after_install_package().
+    $GLOBALS['galleryplus_pre_options'] = null;
+    try {
+        $db = \cmsDatabase::getInstance();
+        $row = $db->fetchAssoc($db->query("SELECT `options` FROM `{#}controllers` WHERE `name` = 'galleryplus'"));
+        if ($row && isset($row['options'])) {
+            $pre = \cmsModel::yamlToArray($row['options']);
+            $GLOBALS['galleryplus_pre_options'] = is_array($pre) ? $pre : null;
+        }
+    } catch (\Throwable $e) {}
+
     $upload_dir = cmsConfig::get('upload_path') . 'galleryplus';
     if (!is_dir($upload_dir)) {
         @mkdir($upload_dir, 0755, true);
@@ -39,6 +52,9 @@ function after_install_package() {
     $db = \cmsDatabase::getInstance();
 
     // Set default controller options
+    // ЧИСТАЯ УСТАНОВКА: прежнее поведение без изменений (жёсткая запись дефолтного YAML).
+    // ОБНОВЛЕНИЕ: настройки админа сохраняются (в т.ч. выключенные чекбоксы = null) —
+    // ядро при componentUpdate подставляет дефолты вместо null, поэтому восстанавливаем.
     try {
         $options_yaml = "---\npreset_small: galleryplus_thumb\npreset_big: galleryplus_big\nordering: date_pub\norderto: desc\nlimit: 24\nview_all: [ ]\nlike: [ ]\nseo_h1: \"\"\nseo_title: \"\"\nseo_keys: \"\"\nseo_desc: \"\"\nnaming_scheme: mixed\nmax_file_size: 0\nmax_width: 0\nmax_height: 0\ndefault_mode: infinite\nshow_adult_in_feed: 1\nshow_adult_to_guests: 1\nis_comments_photo: 1\nis_comments_album: null\nshow_original: 1\npreset_nocrop: galleryplus_nocrop\nuse_categories: 1\nuse_album_tags: 1\nuse_photo_tags: 1\nupload_karma: 0\nadult_karma: 0\nadult_rating: 0\nhide_empty_albums: 1\nhide_exif: null\nshow_embed_codes: 1\nhide_map: null\nshow_lightbox_desc: 1\nlogging_enabled: 1
 billing_take_percent: 0
@@ -46,7 +62,25 @@ billing_percent: 0
 billing_allow_user_price: 0
 map_center_lat: 59.938933
 map_center_lng: 30.315721\n";
-        @$db->query("UPDATE `{#}controllers` SET `options` = '" . $db->escape($options_yaml) . "' WHERE `name` = 'galleryplus'");
+
+        $pre = $GLOBALS['galleryplus_pre_options'] ?? null;
+
+        if (is_array($pre)) {
+            // ОБНОВЛЕНИЕ
+            $defaults = \cmsModel::yamlToArray($options_yaml);
+            if (!is_array($defaults)) { $defaults = []; }
+
+            $row = $db->fetchAssoc($db->query("SELECT `options` FROM `{#}controllers` WHERE `name` = 'galleryplus'"));
+            $current = ($row && isset($row['options'])) ? \cmsModel::yamlToArray($row['options']) : [];
+            if (!is_array($current)) { $current = []; }
+
+            // значения админа в приоритете (включая null); недостающие/новые ключи — из current/defaults
+            $options = array_merge($current, $defaults, $pre);
+            \cmsController::saveOptions('galleryplus', $options);
+        } else {
+            // ЧИСТАЯ УСТАНОВКА — как было в прежних версиях
+            @$db->query("UPDATE `{#}controllers` SET `options` = '" . $db->escape($options_yaml) . "' WHERE `name` = 'galleryplus'");
+        }
     } catch (\Throwable $e) {}
 
     // DB migrations

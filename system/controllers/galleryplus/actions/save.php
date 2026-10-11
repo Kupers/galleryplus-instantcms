@@ -20,6 +20,9 @@ class actionGalleryplusSave extends cmsAction {
         if ($action === 'delete_albums') {
             return $this->deleteAlbums();
         }
+        if ($action === 'add_tags') {
+            return $this->addTags();
+        }
 
         $photo_ids     = $this->request->get('photos', []);
         $titles        = $this->request->get('title', []);
@@ -323,6 +326,78 @@ class actionGalleryplusSave extends cmsAction {
             $this->model->recalcAlbumPhotosCount($aid);
         }
         return $this->cms_template->renderJSON(['success' => true, 'moved' => count($ids)]);
+    }
+
+    private function addTags() {
+        if (!$this->cms_user->id) {
+            return $this->cms_template->renderJSON(['error' => 'Access denied']);
+        }
+        if (empty($this->options['use_photo_tags']) || !cmsCore::isModelExists('tags')) {
+            return $this->cms_template->renderJSON(['error' => 'Tags are disabled']);
+        }
+
+        $ids_raw = $this->request->get('ids', '');
+        if (is_string($ids_raw)) {
+            $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
+        } elseif (is_array($ids_raw)) {
+            $ids = array_filter(array_map('intval', $ids_raw));
+        } else {
+            $ids = [];
+        }
+        if (!$ids) {
+            return $this->cms_template->renderJSON(['error' => 'No photos selected']);
+        }
+
+        $tags_input = $this->request->get('tags', '');
+        if (is_array($tags_input)) { $tags_input = implode(',', $tags_input); }
+        $tags_input = strip_tags((string) $tags_input);
+
+        $tags_list = [];
+        foreach (explode(',', $tags_input) as $tag) {
+            $tag = mb_strtolower(trim($tag));
+            if ($tag === '' || mb_strlen($tag) > 32) { continue; }
+            if (!in_array($tag, $tags_list, true)) { $tags_list[] = $tag; }
+        }
+        if (!$tags_list) {
+            return $this->cms_template->renderJSON(['error' => 'No tags provided']);
+        }
+        $new_tags = implode(', ', $tags_list);
+
+        $is_admin = $this->cms_user->is_admin;
+        $is_moderator = false;
+        if (!$is_admin) {
+            try {
+                if (cmsCore::isModelExists('moderation')) {
+                    $mod = cmsCore::getModel('moderation');
+                    if ($mod && method_exists($mod, 'userIsContentModerator')) {
+                        $is_moderator = $mod->userIsContentModerator('galleryplus', $this->cms_user->id);
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        $updated = 0;
+        foreach ($ids as $id) {
+            $photo = $this->model->getItemById('galleryplus_photos', $id);
+            if (!$photo) { continue; }
+            if (!$is_admin && !$is_moderator && (int)$photo['user_id'] !== (int)$this->cms_user->id) { continue; }
+
+            $tags_model = cmsCore::getModel('tags');
+            $existing = $tags_model->getTagsStringForTarget('galleryplus', 'photo', $id);
+
+            $merged = $existing ? $existing . ', ' . $new_tags : $new_tags;
+
+            $tags_model = cmsCore::getModel('tags');
+            $tags_model->updateTags($merged, 'galleryplus', 'photo', $id);
+
+            $updated++;
+        }
+
+        if (!$updated) {
+            return $this->cms_template->renderJSON(['error' => 'Access denied']);
+        }
+
+        return $this->cms_template->renderJSON(['success' => true, 'updated' => $updated, 'tags' => $tags_list]);
     }
 
     private function generateSlug($title, $id) {

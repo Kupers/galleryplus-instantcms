@@ -49,7 +49,7 @@ class modelGalleryplus extends cmsModel {
                 'id'       => $item['user_id'],
                 'nickname' => $item['user_nickname'],
                 'slug'     => $item['user_slug'],
-                'avatar'   => $item['user_avatar'],
+                'avatar'   => html_avatar_image_src($item['user_avatar'], 'small'),
             ];
             $item = $this->decoratePhoto($item);
             $this->applyPhotoUrls($item);
@@ -250,7 +250,7 @@ class modelGalleryplus extends cmsModel {
                 'slug'      => $item['user_slug'],
                 'nickname'  => $item['user_nickname'],
                 'is_online' => $item['is_online'],
-                'avatar'    => $item['user_avatar'],
+                'avatar'    => html_avatar_image_src($item['user_avatar'], 'small'),
             ];
             $item = $this->decoratePhoto($item);
             $this->applyPhotoUrls($item);
@@ -392,10 +392,82 @@ class modelGalleryplus extends cmsModel {
     }
 
     public function getAlbumsCount($user_id = 0, $include_adult_for_guests = false) {
+        $this->joinUser();
         $this->filterPrivacyAlbums($user_id, $include_adult_for_guests, $this->user_karma, $this->adult_karma);
         $count = $this->getCount('galleryplus_albums');
         $this->resetFilters();
         return $count;
+    }
+
+    /**
+     * Фильтр альбомов по части названия (LIKE).
+     */
+    public function filterAlbumsByTitle($title) {
+        $title = trim((string)$title);
+        if ($title === '') { return $this; }
+        $this->filterLike('i.title', '%' . $title . '%');
+        return $this;
+    }
+
+    /**
+     * Фильтр альбомов по части ника автора (LIKE).
+     * Требует joinUser() (алиас u) в запросе.
+     */
+    public function filterAlbumsByAuthor($author) {
+        $author = trim((string)$author);
+        if ($author === '') { return $this; }
+        $this->filterLike('u.nickname', '%' . $author . '%');
+        return $this;
+    }
+
+    /**
+     * Подсказки для фильтра альбомов: существующие названия или ники авторов.
+     *
+     * @param string $field 'title' или 'author'
+     * @param string $term  введённая подстрока
+     * @return array список строк
+     */
+    public function suggestAlbumValues($field, $term, $user_id = 0, $include_adult_for_guests = false, $limit = 10) {
+
+        $term = trim((string)$term);
+        if ($term === '') { return []; }
+
+        $field = ($field === 'author') ? 'author' : 'title';
+        $limit = max(1, (int)$limit);
+        $like  = '%' . $this->db->escape($term) . '%';
+
+        $user_id = (int)$user_id;
+        if ($user_id) {
+            $privacy = "(a.privacy = 'public' OR a.privacy = 'adult' OR a.user_id = {$user_id})";
+        } elseif ($include_adult_for_guests) {
+            $privacy = "(a.privacy = 'public' OR a.privacy = 'adult')";
+        } else {
+            $privacy = "a.privacy = 'public'";
+        }
+
+        if ($field === 'author') {
+            $sql = "SELECT u.nickname AS val
+                    FROM {#}galleryplus_albums a
+                    INNER JOIN {#}users u ON u.id = a.user_id
+                    WHERE {$privacy} AND u.nickname LIKE '{$like}'
+                    GROUP BY u.nickname ORDER BY u.nickname ASC LIMIT {$limit}";
+        } else {
+            $sql = "SELECT a.title AS val
+                    FROM {#}galleryplus_albums a
+                    WHERE {$privacy} AND a.title LIKE '{$like}'
+                    GROUP BY a.title ORDER BY a.title ASC LIMIT {$limit}";
+        }
+
+        $out = [];
+        $res = $this->db->query($sql);
+        if ($res) {
+            while ($row = $this->db->fetchAssoc($res)) {
+                $val = trim((string)($row['val'] ?? ''));
+                if ($val !== '') { $out[] = $val; }
+            }
+        }
+
+        return $out;
     }
 
     public function getAlbumCover($album_id) {
@@ -552,7 +624,7 @@ class modelGalleryplus extends cmsModel {
                 'id'       => $item['user_id'],
                 'nickname' => $item['user_nickname'],
                 'slug'     => $item['user_slug'],
-                'avatar'   => $item['user_avatar'],
+                'avatar'   => html_avatar_image_src($item['user_avatar'], 'small'),
             ];
             $item = $this->decoratePhoto($item);
             $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
@@ -661,7 +733,7 @@ class modelGalleryplus extends cmsModel {
                 'id'       => $item['user_id'],
                 'nickname' => $item['user_nickname'],
                 'slug'     => $item['user_slug'],
-                'avatar'   => $item['user_avatar'],
+                'avatar'   => html_avatar_image_src($item['user_avatar'], 'small'),
             ];
             $item['url_thumb'] = html_image_src($item['image'], $model->preset_small, true)
                 ?: html_image_src($item['image'], 'original', true);
@@ -1311,7 +1383,7 @@ class modelGalleryplus extends cmsModel {
                 'id'       => $item['user_id'],
                 'nickname' => $item['user_nickname'],
                 'slug'     => $item['user_slug'],
-                'avatar'   => $item['user_avatar'],
+                'avatar'   => html_avatar_image_src($item['user_avatar'], 'small'),
             ];
             $item = $this->decoratePhoto($item);
             $item['url_thumb']    = html_image_src($item['image'], $model->preset_small, true);
@@ -1328,6 +1400,7 @@ class modelGalleryplus extends cmsModel {
     }
 
     public function getAlbumsCountByCategory($category_id, $user_id = 0, $include_adult_for_guests = false) {
+        $this->joinUser();
         $this->filterEqual('i.category_id', $category_id);
         $this->filterPrivacyAlbums($user_id, $include_adult_for_guests, $this->user_karma, $this->adult_karma);
         $count = $this->getCount('galleryplus_albums');

@@ -8,16 +8,33 @@
     $photo_img  = $is_paid_blurred ? ($photo['url_thumb'] ?? '') : (($photo['url_big'] ?? $photo['url_thumb'] ?? ''));
     $photo_desc = $photo['content'] ?: ($photo['title'] ?? '');
 
+    // Соцсети (Telegram и др.) не принимают относительные URL в og:image/og:url - строим абсолютные
+    $req = $this->controller->request ?? null;
+    $abs_host = '';
+    if ($req && ($req_host = $req->getServer('HTTP_HOST'))) {
+        $abs_host = $req->getScheme() . '://' . $req_host;
+    } elseif (!empty($this->site_config->host)) {
+        $abs_host = rtrim($this->site_config->host, '/');
+    }
+    $to_abs = function ($url) use ($abs_host) {
+        if (!$url || !$abs_host || preg_match('~^https?://~i', $url)) {
+            return $url;
+        }
+        return $abs_host . '/' . ltrim($url, '/');
+    };
+    $photo_url_abs = $to_abs($photo_url);
+    $photo_img_abs = $to_abs($photo_img);
+
     $this->addHead('<meta property="og:type" content="article">');
     $this->addHead('<meta property="og:title" content="' . htmlspecialchars($photo['title'] ?? '') . '">');
     $this->addHead('<meta property="og:description" content="' . htmlspecialchars($photo_desc) . '">');
-    $this->addHead('<meta property="og:image" content="' . htmlspecialchars($photo_img) . '">');
-    $this->addHead('<meta property="og:url" content="' . htmlspecialchars($photo_url) . '">');
+    $this->addHead('<meta property="og:image" content="' . htmlspecialchars($photo_img_abs) . '">');
+    $this->addHead('<meta property="og:url" content="' . htmlspecialchars($photo_url_abs) . '">');
     $this->addHead('<meta property="og:site_name" content="' . htmlspecialchars($this->site_config->sitename) . '">');
     $this->addHead('<meta name="twitter:card" content="summary_large_image">');
     $this->addHead('<meta name="twitter:title" content="' . htmlspecialchars($photo['title'] ?? '') . '">');
     $this->addHead('<meta name="twitter:description" content="' . htmlspecialchars($photo_desc) . '">');
-    $this->addHead('<meta name="twitter:image" content="' . htmlspecialchars($photo_img) . '">');
+    $this->addHead('<meta name="twitter:image" content="' . htmlspecialchars($photo_img_abs) . '">');
 
     if ($gps_lat !== null && $gps_lon !== null && empty($hide_map)) {
         $this->addHead('<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">');
@@ -73,7 +90,7 @@
 
         <div class="galleryplus-view-meta">
             <div class="galleryplus-view-author">
-                <span class="galleryplus-view-avatar"><?php echo html_avatar_image($photo['user']['avatar'] ?? '', 'micro', $photo['user']['nickname'] ?? ''); ?></span>
+                <span class="galleryplus-view-avatar"><img class="img-fluid" src="<?php echo $photo['user']['avatar'] ?? ''; ?>" alt="<?php html($photo['user']['nickname'] ?? ''); ?>" title="<?php html($photo['user']['nickname'] ?? ''); ?>"></span>
                 <a href="<?php echo href_to_profile($photo['user']); ?>"><?php html($photo['user']['nickname'] ?? ''); ?></a>
             </div>
             <div class="galleryplus-view-stats">

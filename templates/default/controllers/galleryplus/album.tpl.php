@@ -158,9 +158,31 @@
                     <?php } ?>
                 </select>
                 <?php } ?>
+                <?php if (!empty($use_photo_tags)) { ?>
+                <button type="button" class="galleryplus-btn galleryplus-tags-btn" id="galleryplus-tags-btn" style="display:none">
+                    &#127991; <?php echo defined('LANG_GALLERYPLUS_ADD_TAGS') ? LANG_GALLERYPLUS_ADD_TAGS : 'Теги'; ?>
+                </button>
+                <?php } ?>
                 <button class="galleryplus-btn galleryplus-delete-btn" id="galleryplus-delete-btn" style="display:none">
                     &#128465; <?php echo LANG_GALLERYPLUS_DELETE ?? 'Delete'; ?>
                 </button>
+            </div>
+        <?php } ?>
+
+        <?php if ($can_select && !empty($use_photo_tags)) { ?>
+            <div class="galleryplus-tags-panel" id="galleryplus-tags-panel" style="display:none"
+                 data-autocomplete="<?php echo href_to('tags', 'autocomplete'); ?>"
+                 data-empty-error="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADD_TAGS_EMPTY') ? LANG_GALLERYPLUS_ADD_TAGS_EMPTY : 'Введите хотя бы один тег'); ?>"
+                 data-applied="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADD_TAGS_APPLIED') ? LANG_GALLERYPLUS_ADD_TAGS_APPLIED : 'Теги добавлены'); ?>"
+                 data-error="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADD_TAGS_ERROR') ? LANG_GALLERYPLUS_ADD_TAGS_ERROR : 'Не удалось добавить теги'); ?>">
+                <div class="galleryplus-tagfilter-chips galleryplus-tags-chips" id="galleryplus-tags-chips"></div>
+                <div class="galleryplus-tagfilter-field galleryplus-tags-field">
+                    <input type="text" id="galleryplus-tags-input" class="galleryplus-tagfilter-input galleryplus-tags-input" autocomplete="off"
+                           placeholder="<?php echo defined('LANG_GALLERYPLUS_TAGS_HINT') ? LANG_GALLERYPLUS_TAGS_HINT : 'Ключевые слова через запятую'; ?>">
+                    <div class="galleryplus-tagfilter-suggest galleryplus-tags-suggest" id="galleryplus-tags-suggest"></div>
+                </div>
+                <button type="button" class="galleryplus-btn galleryplus-tags-apply" id="galleryplus-tags-apply"><?php echo defined('LANG_SUBMIT') ? LANG_SUBMIT : 'Применить'; ?></button>
+                <button type="button" class="galleryplus-btn galleryplus-tags-cancel" id="galleryplus-tags-cancel"><?php echo defined('LANG_CANCEL') ? LANG_CANCEL : 'Отмена'; ?></button>
             </div>
         <?php } ?>
 
@@ -365,16 +387,24 @@
     var selectAll = document.getElementById('galleryplus-select-all');
     var countEl = document.getElementById('galleryplus-selection-count');
     var deleteBtn = document.getElementById('galleryplus-delete-btn');
+    var tagsBtn = document.getElementById('galleryplus-tags-btn');
+    var tagsPanel = document.getElementById('galleryplus-tags-panel');
 
     function getChecked() { return document.querySelectorAll('.galleryplus-select-cb:checked'); }
 
     function updateBar() {
         var n = getChecked().length;
-        if (n === 0) { bar.style.display = 'none'; document.body.classList.remove('galleryplus-selecting'); return; }
+        if (n === 0) {
+            bar.style.display = 'none';
+            document.body.classList.remove('galleryplus-selecting');
+            if (tagsPanel) tagsPanel.style.display = 'none';
+            return;
+        }
         bar.style.display = '';
         document.body.classList.add('galleryplus-selecting');
         countEl.textContent = n;
         deleteBtn.style.display = n > 0 ? '' : 'none';
+        if (tagsBtn) tagsBtn.style.display = n > 0 ? '' : 'none';
         var moveSelect = document.getElementById('galleryplus-move-album');
         if (moveSelect) moveSelect.style.display = n > 0 ? '' : 'none';
     }
@@ -456,6 +486,7 @@
             xhr.send(fd);
         });
     }
+
 })();
 </script>
 <?php } ?>

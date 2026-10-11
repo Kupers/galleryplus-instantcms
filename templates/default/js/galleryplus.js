@@ -438,7 +438,501 @@ window.galleryplusMasonry = function(container, itemSelector) {
         });
     }
 
+    // ---- Album filter (название / автор) ----
+    function initAlbumsFilter() {
+
+        var root = document.getElementById('galleryplus-albumfilter');
+        if (!root) return;
+
+        var grid = document.getElementById('galleryplus-albums-grid');
+        var pagination = document.getElementById('galleryplus-albums-pagination');
+        var acUrl = root.getAttribute('data-autocomplete') || '';
+        var baseUrl = root.getAttribute('data-base') || '';
+        if (!acUrl || !baseUrl) return;
+
+        var state = {
+            title: root.getAttribute('data-title') || '',
+            author: root.getAttribute('data-author') || ''
+        };
+        var busy = false;
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function buildUrl() {
+            var q = [];
+            if (state.title) q.push('title=' + encodeURIComponent(state.title));
+            if (state.author) q.push('author=' + encodeURIComponent(state.author));
+            var sep = baseUrl.indexOf('?') === -1 ? '?' : '&';
+            return q.length ? baseUrl + sep + q.join('&') : baseUrl;
+        }
+
+        function syncReset() {
+            var reset = root.querySelector('.galleryplus-albumfilter-reset');
+            if (!reset) return;
+            reset.style.display = (state.title || state.author) ? '' : 'none';
+        }
+
+        function relayout() {
+            if (typeof galleryplusMasonry === 'function' && grid) {
+                grid.classList.remove('jsly');
+                galleryplusMasonry(grid, '.galleryplus-album-card');
+            }
+        }
+
+        function applyFilter() {
+            var url = buildUrl();
+            if (busy || !grid || !window.XMLHttpRequest) { window.location.href = url; return; }
+            busy = true;
+            root.classList.add('galleryplus-tagfilter--loading');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url + (url.indexOf('?') === -1 ? '?' : '&') + 'gp_filter=1', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                busy = false;
+                root.classList.remove('galleryplus-tagfilter--loading');
+                if (xhr.status !== 200) { window.location.href = url; return; }
+                var data = null;
+                try { data = JSON.parse(xhr.responseText); } catch (e) {}
+                if (!data || typeof data.html === 'undefined') { window.location.href = url; return; }
+
+                grid.innerHTML = data.empty ? (data.empty_html || '') : (data.html || '');
+                if (pagination) {
+                    pagination.innerHTML = data.pagination || '';
+                    pagination.style.display = data.pagination ? '' : 'none';
+                }
+                if (window.history && window.history.pushState) {
+                    window.history.pushState({ galleryplusAlbums: 1 }, '', url);
+                }
+                syncReset();
+                relayout();
+            };
+            xhr.onerror = function() {
+                busy = false;
+                root.classList.remove('galleryplus-tagfilter--loading');
+                window.location.href = url;
+            };
+            xhr.send();
+        }
+
+        function setupField(field) {
+            var input = root.querySelector('.galleryplus-albumfilter-input[data-field="' + field + '"]');
+            var box = root.querySelector('.galleryplus-albumfilter-suggest[data-suggest="' + field + '"]');
+            if (!input || !box) return;
+
+            var items = [];
+            var activeIndex = -1;
+            var timer = null;
+            var blurTimer = null;
+            var xhr = null;
+            var cache = {};
+
+            function hide() { box.innerHTML = ''; box.classList.remove('open'); items = []; activeIndex = -1; }
+
+            function mark(i) {
+                for (var k = 0; k < items.length; k++) {
+                    if (k === i) items[k].classList.add('active');
+                    else items[k].classList.remove('active');
+                }
+                activeIndex = i;
+            }
+
+            function render(list) {
+                if (!list.length) { hide(); return; }
+                var html = '';
+                for (var i = 0; i < list.length; i++) {
+                    html += '<button type="button" class="galleryplus-tagfilter-suggest-item" data-value="' + esc(list[i]) + '">' + esc(list[i]) + '</button>';
+                }
+                box.innerHTML = html;
+                box.classList.add('open');
+                items = [];
+                var found = box.querySelectorAll('.galleryplus-tagfilter-suggest-item');
+                for (var j = 0; j < found.length; j++) { items.push(found[j]); }
+                activeIndex = -1;
+            }
+
+            function request(term) {
+                if (term.length < 1) { hide(); return; }
+                if (cache[term]) { render(cache[term]); return; }
+                if (xhr) { xhr.abort(); }
+                xhr = new XMLHttpRequest();
+                xhr.open('GET', acUrl + (acUrl.indexOf('?') === -1 ? '?' : '&') + 'field=' + field + '&term=' + encodeURIComponent(term), true);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.onload = function() {
+                    if (xhr.status !== 200) return;
+                    var list = [];
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data && data.length) {
+                            for (var i = 0; i < data.length && i < 10; i++) {
+                                var v = data[i].label || data[i].value || '';
+                                if (v && list.indexOf(v) === -1) list.push(v);
+                            }
+                        }
+                    } catch (e) {}
+                    cache[term] = list;
+                    render(list);
+                };
+                xhr.send();
+            }
+
+            function commit(value) {
+                hide();
+                if (value === state[field]) return;
+                state[field] = value;
+                applyFilter();
+            }
+
+            input.addEventListener('input', function() {
+                clearTimeout(timer);
+                var term = input.value.trim();
+                timer = setTimeout(function() { request(term); }, 250);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown' && items.length) {
+                    e.preventDefault();
+                    mark(activeIndex + 1 >= items.length ? 0 : activeIndex + 1);
+                    return;
+                }
+                if (e.key === 'ArrowUp' && items.length) {
+                    e.preventDefault();
+                    mark(activeIndex - 1 < 0 ? items.length - 1 : activeIndex - 1);
+                    return;
+                }
+                if (e.key === 'Escape') { hide(); return; }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var val = input.value.trim();
+                    var picked = '';
+                    if (activeIndex > -1 && items[activeIndex]) {
+                        picked = items[activeIndex].getAttribute('data-value');
+                    }
+                    if (!picked && val) {
+                        for (var s = 0; s < items.length; s++) {
+                            if ((items[s].getAttribute('data-value') || '').toLowerCase() === val.toLowerCase()) {
+                                picked = items[s].getAttribute('data-value');
+                                break;
+                            }
+                        }
+                    }
+                    commit(picked || val);
+                    return;
+                }
+            });
+
+            box.addEventListener('mousedown', function(e) {
+                var btn = e.target.closest('.galleryplus-tagfilter-suggest-item');
+                if (!btn) return;
+                e.preventDefault();
+                var v = btn.getAttribute('data-value');
+                input.value = v;
+                commit(v);
+            });
+
+            input.addEventListener('blur', function() {
+                var val = input.value.trim();
+                clearTimeout(blurTimer);
+                blurTimer = setTimeout(function() {
+                    if (val !== state[field]) commit(val);
+                    else hide();
+                }, 150);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!root.contains(e.target)) hide();
+            });
+
+            return {
+                clearBlur: function() { clearTimeout(blurTimer); }
+            };
+        }
+
+        var fields = [setupField('title'), setupField('author')];
+
+        document.addEventListener('click', function(e) {
+            var rst = e.target.closest('.galleryplus-albumfilter-reset');
+            if (!rst) return;
+            e.preventDefault();
+            for (var fi = 0; fi < fields.length; fi++) {
+                if (fields[fi]) fields[fi].clearBlur();
+            }
+            state.title = '';
+            state.author = '';
+            var ti = root.querySelector('.galleryplus-albumfilter-input[data-field="title"]');
+            var ai = root.querySelector('.galleryplus-albumfilter-input[data-field="author"]');
+            if (ti) ti.value = '';
+            if (ai) ai.value = '';
+            applyFilter();
+        });
+
+        window.addEventListener('popstate', function(e) {
+            if (window.__gpViewerOpen || window.__gpViewerClosing) return;
+            if (e.state && e.state.galleryplusAlbums) {
+                window.location.reload();
+            }
+        });
+    }
+
+    // ---- Assign tags to selected photos ----
+    function initSelectionTags() {
+
+        var btn = document.getElementById('galleryplus-tags-btn');
+        var panel = document.getElementById('galleryplus-tags-panel');
+        if (!btn || !panel) return;
+
+        var chipsBox = document.getElementById('galleryplus-tags-chips');
+        var input = document.getElementById('galleryplus-tags-input');
+        var suggestBox = document.getElementById('galleryplus-tags-suggest');
+        var applyBtn = document.getElementById('galleryplus-tags-apply');
+        var cancelBtn = document.getElementById('galleryplus-tags-cancel');
+        if (!input || !suggestBox || !applyBtn) return;
+
+        var acUrl = panel.getAttribute('data-autocomplete') || '/tags/autocomplete';
+        var appliedMsg = panel.getAttribute('data-applied') || 'OK';
+        var emptyMsg = panel.getAttribute('data-empty-error') || 'Enter at least one tag';
+        var errorMsg = panel.getAttribute('data-error') || 'Error';
+
+        var tags = [];
+        var items = [];
+        var activeIndex = -1;
+        var timer = null;
+        var xhr = null;
+        var cache = {};
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function hasTag(name) {
+            var low = String(name || '').toLowerCase();
+            for (var i = 0; i < tags.length; i++) {
+                if (tags[i].toLowerCase() === low) return true;
+            }
+            return false;
+        }
+
+        function renderChips() {
+            if (!chipsBox) return;
+            var html = '';
+            for (var i = 0; i < tags.length; i++) {
+                html += '<span class="galleryplus-tagfilter-chip" data-tag="' + esc(tags[i]) + '">' +
+                    '<span class="galleryplus-tagfilter-chip-name">#' + esc(tags[i]) + '</span>' +
+                    '<button type="button" class="galleryplus-tagfilter-chip-remove" data-tag="' + esc(tags[i]) + '">&times;</button></span>';
+            }
+            chipsBox.innerHTML = html;
+        }
+
+        function addTag(name) {
+            name = String(name || '').trim().replace(/^#+/, '').trim();
+            if (!name) return;
+            hideSuggest();
+            input.value = '';
+            if (hasTag(name)) return;
+            tags.push(name);
+            renderChips();
+        }
+
+        function removeTag(name) {
+            for (var i = 0; i < tags.length; i++) {
+                if (tags[i].toLowerCase() === String(name || '').toLowerCase()) {
+                    tags.splice(i, 1);
+                    break;
+                }
+            }
+            renderChips();
+        }
+
+        function hideSuggest() {
+            suggestBox.innerHTML = '';
+            suggestBox.classList.remove('open');
+            items = [];
+            activeIndex = -1;
+        }
+
+        function markActive() {
+            for (var i = 0; i < items.length; i++) {
+                if (i === activeIndex) items[i].classList.add('active');
+                else items[i].classList.remove('active');
+            }
+        }
+
+        function renderSuggest(list) {
+            if (!list.length) { hideSuggest(); return; }
+            var html = '';
+            for (var i = 0; i < list.length; i++) {
+                html += '<button type="button" class="galleryplus-tagfilter-suggest-item" data-value="' + esc(list[i]) + '">#' + esc(list[i]) + '</button>';
+            }
+            suggestBox.innerHTML = html;
+            suggestBox.classList.add('open');
+            items = [];
+            var found = suggestBox.querySelectorAll('.galleryplus-tagfilter-suggest-item');
+            for (var j = 0; j < found.length; j++) { items.push(found[j]); }
+            activeIndex = -1;
+        }
+
+        function request(term) {
+            if (term.length < 1) { hideSuggest(); return; }
+            if (cache[term]) { renderSuggest(cache[term]); return; }
+            if (xhr) { xhr.abort(); }
+            xhr = new XMLHttpRequest();
+            xhr.open('GET', acUrl + (acUrl.indexOf('?') === -1 ? '?' : '&') + 'term=' + encodeURIComponent(term), true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                if (xhr.status !== 200) return;
+                var list = [];
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data && data.length) {
+                        for (var i = 0; i < data.length && i < 10; i++) {
+                            var v = data[i].label || data[i].value || '';
+                            if (v && !hasTag(v)) list.push(v);
+                        }
+                    }
+                } catch (e) { return; }
+                cache[term] = list;
+                renderSuggest(list);
+            };
+            xhr.send();
+        }
+
+        function flashError() {
+            input.classList.add('galleryplus-tagfilter-input--error');
+            setTimeout(function() { input.classList.remove('galleryplus-tagfilter-input--error'); }, 1200);
+        }
+
+        function showToast(msg) {
+            var t = document.createElement('div');
+            t.className = 'galleryplus-tags-toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function() { t.classList.add('show'); }, 10);
+            setTimeout(function() {
+                if (t.parentNode) t.parentNode.removeChild(t);
+            }, 2600);
+        }
+
+        function resetPanel() {
+            hideSuggest();
+            tags = [];
+            renderChips();
+            panel.style.display = 'none';
+        }
+
+        function openPanel() {
+            panel.style.display = '';
+            input.focus();
+        }
+
+        function togglePanel() {
+            if (panel.style.display === 'none') openPanel();
+            else resetPanel();
+        }
+
+        function clearSelectionUI() {
+            var cbs = document.querySelectorAll('.galleryplus-select-cb');
+            for (var i = 0; i < cbs.length; i++) { cbs[i].checked = false; }
+            var selectAll = document.getElementById('galleryplus-select-all');
+            if (selectAll) selectAll.checked = false;
+            var bar = document.getElementById('galleryplus-selection-bar');
+            if (bar) bar.style.display = 'none';
+            document.body.classList.remove('galleryplus-selecting');
+        }
+
+        btn.addEventListener('click', function() {
+            if (document.getElementById('galleryplus-selection-bar').style.display === 'none') return;
+            togglePanel();
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addTag(input.value); return; }
+            if (e.key === ',' || e.key === ';') {
+                e.preventDefault();
+                if (input.value.trim()) addTag(input.value);
+                return;
+            }
+            clearTimeout(timer);
+            if (e.key === 'ArrowDown') { e.preventDefault(); if (!items.length) return; activeIndex = (activeIndex + 1) % items.length; markActive(); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); if (!items.length) return; activeIndex = (activeIndex - 1 + items.length) % items.length; markActive(); return; }
+            if (e.key === 'Escape') { hideSuggest(); return; }
+            timer = setTimeout(function() { request(input.value.trim()); }, 250);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(hideSuggest, 200);
+        });
+
+        input.addEventListener('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() { request(input.value.trim()); }, 250);
+        });
+
+        chipsBox.addEventListener('click', function(e) {
+            var rm = e.target.closest('.galleryplus-tagfilter-chip-remove');
+            if (!rm) return;
+            removeTag(rm.getAttribute('data-tag'));
+        });
+
+        suggestBox.addEventListener('mousedown', function(e) {
+            var it = e.target.closest('.galleryplus-tagfilter-suggest-item');
+            if (!it) return;
+            e.preventDefault();
+            addTag(it.getAttribute('data-value'));
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            resetPanel();
+        });
+
+        applyBtn.addEventListener('click', function() {
+            var leftover = input.value.trim().replace(/^#+/, '').trim();
+            if (leftover) { addTag(leftover); }
+            if (!tags.length) { flashError(); return; }
+
+            var cbs = document.querySelectorAll('.galleryplus-select-cb:checked');
+            if (!cbs.length) { resetPanel(); return; }
+
+            var ids = [];
+            for (var i = 0; i < cbs.length; i++) {
+                ids.push(parseInt(cbs[i].getAttribute('data-id')));
+            }
+
+            applyBtn.disabled = true;
+            var fd = new FormData();
+            fd.append('action', 'add_tags');
+            fd.append('ids', ids.join(','));
+            fd.append('tags', tags.join(','));
+
+            var xhrT = new XMLHttpRequest();
+            xhrT.open('POST', '/galleryplus/save', true);
+            xhrT.onload = function() {
+                applyBtn.disabled = false;
+                var r = null;
+                try { r = JSON.parse(xhrT.responseText); } catch (e) {}
+                if (r && r.success) {
+                    clearSelectionUI();
+                    resetPanel();
+                    showToast(appliedMsg);
+                } else {
+                    flashError();
+                    showToast(errorMsg);
+                }
+            };
+            xhrT.onerror = function() {
+                applyBtn.disabled = false;
+                flashError();
+            };
+            xhrT.send(fd);
+        });
+    }
+
     initTagFilter();
+    initAlbumsFilter();
+    initSelectionTags();
 
     // ---- Tab switching ----
     document.addEventListener('click', function(e) {
@@ -735,6 +1229,27 @@ window.galleryplusMasonry = function(container, itemSelector) {
         }
     });
 
+    function runScripts(container) {
+        var editor_markers = [
+            'init_tinymce', 'init_redactor', 'init_markitup', 'init_ace',
+            'tiny_global_options', 'markitup_global_options',
+            'icms.files.url_delete', 'addWysiwygsInsertPool'
+        ];
+        var scripts = container.querySelectorAll('script');
+        for (var i = 0; i < scripts.length; i++) {
+            var old = scripts[i];
+            var code = old.src || old.textContent || '';
+            var is_editor = false;
+            for (var m = 0; m < editor_markers.length; m++) {
+                if (code.indexOf(editor_markers[m]) !== -1) { is_editor = true; break; }
+            }
+            if (is_editor) { old.parentNode.removeChild(old); continue; }
+            var s = document.createElement('script');
+            if (old.src) { s.src = old.src; } else { s.textContent = old.textContent; }
+            old.parentNode.replaceChild(s, old);
+        }
+    }
+
     function openCommentsPanel() {
         if (!currentItem) return;
         var obj = getObject(currentItem);
@@ -752,6 +1267,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
                     var r = JSON.parse(xhr.responseText);
                     if (r.html) {
                         viewerCommentsBody.innerHTML = r.html;
+                        runScripts(viewerCommentsBody);
                         if (typeof icms !== 'undefined' && icms.comments && icms.comments.init) {
                             icms.comments.init(r.urls || {}, r.target || {});
                             icms.comments.onDocumentReady();
@@ -764,6 +1280,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
                     }
                 } catch(e) {
                     viewerCommentsBody.innerHTML = xhr.responseText;
+                    runScripts(viewerCommentsBody);
                     if (typeof icms !== 'undefined' && icms.comments && icms.comments.init) {
                         icms.comments.init({}, {});
                         icms.comments.onDocumentReady();

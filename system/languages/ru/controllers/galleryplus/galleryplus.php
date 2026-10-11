@@ -159,6 +159,11 @@
     define('LANG_GALLERYPLUS_MOVE_TO_ALBUM', 'Переместить в альбом');
     define('LANG_GALLERYPLUS_CONFIRM_MOVE', 'Переместить выбранные фото?');
 
+    define('LANG_GALLERYPLUS_ADD_TAGS',         'Теги');
+    define('LANG_GALLERYPLUS_ADD_TAGS_EMPTY',   'Введите хотя бы один тег');
+    define('LANG_GALLERYPLUS_ADD_TAGS_APPLIED', 'Теги добавлены');
+    define('LANG_GALLERYPLUS_ADD_TAGS_ERROR',   'Не удалось добавить теги');
+
     define('LANG_GALLERYPLUS_EXIF',                   'EXIF');
     define('LANG_GALLERYPLUS_EXIF_CAMERA',            'Камера');
     define('LANG_GALLERYPLUS_EXIF_DATE',              'Дата съёмки');
@@ -326,3 +331,8 @@ define('LANG_GALLERYPLUS_TAG_FILTER_ADD',      'Добавить тег');
 define('LANG_GALLERYPLUS_TAG_FILTER_REMOVE',   'Убрать тег');
 define('LANG_GALLERYPLUS_TAG_FILTER_RESET',    'Сбросить');
 define('LANG_GALLERYPLUS_TAG_FILTER_EMPTY',    'Ничего не найдено по этим тегам');
+
+define('LANG_GALLERYPLUS_ALBUM_FILTER_TITLE',  'Название альбома');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_AUTHOR', 'Автор');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_RESET',  'Сбросить');
+define('LANG_GALLERYPLUS_ALBUM_FILTER_EMPTY',  'Ничего не найдено');
