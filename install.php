@@ -296,6 +296,7 @@ map_center_lng: 30.315721\n";
             'tags_search_subjects',
             'user_tab_info',
             'user_tab_show',
+            'adminpanel_menu',
         ];
 
         $ordering = (int)$db->fetchAssoc($db->query("SELECT MAX(`ordering`) AS m FROM `{#}events`"))['m'];

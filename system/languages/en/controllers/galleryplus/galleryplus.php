@@ -261,8 +261,8 @@ define('LANG_GALLERYPLUS_SHOW_ADULT_TO_GUESTS',   'Show 18+ to unregistered user
     define('LANG_GALLERYPLUS_LOG_DISABLED',            'Logging is disabled');
     define('LANG_GALLERYPLUS_LOG_SETTINGS_LINK',       'Go to settings');
 
-    define('LANG_GALLERYPLUS_UPDATE_AVAILABLE',        'Gallery+ version %s is available');
-    define('LANG_GALLERYPLUS_UPDATE_PM_TEXT',          'A new version %s of the Gallery+ component is available. Update: %s');
+define('LANG_GALLERYPLUS_UPDATE_AVAILABLE',        'Gallery+ version %s is available');
+    define('LANG_GALLERYPLUS_UPDATE_NOTICE',           'A new version %s of the Gallery+ component is available: <a href="%s" target="_blank" rel="noopener">Download update</a>');
 
     define('LANG_GALLERYPLUS_PAGE_ALL',     'Gallery+');
     define('LANG_GALLERYPLUS_PAGE_ALBUMS',  'Albums');

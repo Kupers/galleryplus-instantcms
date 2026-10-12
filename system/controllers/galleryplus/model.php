@@ -1602,20 +1602,77 @@ class modelGalleryplus extends cmsModel {
     const GITHUB_REPO           = 'Kupers/galleryplus-instantcms';
     const UPDATE_CHECK_INTERVAL = 21600;
 
+    protected $updates_table_is_ready = false;
+
+    // Автосоздание таблицы состояния проверки обновлений.
+    // Нужно, чтобы проверка работала и на сайтах, где файлы обновлены вручную (без запуска установщика).
+    public function ensureUpdatesTable() {
+
+        if ($this->updates_table_is_ready) {
+            return true;
+        }
+
+        try {
+
+            if (!$this->db->isTableExists('galleryplus_updates')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `{#}galleryplus_updates` (
+                    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                    `latest_version` varchar(32) DEFAULT NULL,
+                    `release_url` varchar(255) DEFAULT NULL,
+                    `notified_version` varchar(32) DEFAULT NULL,
+                    `checked_at` datetime DEFAULT NULL,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            }
+
+            $this->updates_table_is_ready = true;
+
+        } catch (\Throwable $e) {}
+
+        return $this->updates_table_is_ready;
+    }
+
     public function getUpdateInfo() {
-        return $this->db->getRow('galleryplus_updates', 'id = 1', '*') ?: [];
+
+        if (!$this->ensureUpdatesTable()) {
+            return [];
+        }
+
+        try {
+            return $this->db->getRow('galleryplus_updates', 'id = 1', '*') ?: [];
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     public function saveUpdateInfo($latest_version, $release_url) {
 
-        $latest_version = $latest_version ? "'" . $this->db->escape($latest_version) . "'" : 'NULL';
-        $release_url    = $release_url    ? "'" . $this->db->escape($release_url)    . "'" : 'NULL';
+        if (!$this->ensureUpdatesTable()) {
+            return false;
+        }
 
-        return $this->db->query(
-            "INSERT INTO `{#}galleryplus_updates` (`id`, `latest_version`, `release_url`, `checked_at`)
-             VALUES (1, {$latest_version}, {$release_url}, NOW())
-             ON DUPLICATE KEY UPDATE `latest_version` = VALUES(`latest_version`), `release_url` = VALUES(`release_url`), `checked_at` = NOW()"
-        );
+        // при неудачном запросе к GitHub не затираем ранее известную версию
+        $existing = $this->getUpdateInfo();
+
+        if ($latest_version !== null && $latest_version !== '') {
+            $existing['latest_version'] = $latest_version;
+        }
+        if ($release_url !== null && $release_url !== '') {
+            $existing['release_url'] = $release_url;
+        }
+
+        $latest_version = !empty($existing['latest_version']) ? "'" . $this->db->escape($existing['latest_version']) . "'" : 'NULL';
+        $release_url    = !empty($existing['release_url'])    ? "'" . $this->db->escape($existing['release_url'])    . "'" : 'NULL';
+
+        try {
+            return $this->db->query(
+                "INSERT INTO `{#}galleryplus_updates` (`id`, `latest_version`, `release_url`, `checked_at`)
+                 VALUES (1, {$latest_version}, {$release_url}, NOW())
+                 ON DUPLICATE KEY UPDATE `latest_version` = VALUES(`latest_version`), `release_url` = VALUES(`release_url`), `checked_at` = NOW()"
+            );
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function getInstalledComponentVersion() {
@@ -1664,6 +1721,10 @@ class modelGalleryplus extends cmsModel {
 
             $this->saveUpdateInfo($latest, $release_url);
 
+            if ($latest === null) {
+                return null;
+            }
+
             $cache = [
                 'latest_version' => $latest,
                 'release_url'    => $release_url,
@@ -1701,38 +1762,37 @@ class modelGalleryplus extends cmsModel {
             return false;
         }
 
-        $text = sprintf(
-            LANG_GALLERYPLUS_UPDATE_PM_TEXT,
-            $latest_version,
-            $release_url ?: 'https://github.com/' . self::GITHUB_REPO . '/releases'
-        );
+        $url = $release_url ?: 'https://github.com/' . self::GITHUB_REPO . '/releases';
 
-        $sender = (int)cmsUser::get('id');
-        if (!$sender) { $sender = 1; }
+        // уведомляем через стандартный механизм системных уведомлений ICMS
+        // (счётчик на «колокольчике» в шапке админки + список уведомлений)
+        $text = sprintf(LANG_GALLERYPLUS_UPDATE_NOTICE, $latest_version, $url);
 
         try {
 
+            $messages_model = cmsCore::getModel('messages');
+
             foreach ($admin_ids as $admin_id) {
-
-                $contact = $this->db->getRow('{users}_contacts', 'user_id = ' . (int)$admin_id . ' AND contact_id = ' . (int)$sender, 'id');
-
-                if (!$contact) {
-                    $this->db->query(
-                        "INSERT INTO `{users}_contacts` (`user_id`, `contact_id`) VALUES (" . (int)$admin_id . ", " . (int)$sender . ")"
-                    );
-                }
-
-                $this->db->query(
-                    "INSERT INTO `{users}_messages` (`from_id`, `to_id`, `content`) VALUES (" .
-                    (int)$sender . ", " . (int)$admin_id . ", '" . $this->db->escape($text) . "')"
-                );
+                $messages_model->addNotice([(int)$admin_id], [
+                    'content' => $text,
+                ]);
             }
 
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            return false;
+        }
 
-        return $this->db->query(
-            "UPDATE `{#}galleryplus_updates` SET `notified_version` = '" . $this->db->escape($latest_version) . "' WHERE `id` = 1"
-        );
+        if (!$this->ensureUpdatesTable()) {
+            return false;
+        }
+
+        try {
+            return $this->db->query(
+                "UPDATE `{#}galleryplus_updates` SET `notified_version` = '" . $this->db->escape($latest_version) . "' WHERE `id` = 1"
+            );
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
 }

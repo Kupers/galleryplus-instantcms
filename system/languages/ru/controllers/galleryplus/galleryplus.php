@@ -264,8 +264,8 @@ define('LANG_GALLERYPLUS_CATEGORY_DESC',           'Описание');
     define('LANG_GALLERYPLUS_LOG_ENABLED',             'Ведение логов включено');
     define('LANG_GALLERYPLUS_LOG_DISABLED',            'Ведение логов выключено');
 
-    define('LANG_GALLERYPLUS_UPDATE_AVAILABLE',        'Доступна новая версия Gallery+ %s');
-    define('LANG_GALLERYPLUS_UPDATE_PM_TEXT',          'Для компонента Gallery+ вышла новая версия %s. Обновить: %s');
+define('LANG_GALLERYPLUS_UPDATE_AVAILABLE',        'Доступна новая версия Gallery+ %s');
+    define('LANG_GALLERYPLUS_UPDATE_NOTICE',           'Для компонента Gallery+ вышла новая версия %s: <a href="%s" target="_blank" rel="noopener">Скачать обновление</a>');
     define('LANG_GALLERYPLUS_LOG_SETTINGS_LINK',       'Перейти к настройкам');
 
     define('LANG_GALLERYPLUS_PAGE_ALL',     'Галерея+');
