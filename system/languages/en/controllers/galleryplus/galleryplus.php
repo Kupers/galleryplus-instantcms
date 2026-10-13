@@ -39,6 +39,9 @@
     define('LANG_GALLERYPLUS_RATING_ADULT_HINT',  'Minimum rating to view 18+ albums. 0 — for all authorized users. Does not apply to administrators and moderators');
     define('LANG_GALLERYPLUS_RATING_ADULT_ERROR', 'Insufficient rating to view 18+ content (required: %s)');
     define('LANG_GALLERYPLUS_UPLOAD',            'Upload');
+    define('LANG_GALLERYPLUS_SORT',              'Sort');
+    define('LANG_GALLERYPLUS_SORT_NEW',          'Newest first');
+    define('LANG_GALLERYPLUS_SORT_OLD',          'Oldest first');
     define('LANG_GALLERYPLUS_DROP_HERE',         'Drag & drop images here or click to browse');
     define('LANG_GALLERYPLUS_UPLOAD_HINT',       'JPG, PNG, GIF, WebP — max 20MB each');
     define('LANG_GALLERYPLUS_ALBUM',             'Album');

@@ -171,6 +171,44 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     color: #fff !important;
 }
 
+/* --- Sort (photo ordering in album) --- */
+.galleryplus-sortbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+.galleryplus-sort-label {
+    font-size: 13px;
+    color: #999;
+    margin-right: 2px;
+}
+.galleryplus-sort-btn {
+    display: inline-block;
+    padding: 5px 14px;
+    border: 1px solid #ddd;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    background: transparent;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+}
+.galleryplus-sort-btn:hover {
+    border-color: #337ab7;
+    color: #337ab7;
+    text-decoration: none;
+}
+.galleryplus-sort-btn.active {
+    background: #337ab7;
+    border-color: #337ab7;
+    color: #fff;
+}
+
 /* --- Tag filter (сортировка по тегам) --- */
 .galleryplus-tagfilter {
     display: flex;

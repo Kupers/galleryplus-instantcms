@@ -1,4 +1,6 @@
 <?php
+    $sort = isset($sort) ? $sort : 'old';
+    $grid_url = href_to('galleryplus', 'album', [$album['slug']]) . '.html' . ($sort === 'new' ? '?sort=new' : '');
     $this->addTplCSSName('galleryplus');
     $this->addTplJSName('galleryplus');
     $this->addTplJSName('jquery-cookie');
@@ -58,6 +60,14 @@
         </div>
     </div>
 
+    <?php if (!empty($photos)) { ?>
+        <div class="galleryplus-sortbar">
+            <span class="galleryplus-sort-label"><?php echo defined('LANG_GALLERYPLUS_SORT') ? LANG_GALLERYPLUS_SORT : 'Сортировка'; ?></span>
+            <a class="galleryplus-sort-btn<?php echo $sort === 'new' ? ' active' : ''; ?>" href="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html?sort=new'; ?>"><?php echo defined('LANG_GALLERYPLUS_SORT_NEW') ? LANG_GALLERYPLUS_SORT_NEW : 'Сначала новые'; ?></a>
+            <a class="galleryplus-sort-btn<?php echo $sort !== 'new' ? ' active' : ''; ?>" href="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>"><?php echo defined('LANG_GALLERYPLUS_SORT_OLD') ? LANG_GALLERYPLUS_SORT_OLD : 'Сначала старые'; ?></a>
+        </div>
+    <?php } ?>
+
     <?php if (!empty($locked)) { ?>
 
         <?php if ($album['privacy'] === 'password') { ?>
@@ -74,7 +84,7 @@
         <?php } elseif (!empty($view_paid)) { ?>
 
             <?php if ($photos) { ?>
-                <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
+                <div class="galleryplus-grid" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo $grid_url; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
                     <?php foreach ($photos as $photo) {
                         $is_preview = !empty($photo['album_preview']);
                         $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
@@ -186,7 +196,7 @@
             </div>
         <?php } ?>
 
-        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo href_to('galleryplus', 'album', [$album['slug']]) . '.html'; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
+        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo $grid_url; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
                 $author = htmlspecialchars($photo['user']['nickname'] ?? '');
@@ -341,7 +351,8 @@
         if (el) el.classList.add('active');
 
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', baseUrl + '?page=' + page, true);
+        var sep = (baseUrl.indexOf('?') === -1) ? '?' : '&';
+        xhr.open('GET', baseUrl + sep + 'page=' + page, true);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.onload = function() {
             if (xhr.status === 200) {

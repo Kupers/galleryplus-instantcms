@@ -140,6 +140,8 @@ class actionGalleryplusAlbum extends cmsAction {
         $this->model->preset_nocrop = $this->options['preset_nocrop'] ?? 'galleryplus_nocrop';
         $this->model->filterEqual('album_id', $album['id']);
 
+        $sort = $this->applyAlbumSort();
+
         $this->can_select = $this->canSelect($album);
 
         if ($this->request->isAjax() && $page > 1) {
@@ -217,6 +219,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'photos'          => $photos,
             'page'            => $page,
             'has_next'        => $has_next,
+            'sort'            => $sort,
             'user'            => $this->cms_user,
             'locked'          => false,
             'is_owner'        => $is_owner,
@@ -260,6 +263,8 @@ class actionGalleryplusAlbum extends cmsAction {
 
         $this->model->filterEqual('album_id', $album['id']);
 
+        $sort = $this->applyAlbumSort();
+
         $photos = $this->model->getPhotos($page, $perpage);
         if (!$photos) { $photos = []; }
         $photos = $this->applyAdultFilter($photos);
@@ -281,6 +286,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'photos'           => $photos,
             'page'             => $page,
             'has_next'         => $has_next,
+            'sort'             => $sort,
             'user'             => $this->cms_user,
             'locked'           => true,
             'is_owner'         => false,
@@ -312,6 +318,8 @@ class actionGalleryplusAlbum extends cmsAction {
         $this->model->preset_big    = $this->options['preset_big'] ?? 'galleryplus_big';
         $this->model->preset_nocrop = $this->options['preset_nocrop'] ?? 'galleryplus_nocrop';
 
+        $this->applyAlbumSort();
+
         $photos = $this->model->getPhotos($page, $perpage);
         if (!$photos) { $photos = []; }
         $photos = $this->applyAdultFilter($photos);
@@ -341,6 +349,17 @@ class actionGalleryplusAlbum extends cmsAction {
             'page'     => $page + 1,
             'has_next' => $has_next,
         ]);
+    }
+
+    /**
+     * Пользовательская сортировка фото в альбоме.
+     * old — сначала старые (по умолчанию), new — сначала новые.
+     */
+    private function applyAlbumSort() {
+        $sort = $this->request->get('sort', 'old');
+        if (!in_array($sort, ['new', 'old'], true)) { $sort = 'old'; }
+        $this->model->orderBy('i.id', $sort === 'new' ? 'desc' : 'asc');
+        return $sort;
     }
 
     private function canSelect($album) {

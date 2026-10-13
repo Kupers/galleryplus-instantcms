@@ -39,6 +39,9 @@
     define('LANG_GALLERYPLUS_RATING_ADULT_HINT',  'Минимальный рейтинг для просмотра альбомов 18+. 0 — для всех авторизованных. Не применяется к администраторам и модераторам');
     define('LANG_GALLERYPLUS_RATING_ADULT_ERROR', 'Недостаточно рейтинга для просмотра 18+ контента (требуется: %s)');
     define('LANG_GALLERYPLUS_UPLOAD',            'Загрузить');
+    define('LANG_GALLERYPLUS_SORT',              'Сортировка');
+    define('LANG_GALLERYPLUS_SORT_NEW',          'Сначала новые');
+    define('LANG_GALLERYPLUS_SORT_OLD',          'Сначала старые');
     define('LANG_GALLERYPLUS_DROP_HERE',         'Перетащите изображения сюда или нажмите для выбора');
     define('LANG_GALLERYPLUS_UPLOAD_HINT',       'JPG, PNG, GIF, WebP — до 20MB каждый');
     define('LANG_GALLERYPLUS_ALBUM',             'Альбом');
