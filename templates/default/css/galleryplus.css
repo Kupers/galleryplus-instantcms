@@ -2245,6 +2245,7 @@ img.galleryplus-viewer-blurred {
 /* ===== View page adult blur ===== */
 .galleryplus-view-image--adult {
     position: relative;
+    overflow: hidden;
 }
 
 .galleryplus-view-image--adult img.galleryplus-blurred {
@@ -2295,6 +2296,7 @@ img.galleryplus-viewer-blurred {
 
 .galleryplus-view-image--paid-blur {
     position: relative;
+    overflow: hidden;
 }
 
 .galleryplus-view-image--paid-blur img.galleryplus-blurred {
