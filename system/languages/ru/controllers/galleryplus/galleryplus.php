@@ -386,4 +386,8 @@ define('LANG_GALLERYPLUS_SHARE_DEVICES_LIMIT',   'Достигнут лимит 
 define('LANG_GALLERYPLUS_SHARE_BLOCKED_TITLE',   'Ссылка недоступна');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_TITLE',    'Секретная ссылка');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_TEXT',     'Чтобы открыть содержимое, нажмите кнопку ниже.');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_DESC',     'Секретная ссылка Gallery+');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_OPEN',     'Открыть');
+define('LANG_GALLERYPLUS_SHARE_HIDE_PREVIEW_TOGGLE', 'Скрыть предпросмотр в мессенджерах');
+define('LANG_GALLERYPLUS_SHARE_HIDE_PREVIEW_HINT',   'При отправке ссылки не будет карточки с фото.');
+define('LANG_GALLERYPLUS_SHARE_STATUS_HIDE_PREVIEW', 'Без предпросмотра');

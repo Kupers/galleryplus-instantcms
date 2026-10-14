@@ -382,4 +382,8 @@ define('LANG_GALLERYPLUS_SHARE_DEVICES_LIMIT',   'The device limit for this link
 define('LANG_GALLERYPLUS_SHARE_BLOCKED_TITLE',   'Link unavailable');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_TITLE',    'Secret link');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_TEXT',     'To open the content, click the button below.');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_DESC',     'Gallery+ secret link');
 define('LANG_GALLERYPLUS_SHARE_PREVIEW_OPEN',     'Open');
+define('LANG_GALLERYPLUS_SHARE_HIDE_PREVIEW_TOGGLE', 'Hide preview in messengers');
+define('LANG_GALLERYPLUS_SHARE_HIDE_PREVIEW_HINT',   'No photo card will be shown when the link is shared.');
+define('LANG_GALLERYPLUS_SHARE_STATUS_HIDE_PREVIEW', 'No preview');

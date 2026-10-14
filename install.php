@@ -274,6 +274,7 @@ map_center_lng: 30.315721\n";
             `expires_at` datetime DEFAULT NULL,
             `max_devices` int(11) unsigned NOT NULL DEFAULT '0',
             `single_use` tinyint(1) NOT NULL DEFAULT '0',
+            `hide_preview` tinyint(1) NOT NULL DEFAULT '0',
             `is_active` tinyint(1) NOT NULL DEFAULT '1',
             `opens` int(11) unsigned NOT NULL DEFAULT '0',
             `last_open_at` datetime DEFAULT NULL,
@@ -296,6 +297,8 @@ map_center_lng: 30.315721\n";
             UNIQUE KEY `link_device` (`link_id`,`device_id`),
             KEY `link_id` (`link_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+        @$db->query("ALTER TABLE `{#}galleryplus_share_links` ADD COLUMN `hide_preview` tinyint(1) NOT NULL DEFAULT '0' AFTER `single_use`");
     } catch (\Throwable $e) {}
 
     // Регистрация billing-действий (платная загрузка, просмотр альбома, оригинал)

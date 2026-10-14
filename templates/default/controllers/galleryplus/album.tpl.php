@@ -64,7 +64,7 @@
                         data-gp-album="<?php echo (int)$album['id']; ?>"
                         data-gp-photo="0"
                         data-gp-csrf="<?php echo cmsForm::getCSRFToken(); ?>"
-                        data-gp-i18n="<?php echo htmlspecialchars(json_encode(galleryplus_share_i18n(), JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>">&#128279; <?php echo defined('LANG_GALLERYPLUS_SHARE_SECRET') ? LANG_GALLERYPLUS_SHARE_SECRET : 'Секретная ссылка'; ?></button>
+                        data-gp-i18n="<?php echo htmlspecialchars(json_encode(galleryplus_share_i18n(), JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>"><span class="galleryplus-share-btn-icon"><?php echo string_replace_svg_icons('{solid%link}'); ?></span> <span class="galleryplus-share-btn-text"><?php echo defined('LANG_GALLERYPLUS_SHARE_SECRET') ? LANG_GALLERYPLUS_SHARE_SECRET : 'Секретная ссылка'; ?></span></button>
             <?php } ?>
         </div>
     </div>

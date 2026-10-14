@@ -1783,6 +1783,11 @@ window.galleryplusMasonry = function(container, itemSelector) {
                         '<span class="galleryplus-share-single-label"></span>' +
                     '</label>' +
                     '<p class="galleryplus-share-note galleryplus-share-single-note"></p>' +
+                    '<label class="galleryplus-share-check">' +
+                        '<input type="checkbox" class="galleryplus-share-hidepreview-cb">' +
+                        '<span class="galleryplus-share-hidepreview-label"></span>' +
+                    '</label>' +
+                    '<p class="galleryplus-share-note galleryplus-share-hidepreview-note"></p>' +
                     '<button type="button" class="galleryplus-btn galleryplus-share-create"></button>' +
                 '</div>' +
                 '<div class="galleryplus-share-error" style="display:none"></div>' +
@@ -1805,6 +1810,9 @@ window.galleryplusMasonry = function(container, itemSelector) {
     var singleCb  = q('.galleryplus-share-single-cb');
     var singleL   = q('.galleryplus-share-single-label');
     var singleNote= q('.galleryplus-share-single-note');
+    var hideCb    = q('.galleryplus-share-hidepreview-cb');
+    var hideL     = q('.galleryplus-share-hidepreview-label');
+    var hideNote  = q('.galleryplus-share-hidepreview-note');
     var createBtn = q('.galleryplus-share-create');
     var errorEl   = q('.galleryplus-share-error');
     var listEl    = q('.galleryplus-share-list');
@@ -1817,6 +1825,8 @@ window.galleryplusMasonry = function(container, itemSelector) {
     devNote.textContent   = t('devicesHint', '');
     singleL.textContent   = t('singleToggle', '');
     singleNote.textContent= t('singleHint', '');
+    hideL.textContent     = t('hidePreviewToggle', '');
+    hideNote.textContent  = t('hidePreviewHint', '');
     createBtn.textContent = t('create', 'Create');
 
     for (var d = 1; d <= 30; d++) {
@@ -1847,7 +1857,8 @@ window.galleryplusMasonry = function(container, itemSelector) {
         var days = parseInt(daysSel.value, 10);
         var maxDevices = devCb.checked ? Math.max(1, parseInt(devNum.value || '1', 10)) : 0;
         var single = singleCb.checked ? 1 : 0;
-        post('share_create', { days: days, max_devices: maxDevices, single_use: single }, function (res) {
+        var hidePreview = hideCb.checked ? 1 : 0;
+        post('share_create', { days: days, max_devices: maxDevices, single_use: single, hide_preview: hidePreview }, function (res) {
             createBtn.disabled = false;
             if (res.error) { showError(res.error); return; }
             reload();
@@ -1896,6 +1907,7 @@ window.galleryplusMasonry = function(container, itemSelector) {
         var parts = [];
         parts.push('<span class="galleryplus-share-status">' + statusText(link) + '</span>');
         if (link.single_use) { parts.push('<span>' + t('statusSingle', 'Single-use') + '</span>'); }
+        if (link.hide_preview) { parts.push('<span>' + t('statusHidePreview', 'No preview') + '</span>'); }
         if (link.expires_at) { parts.push('<span>' + t('until', 'until') + ' ' + link.expires_at + '</span>'); }
         parts.push('<span>' + link.opens + ' ' + t('opens', 'visits') + '</span>');
         if (link.max_devices > 0) {

@@ -203,6 +203,7 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_links` (
   `expires_at` datetime DEFAULT NULL,
   `max_devices` int(11) unsigned NOT NULL DEFAULT '0',
   `single_use` tinyint(1) NOT NULL DEFAULT '0',
+  `hide_preview` tinyint(1) NOT NULL DEFAULT '0',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `opens` int(11) unsigned NOT NULL DEFAULT '0',
   `last_open_at` datetime DEFAULT NULL,

@@ -1828,6 +1828,23 @@ html[data-idle] .galleryplus-viewer-bottom {
     height: 18px;
 }
 
+.galleryplus-share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.galleryplus-share-btn-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.galleryplus-share-btn-icon .icms-svg-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
 /* --- Body lock --- */
 body.galleryplus-viewer-open {
     overflow: hidden;
@@ -3538,6 +3555,16 @@ body.galleryplus-selecting .galleryplus-item .galleryplus-fav-btn--card {
 }
 .galleryplus-share-devices-box {
     padding: 4px 0 10px 26px;
+}
+.galleryplus-share-preview-image {
+    max-width: 420px;
+    margin: 0 auto 14px;
+}
+.galleryplus-share-preview-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
 }
 .galleryplus-share-devices-num {
     max-width: 120px;

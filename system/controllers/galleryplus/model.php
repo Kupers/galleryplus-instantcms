@@ -196,7 +196,9 @@ class modelGalleryplus extends cmsModel {
 
         try {
 
-            if (!$this->db->isTableExists('galleryplus_share_links')) {
+            $migrate = $this->db->isTableExists('galleryplus_share_links');
+
+            if (!$migrate) {
                 $this->db->query("CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_links` (
                     `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                     `token` varchar(32) NOT NULL,
@@ -206,6 +208,7 @@ class modelGalleryplus extends cmsModel {
                     `expires_at` datetime DEFAULT NULL,
                     `max_devices` int(11) unsigned NOT NULL DEFAULT '0',
                     `single_use` tinyint(1) NOT NULL DEFAULT '0',
+                    `hide_preview` tinyint(1) NOT NULL DEFAULT '0',
                     `is_active` tinyint(1) NOT NULL DEFAULT '1',
                     `opens` int(11) unsigned NOT NULL DEFAULT '0',
                     `last_open_at` datetime DEFAULT NULL,
@@ -230,6 +233,13 @@ class modelGalleryplus extends cmsModel {
                     UNIQUE KEY `link_device` (`link_id`,`device_id`),
                     KEY `link_id` (`link_id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            }
+
+            if ($migrate) {
+                $col = @$this->db->query("SHOW COLUMNS FROM `{#}galleryplus_share_links` LIKE 'hide_preview'");
+                if (!$col || !$this->db->fetchAssoc($col)) {
+                    @$this->db->query("ALTER TABLE `{#}galleryplus_share_links` ADD `hide_preview` tinyint(1) NOT NULL DEFAULT '0' AFTER `single_use`");
+                }
             }
 
             $this->share_tables_is_ready = true;
@@ -278,6 +288,7 @@ class modelGalleryplus extends cmsModel {
             'expires_at'  => !empty($data['expires_at']) ? $data['expires_at'] : null,
             'max_devices' => (int)($data['max_devices'] ?? 0),
             'single_use'  => !empty($data['single_use']) ? 1 : 0,
+            'hide_preview' => !empty($data['hide_preview']) ? 1 : 0,
             'is_active'   => 1,
             'opens'       => 0,
             'date_pub'    => null,

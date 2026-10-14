@@ -97,7 +97,29 @@ class actionGalleryplusShare extends cmsAction {
 
     // Страница-прослойка для предпросмотра/роботов: без расхода ссылки
     private function renderPreview($link, $album, $photo) {
+
         $title = $photo ? $photo['title'] : $album['title'];
+
+        $image = '';
+        if (empty($link['hide_preview'])) {
+            $this->model->preset_small = $this->options['preset_small'] ?? 'galleryplus_thumb';
+            $this->model->preset_big   = $this->options['preset_big'] ?? 'galleryplus_big';
+
+            if ($photo) {
+                $image_arr = cmsModel::yamlToArray($photo['image']);
+                $src = html_image_src($image_arr, $this->model->preset_big, true)
+                    ?: html_image_src($image_arr, $this->model->preset_small, true);
+                $image = $this->absoluteUrl($src);
+            } else {
+                $cover = $this->model->getAlbumCover($album['id']);
+                $image = $this->absoluteUrl($cover['url']);
+            }
+        }
+
+        $desc = $photo ? trim((string)($photo['content'] ?? '')) : trim((string)($album['description'] ?? ''));
+        if ($desc === '') {
+            $desc = defined('LANG_GALLERYPLUS_SHARE_PREVIEW_DESC') ? LANG_GALLERYPLUS_SHARE_PREVIEW_DESC : '';
+        }
 
         $this->cms_template->addBreadcrumb(
             defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
@@ -105,9 +127,19 @@ class actionGalleryplusShare extends cmsAction {
         );
 
         return $this->cms_template->render('share_preview', [
-            'title'    => $title,
-            'open_url' => href_to('galleryplus', 's', [$link['token']]) . '?open=1',
+            'title'        => $title,
+            'image'        => $image,
+            'description'  => $desc,
+            'hide_preview' => !empty($link['hide_preview']),
+            'open_url'     => href_to('galleryplus', 's', [$link['token']]) . '?open=1',
         ]);
+    }
+
+    private function absoluteUrl($url) {
+        if (!$url) { return ''; }
+        if (preg_match('~^https?://~i', $url)) { return $url; }
+        $host = rtrim((string)cmsConfig::get('host'), '/');
+        return $host . '/' . ltrim($url, '/');
     }
 
     // Определяем автоматический запрос (робот/предпросмотр), который не должен
@@ -129,31 +161,24 @@ class actionGalleryplusShare extends cmsAction {
 
         if ($ua === '' || strpos($accept, 'text/html') === false) { return true; }
 
-        $markers = [
-            'bot', 'crawler', 'spider', 'slurp', 'curl', 'wget', 'python', 'guzzle',
-            'okhttp', 'go-http-client', 'java/', 'libwww', 'httpclient', 'http-client',
-            'facebookexternalhit', 'facebookcatalog', 'facebot', 'facebook',
-            'telegram', 'whatsapp', 'slackbot', 'discord', 'twitterbot', 'skype',
-            'linkedinbot', 'embedly', 'iframely', 'metainspector', 'opengraph',
-            'unfurl', 'scraper', 'scrape', 'preview', 'headless', 'phantomjs',
-            'puppeteer', 'playwright', 'axios', 'node-fetch', 'rss', 'feed',
-            'monitor', 'uptime', 'pingdom', 'statuscake', 'validator', 'audit',
-            'semrush', 'ahrefs', 'mj12', 'dotbot', 'yandex', 'googlebot', 'bingbot',
-            'baidu', 'applebot', 'petalbot', 'sogou', 'exabot', 'ia_archiver',
-            'archive.org', 'bitly', 'pinterest', 'redditbot', 'tumblr', 'snapchat',
-            'nextcloud', 'owncloud', 'synology', 'zabbix', 'nagios', 'vk', 'mail.ru',
-            'maxbot',
-        ];
-        foreach ($markers as $m) {
-            if (strpos($ua, $m) !== false) { return true; }
-        }
-
-        $browser = (strpos($ua, 'mozilla') !== false) && preg_match(
+        // Главный признак человека — реальный браузерный движок. Мобильные in-app
+        // браузеры мессенджеров (MAX/VK, Telegram, Instagram и т.п.) содержат в UA
+        // названия «vk», «mail.ru» и др., поэтому по подстрокам людей определять нельзя.
+        $is_browser = (strpos($ua, 'mozilla') !== false) && preg_match(
             '~chrome/|crios/|safari/|firefox/|gecko/|edg/|edgios/|edga/|opr/|opera|trident/|msie|yaapp|yabrowser|samsungbrowser|ucbrowser|vivaldi~',
             $ua
         );
 
-        return !$browser;
+        if ($is_browser) {
+            // Отсекаем только явный headless/скриптовый отпечаток внутри браузерного UA
+            if (preg_match('~headless|phantomjs|puppeteer|playwright|electron/|node-fetch|axios|spider|bot/|crawler~', $ua)) {
+                return true;
+            }
+            return false;
+        }
+
+        // Не браузер (роботы предпросмотра, фетчеры, скрипты) — без расхода ссылки
+        return true;
     }
 
     private function getDeviceId() {
@@ -237,6 +262,7 @@ class actionGalleryplusShare extends cmsAction {
             'is_expired'   => $expired,
             'max_devices'  => (int)$link['max_devices'],
             'single_use'   => !empty($link['single_use']),
+            'hide_preview' => !empty($link['hide_preview']),
             'is_active'    => !empty($link['is_active']),
             'opens'        => (int)$link['opens'],
             'devices'      => $devices,
@@ -289,6 +315,7 @@ class actionGalleryplusShare extends cmsAction {
         if ($max_devices < 0) { $max_devices = 0; }
 
         $single_use = (int)$this->request->get('single_use', 0) ? 1 : 0;
+        $hide_preview = (int)$this->request->get('hide_preview', 0) ? 1 : 0;
 
         $created = $this->model->createShareLink([
             'album_id'    => (int)$album['id'],
@@ -297,6 +324,7 @@ class actionGalleryplusShare extends cmsAction {
             'expires_at'  => $days > 0 ? date('Y-m-d H:i:s', strtotime('+' . $days . ' days')) : null,
             'max_devices' => $max_devices,
             'single_use'  => $single_use,
+            'hide_preview' => $hide_preview,
         ]);
 
         if (!$created) {
