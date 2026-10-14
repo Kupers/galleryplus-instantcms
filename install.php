@@ -298,7 +298,10 @@ map_center_lng: 30.315721\n";
             KEY `link_id` (`link_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
-        @$db->query("ALTER TABLE `{#}galleryplus_share_links` ADD COLUMN `hide_preview` tinyint(1) NOT NULL DEFAULT '0' AFTER `single_use`");
+        $col = @$db->query("SHOW COLUMNS FROM `{#}galleryplus_share_links` LIKE 'hide_preview'");
+        if (!$col || !$db->fetchAssoc($col)) {
+            @$db->query("ALTER TABLE `{#}galleryplus_share_links` ADD COLUMN `hide_preview` tinyint(1) NOT NULL DEFAULT '0' AFTER `single_use`");
+        }
     } catch (\Throwable $e) {}
 
     // Регистрация billing-действий (платная загрузка, просмотр альбома, оригинал)
