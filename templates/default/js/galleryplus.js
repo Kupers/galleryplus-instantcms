@@ -1692,3 +1692,291 @@ window.galleryplusMasonry = function(container, itemSelector) {
     });
 
 })();
+
+/* ==== Secret share links (share-token) ==== */
+(function () {
+    'use strict';
+
+    var btn = document.querySelector('[data-gp-share]');
+    if (!btn) { return; }
+
+    var endpoint = btn.getAttribute('data-gp-endpoint') || '/galleryplus/share';
+    var csrf     = btn.getAttribute('data-gp-csrf') || '';
+    var albumId  = btn.getAttribute('data-gp-album') || '0';
+    var photoId  = btn.getAttribute('data-gp-photo') || '0';
+
+    var i18n = {};
+    try { i18n = JSON.parse(btn.getAttribute('data-gp-i18n') || '{}'); } catch (e) {}
+
+    function t(key, fb) { return i18n[key] || fb || key; }
+    function formatDays(n) { return t('daysSuffix', '%s').replace('%s', n); }
+
+    function post(action, extra, done) {
+        var fd = new FormData();
+        fd.append('action', action);
+        fd.append('csrf_token', csrf);
+        fd.append('album_id', albumId);
+        fd.append('photo_id', photoId);
+        if (extra) {
+            for (var k in extra) {
+                if (Object.prototype.hasOwnProperty.call(extra, k)) { fd.append(k, extra[k]); }
+            }
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function () {
+            var data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (e) {}
+            done(data || { error: t('error', 'Error') });
+        };
+        xhr.onerror = function () { done({ error: t('error', 'Error') }); };
+        xhr.send(fd);
+    }
+
+    function copyText(text, done) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+            return;
+        }
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        done(ok);
+    }
+
+    /* ---- Modal ---- */
+    var modal = document.createElement('div');
+    modal.className = 'galleryplus-share-modal';
+    modal.style.display = 'none';
+    modal.innerHTML =
+        '<div class="galleryplus-share-overlay" data-gp-close></div>' +
+        '<div class="galleryplus-share-dialog" role="dialog" aria-modal="true">' +
+            '<div class="galleryplus-share-head">' +
+                '<span class="galleryplus-share-title"></span>' +
+                '<button type="button" class="galleryplus-share-x" data-gp-close>&times;</button>' +
+            '</div>' +
+            '<div class="galleryplus-share-body">' +
+                '<p class="galleryplus-share-hint"></p>' +
+                '<div class="galleryplus-share-form">' +
+                    '<div class="galleryplus-share-row">' +
+                        '<label class="galleryplus-share-expires-label"></label>' +
+                        '<select class="form-control galleryplus-share-days"></select>' +
+                    '</div>' +
+                    '<label class="galleryplus-share-check">' +
+                        '<input type="checkbox" class="galleryplus-share-devices-cb">' +
+                        '<span class="galleryplus-share-devices-label"></span>' +
+                    '</label>' +
+                    '<div class="galleryplus-share-devices-box" style="display:none">' +
+                        '<label class="galleryplus-share-devices-count-label"></label>' +
+                        '<input type="number" min="1" max="999" value="1" class="form-control galleryplus-share-devices-num">' +
+                        '<p class="galleryplus-share-note galleryplus-share-devices-note"></p>' +
+                    '</div>' +
+                    '<label class="galleryplus-share-check">' +
+                        '<input type="checkbox" class="galleryplus-share-single-cb">' +
+                        '<span class="galleryplus-share-single-label"></span>' +
+                    '</label>' +
+                    '<p class="galleryplus-share-note galleryplus-share-single-note"></p>' +
+                    '<button type="button" class="galleryplus-btn galleryplus-share-create"></button>' +
+                '</div>' +
+                '<div class="galleryplus-share-error" style="display:none"></div>' +
+                '<div class="galleryplus-share-list"></div>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(modal);
+
+    var q = function (sel) { return modal.querySelector(sel); };
+    var titleEl   = q('.galleryplus-share-title');
+    var hintEl    = q('.galleryplus-share-hint');
+    var expiresL  = q('.galleryplus-share-expires-label');
+    var daysSel   = q('.galleryplus-share-days');
+    var devCb     = q('.galleryplus-share-devices-cb');
+    var devLabel  = q('.galleryplus-share-devices-label');
+    var devBox    = q('.galleryplus-share-devices-box');
+    var devCountL = q('.galleryplus-share-devices-count-label');
+    var devNum    = q('.galleryplus-share-devices-num');
+    var devNote   = q('.galleryplus-share-devices-note');
+    var singleCb  = q('.galleryplus-share-single-cb');
+    var singleL   = q('.galleryplus-share-single-label');
+    var singleNote= q('.galleryplus-share-single-note');
+    var createBtn = q('.galleryplus-share-create');
+    var errorEl   = q('.galleryplus-share-error');
+    var listEl    = q('.galleryplus-share-list');
+
+    titleEl.textContent   = t('title', 'Secret link');
+    hintEl.textContent    = t('hint', '');
+    expiresL.textContent  = t('expires', 'Expires');
+    devLabel.textContent  = t('devicesToggle', '');
+    devCountL.textContent = t('devicesCount', 'Devices');
+    devNote.textContent   = t('devicesHint', '');
+    singleL.textContent   = t('singleToggle', '');
+    singleNote.textContent= t('singleHint', '');
+    createBtn.textContent = t('create', 'Create');
+
+    for (var d = 1; d <= 30; d++) {
+        var opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = formatDays(d);
+        daysSel.appendChild(opt);
+    }
+    var optU = document.createElement('option');
+    optU.value = '0';
+    optU.textContent = t('unlimited', 'Unlimited');
+    daysSel.appendChild(optU);
+    daysSel.value = '7';
+
+    devCb.addEventListener('change', function () {
+        devBox.style.display = devCb.checked ? '' : 'none';
+    });
+
+    function showError(msg) {
+        if (!msg) { errorEl.style.display = 'none'; errorEl.textContent = ''; return; }
+        errorEl.textContent = msg;
+        errorEl.style.display = '';
+    }
+
+    createBtn.addEventListener('click', function () {
+        showError('');
+        createBtn.disabled = true;
+        var days = parseInt(daysSel.value, 10);
+        var maxDevices = devCb.checked ? Math.max(1, parseInt(devNum.value || '1', 10)) : 0;
+        var single = singleCb.checked ? 1 : 0;
+        post('share_create', { days: days, max_devices: maxDevices, single_use: single }, function (res) {
+            createBtn.disabled = false;
+            if (res.error) { showError(res.error); return; }
+            reload();
+        });
+    });
+
+    function statusText(link) {
+        if (!link.is_active) { return t('statusRevoked', 'Revoked'); }
+        if (link.is_expired) { return t('statusExpired', 'Expired'); }
+        return t('statusActive', 'Active');
+    }
+
+    function renderList(res) {
+        if (res.error) { showError(res.error); listEl.innerHTML = ''; return; }
+        var links = res.links || [];
+        listEl.innerHTML = '';
+        if (!links.length) {
+            var empty = document.createElement('p');
+            empty.className = 'galleryplus-share-empty text-muted';
+            empty.textContent = t('empty', 'No links yet');
+            listEl.appendChild(empty);
+            return;
+        }
+        links.forEach(function (link) {
+            listEl.appendChild(renderLink(link));
+        });
+    }
+
+    function renderLink(link) {
+        var row = document.createElement('div');
+        row.className = 'galleryplus-share-item' + (link.is_active && !link.is_expired ? '' : ' galleryplus-share-item--inactive');
+
+        var top = document.createElement('div');
+        top.className = 'galleryplus-share-item-top';
+        var url = document.createElement('input');
+        url.type = 'text';
+        url.readOnly = true;
+        url.className = 'form-control galleryplus-share-url';
+        url.value = link.url;
+        url.addEventListener('focus', function () { this.select(); });
+        top.appendChild(url);
+        row.appendChild(top);
+
+        var meta = document.createElement('div');
+        meta.className = 'galleryplus-share-meta';
+        var parts = [];
+        parts.push('<span class="galleryplus-share-status">' + statusText(link) + '</span>');
+        if (link.single_use) { parts.push('<span>' + t('statusSingle', 'Single-use') + '</span>'); }
+        if (link.expires_at) { parts.push('<span>' + t('until', 'until') + ' ' + link.expires_at + '</span>'); }
+        parts.push('<span>' + link.opens + ' ' + t('opens', 'visits') + '</span>');
+        if (link.max_devices > 0) {
+            parts.push('<span>' + link.devices + '/' + link.max_devices + ' ' + t('devicesWord', 'devices') + '</span>');
+        }
+        meta.innerHTML = parts.join(' &middot; ');
+        row.appendChild(meta);
+
+        var actions = document.createElement('div');
+        actions.className = 'galleryplus-share-actions';
+
+        actions.appendChild(mkBtn(t('copy', 'Copy'), 'copy', function (b) {
+            copyText(link.url, function (ok) {
+                var orig = b.textContent;
+                b.textContent = ok ? t('copied', 'Copied') : t('copy', 'Copy');
+                setTimeout(function () { b.textContent = orig; }, 1500);
+            });
+        }));
+        if (link.is_active) {
+            actions.appendChild(mkBtn(t('revoke', 'Revoke'), 'revoke', function () {
+                if (!window.confirm(t('confirmRevoke', 'Revoke?'))) { return; }
+                post('share_revoke', { link_id: link.id }, reload);
+            }));
+        } else {
+            actions.appendChild(mkBtn(t('activate', 'Enable'), 'activate', function () {
+                post('share_activate', { link_id: link.id }, reload);
+            }));
+        }
+        actions.appendChild(mkBtn(t('regenerate', 'Regenerate'), 'regenerate', function () {
+            post('share_regenerate', { link_id: link.id }, function (res) {
+                if (res.error) { showError(res.error); return; }
+                reload();
+            });
+        }));
+        if (link.max_devices > 0) {
+            actions.appendChild(mkBtn(t('resetDevices', 'Reset devices'), 'reset', function () {
+                post('share_reset_devices', { link_id: link.id }, reload);
+            }));
+        }
+        actions.appendChild(mkBtn(t('delete', 'Delete'), 'delete danger', function () {
+            if (!window.confirm(t('confirmDelete', 'Delete?'))) { return; }
+            post('share_delete', { link_id: link.id }, reload);
+        }));
+
+        row.appendChild(actions);
+        return row;
+    }
+
+    function mkBtn(label, cls, handler) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'galleryplus-share-action galleryplus-share-action--' + cls.split(' ')[0] + (cls.indexOf('danger') !== -1 ? ' danger' : '');
+        b.textContent = label;
+        b.addEventListener('click', function () { handler(b); });
+        return b;
+    }
+
+    function reload() {
+        showError('');
+        listEl.innerHTML = '';
+        var load = document.createElement('p');
+        load.className = 'galleryplus-share-loading text-muted';
+        load.textContent = t('loading', 'Loading...');
+        listEl.appendChild(load);
+        post('share_list', null, renderList);
+    }
+
+    function openModal() {
+        modal.style.display = '';
+        reload();
+    }
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    btn.addEventListener('click', openModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target.hasAttribute('data-gp-close')) { closeModal(); }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.style.display !== 'none') { closeModal(); }
+    });
+
+})();

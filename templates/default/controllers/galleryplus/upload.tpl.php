@@ -43,6 +43,7 @@
         <div class="galleryplus-upload-album-select"<?php echo !empty($album_id) ? ' style="display:none"' : ''; ?>>
             <label><?php echo LANG_GALLERYPLUS_ALBUM ?? 'Album'; ?>:</label>
             <div class="galleryplus-album-search-wrap">
+                <span class="galleryplus-album-search-icon" aria-hidden="true"><?php echo string_replace_svg_icons('{solid%search}'); ?></span>
                 <input type="text" id="galleryplus-album-search" class="form-control" autocomplete="nope" placeholder="<?php echo defined('LANG_GALLERYPLUS_ALBUM_SEARCH_PLACEHOLDER') ? LANG_GALLERYPLUS_ALBUM_SEARCH_PLACEHOLDER : 'Type album name...'; ?>">
                 <input type="hidden" name="album_id" id="galleryplus-album-id" value="<?php echo (int)$album_id; ?>">
                 <div class="galleryplus-album-dropdown" id="galleryplus-album-dropdown"></div>

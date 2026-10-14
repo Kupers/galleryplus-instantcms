@@ -193,3 +193,35 @@ CREATE TABLE IF NOT EXISTS `{#}galleryplus_original_access` (
   KEY `photo_id` (`photo_id`),
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_links` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `token` varchar(32) NOT NULL,
+  `album_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `photo_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `user_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `expires_at` datetime DEFAULT NULL,
+  `max_devices` int(11) unsigned NOT NULL DEFAULT '0',
+  `single_use` tinyint(1) NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `opens` int(11) unsigned NOT NULL DEFAULT '0',
+  `last_open_at` datetime DEFAULT NULL,
+  `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `album_id` (`album_id`),
+  KEY `photo_id` (`photo_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_devices` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `link_id` int(11) unsigned NOT NULL,
+  `device_id` varchar(64) NOT NULL,
+  `ip` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `link_device` (`link_id`,`device_id`),
+  KEY `link_id` (`link_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

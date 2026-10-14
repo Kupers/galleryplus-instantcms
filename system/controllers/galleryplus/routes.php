@@ -66,6 +66,15 @@ function routes_galleryplus() {
             2         => 'preset'
         ],
         [
+            'pattern' => '/^galleryplus\/share$/i',
+            'action'  => 'share',
+        ],
+        [
+            'pattern' => '/^galleryplus\/s\/([A-Za-z0-9]+)$/i',
+            'action'  => 'share',
+            1         => 'token'
+        ],
+        [
             'pattern' => '/^galleryplus\/([a-z0-9\-\/]+).html$/i',
             'action'  => 'view',
             1         => 'slug'

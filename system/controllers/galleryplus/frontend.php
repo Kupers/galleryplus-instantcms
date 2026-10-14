@@ -53,6 +53,13 @@ class galleryplus extends cmsFrontend {
         return $this->isAdultConfirmed() ? 0 : 1;
     }
 
+    /**
+     * Строки интерфейса секретных ссылок для передачи в JS.
+     */
+    public function shareI18n() {
+        return galleryplus_share_i18n();
+    }
+
 //============================================================================//
 // Billing-интеграция (платная загрузка, просмотр альбома, оригинал)
 //============================================================================//
@@ -245,4 +252,48 @@ class galleryplus extends cmsFrontend {
         return round($price * (100 - $percent) / 100, 2);
     }
 
+}
+
+if (!function_exists('galleryplus_share_i18n')) {
+    /**
+     * Строки интерфейса секретных ссылок (для шаблонов и JS).
+     */
+    function galleryplus_share_i18n() {
+        $t = function ($name, $default = '') {
+            return defined($name) ? constant($name) : $default;
+        };
+        return [
+            'title'          => $t('LANG_GALLERYPLUS_SHARE_TITLE', 'Секретная ссылка'),
+            'hint'           => $t('LANG_GALLERYPLUS_SHARE_HINT', ''),
+            'create'         => $t('LANG_GALLERYPLUS_SHARE_CREATE', 'Создать ссылку'),
+            'expires'        => $t('LANG_GALLERYPLUS_SHARE_EXPIRES', 'Срок действия'),
+            'unlimited'      => $t('LANG_GALLERYPLUS_SHARE_UNLIMITED', 'Бессрочно'),
+            'daysSuffix'     => $t('LANG_GALLERYPLUS_SHARE_DAYS', '%s дн.'),
+            'devicesToggle'  => $t('LANG_GALLERYPLUS_SHARE_DEVICES_TOGGLE', ''),
+            'devicesHint'    => $t('LANG_GALLERYPLUS_SHARE_DEVICES_HINT', ''),
+            'devicesCount'   => $t('LANG_GALLERYPLUS_SHARE_DEVICES_COUNT', 'Устройств'),
+            'singleToggle'   => $t('LANG_GALLERYPLUS_SHARE_SINGLE_TOGGLE', ''),
+            'singleHint'     => $t('LANG_GALLERYPLUS_SHARE_SINGLE_HINT', ''),
+            'copy'           => $t('LANG_GALLERYPLUS_SHARE_COPY', 'Скопировать'),
+            'copied'         => $t('LANG_GALLERYPLUS_SHARE_COPIED', 'Скопировано'),
+            'revoke'         => $t('LANG_GALLERYPLUS_SHARE_REVOKE', 'Отозвать'),
+            'activate'       => $t('LANG_GALLERYPLUS_SHARE_ACTIVATE', 'Включить'),
+            'regenerate'     => $t('LANG_GALLERYPLUS_SHARE_REGENERATE', 'Перевыпустить'),
+            'delete'         => $t('LANG_GALLERYPLUS_SHARE_DELETE', 'Удалить'),
+            'resetDevices'   => $t('LANG_GALLERYPLUS_SHARE_RESET_DEVICES', 'Сбросить устройства'),
+            'statusActive'   => $t('LANG_GALLERYPLUS_SHARE_STATUS_ACTIVE', 'Активна'),
+            'statusRevoked'  => $t('LANG_GALLERYPLUS_SHARE_STATUS_REVOKED', 'Отозвана'),
+            'statusExpired'  => $t('LANG_GALLERYPLUS_SHARE_STATUS_EXPIRED', 'Истекла'),
+            'statusSingle'   => $t('LANG_GALLERYPLUS_SHARE_STATUS_SINGLE', 'Одноразовая'),
+            'empty'          => $t('LANG_GALLERYPLUS_SHARE_EMPTY', 'Ссылок пока нет'),
+            'opens'          => $t('LANG_GALLERYPLUS_SHARE_OPENS', 'переходов'),
+            'devicesWord'    => $t('LANG_GALLERYPLUS_SHARE_DEVICES_WORD', 'устройств'),
+            'until'          => $t('LANG_GALLERYPLUS_SHARE_UNTIL', 'до'),
+            'loading'        => $t('LANG_GALLERYPLUS_SHARE_LOADING', 'Загрузка...'),
+            'confirmDelete'  => $t('LANG_GALLERYPLUS_SHARE_CONFIRM_DELETE', 'Удалить ссылку?'),
+            'confirmRevoke'  => $t('LANG_GALLERYPLUS_SHARE_CONFIRM_REVOKE', 'Отозвать ссылку?'),
+            'close'          => $t('LANG_GALLERYPLUS_SHARE_CLOSE', 'Закрыть'),
+            'error'          => $t('LANG_GALLERYPLUS_SHARE_ERR_CREATE', 'Ошибка'),
+        ];
+    }
 }

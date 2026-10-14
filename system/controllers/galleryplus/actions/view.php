@@ -45,6 +45,7 @@ class actionGalleryplusView extends cmsAction {
 
         $is_blurred = false;
         $is_age_locked = false;
+        $share_access = !empty($photo['album_id']) && $this->model->hasShareAccess((int)$photo['album_id']);
         if (!empty($photo['album'])) {
             if (!$this->model->canAccessAlbum($photo['album'], $this->cms_user->id, $this->model->user_karma, $this->model->adult_karma, $show_adult_for_guests, $this->model->user_rating, $this->model->adult_rating)) {
                 if (!$this->cms_user->id) {
@@ -52,13 +53,13 @@ class actionGalleryplusView extends cmsAction {
                 }
                 return cmsCore::error404();
             }
-            if (!empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult' && !$this->cms_user->id && $show_adult_for_guests) {
+            if (!$share_access && !empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult' && !$this->cms_user->id && $show_adult_for_guests) {
                 $is_blurred = true;
             }
             // Возрастной гейт: залогиненному пользователю без подтверждённого возраста
             // 18+ (младше 18 или не указана дата рождения) фото не размоется нигде.
             // Владелец и админ/модератор подтверждены всегда (isAdultConfirmed).
-            if (!$is_blurred && !empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult'
+            if (!$share_access && !$is_blurred && !empty($photo['album']['privacy']) && $photo['album']['privacy'] === 'adult'
                 && $this->cms_user->id && (int)$photo['user_id'] !== (int)$this->cms_user->id && !$this->isAdultConfirmed()) {
                 $is_blurred  = true;
                 $is_age_locked = true;

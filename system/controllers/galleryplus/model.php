@@ -176,10 +176,222 @@ class modelGalleryplus extends cmsModel {
 
     public function clearAlbumAccess($album_id) {
         $this->resetFilters();
-        $this->filterEqual('album_id', (int)$album_id);
+        $this->filterEqual('album_id', $album_id);
         $result = $this->deleteFiltered('galleryplus_album_access');
         $this->resetFilters();
         return $result;
+    }
+
+//============================================================================//
+//  Секретные ссылки (share-token)
+//============================================================================//
+
+    // Автосоздание таблиц секретных ссылок.
+    // Нужно, чтобы функция работала и при обновлении файлов вручную (без установщика).
+    public function ensureShareTables() {
+
+        if ($this->share_tables_is_ready) {
+            return true;
+        }
+
+        try {
+
+            if (!$this->db->isTableExists('galleryplus_share_links')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_links` (
+                    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                    `token` varchar(32) NOT NULL,
+                    `album_id` int(11) unsigned NOT NULL DEFAULT '0',
+                    `photo_id` int(11) unsigned NOT NULL DEFAULT '0',
+                    `user_id` int(11) unsigned NOT NULL DEFAULT '0',
+                    `expires_at` datetime DEFAULT NULL,
+                    `max_devices` int(11) unsigned NOT NULL DEFAULT '0',
+                    `single_use` tinyint(1) NOT NULL DEFAULT '0',
+                    `is_active` tinyint(1) NOT NULL DEFAULT '1',
+                    `opens` int(11) unsigned NOT NULL DEFAULT '0',
+                    `last_open_at` datetime DEFAULT NULL,
+                    `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `token` (`token`),
+                    KEY `album_id` (`album_id`),
+                    KEY `photo_id` (`photo_id`),
+                    KEY `user_id` (`user_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            }
+
+            if (!$this->db->isTableExists('galleryplus_share_devices')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `{#}galleryplus_share_devices` (
+                    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                    `link_id` int(11) unsigned NOT NULL,
+                    `device_id` varchar(64) NOT NULL,
+                    `ip` varchar(45) DEFAULT NULL,
+                    `user_agent` varchar(255) DEFAULT NULL,
+                    `date_pub` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `link_device` (`link_id`,`device_id`),
+                    KEY `link_id` (`link_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            }
+
+            $this->share_tables_is_ready = true;
+
+        } catch (\Throwable $e) {}
+
+        return $this->share_tables_is_ready;
+    }
+
+    public function getShareLinkByToken($token) {
+        $this->ensureShareTables();
+        $token = trim((string)$token);
+        if ($token === '' || !preg_match('/^[A-Za-z0-9]+$/', $token)) { return null; }
+        $this->resetFilters();
+        $this->filterEqual('token', $token);
+        $link = $this->getItem('galleryplus_share_links');
+        $this->resetFilters();
+        return $link ?: null;
+    }
+
+    public function getShareLink($id) {
+        $this->ensureShareTables();
+        $link = $this->getItemById('galleryplus_share_links', (int)$id);
+        return $link ?: null;
+    }
+
+    public function getShareLinks($album_id, $photo_id = 0) {
+        $this->ensureShareTables();
+        $this->resetFilters();
+        $this->filterEqual('album_id', (int)$album_id);
+        $this->filterEqual('photo_id', (int)$photo_id);
+        $this->orderBy('id', 'desc');
+        $links = $this->get('galleryplus_share_links', false);
+        $this->resetFilters();
+        return $links ?: [];
+    }
+
+    public function createShareLink($data) {
+        $this->ensureShareTables();
+        $token = $this->generateShareToken();
+        $id = $this->insert('galleryplus_share_links', [
+            'token'       => $token,
+            'album_id'    => (int)($data['album_id'] ?? 0),
+            'photo_id'    => (int)($data['photo_id'] ?? 0),
+            'user_id'     => (int)($data['user_id'] ?? 0),
+            'expires_at'  => !empty($data['expires_at']) ? $data['expires_at'] : null,
+            'max_devices' => (int)($data['max_devices'] ?? 0),
+            'single_use'  => !empty($data['single_use']) ? 1 : 0,
+            'is_active'   => 1,
+            'opens'       => 0,
+            'date_pub'    => null,
+        ]);
+        return $id ? ['id' => (int)$id, 'token' => $token] : false;
+    }
+
+    public function setShareLinkActive($id, $active) {
+        return $this->update('galleryplus_share_links', (int)$id, [
+            'is_active' => $active ? 1 : 0,
+        ]);
+    }
+
+    public function regenerateShareLink($id) {
+        $token = $this->generateShareToken();
+        $this->update('galleryplus_share_links', (int)$id, [
+            'token'     => $token,
+            'is_active' => 1,
+            'opens'     => 0,
+        ]);
+        $this->clearShareDevices($id);
+        return $token;
+    }
+
+    public function deleteShareLink($id) {
+        $id = (int)$id;
+        $this->clearShareDevices($id);
+        return $this->delete('galleryplus_share_links', $id);
+    }
+
+    public function touchShareLink($id) {
+        $id = (int)$id;
+        $this->db->query("UPDATE {#}galleryplus_share_links SET `opens` = `opens` + 1, `last_open_at` = NOW() WHERE `id` = " . $id);
+        return true;
+    }
+
+    public function getShareDevices($link_id) {
+        $this->resetFilters();
+        $this->filterEqual('link_id', (int)$link_id);
+        $this->orderBy('id', 'desc');
+        $devices = $this->get('galleryplus_share_devices', false);
+        $this->resetFilters();
+        return $devices ?: [];
+    }
+
+    public function countShareDevices($link_id) {
+        $this->resetFilters();
+        $this->filterEqual('link_id', (int)$link_id);
+        $count = $this->getCount('galleryplus_share_devices');
+        $this->resetFilters();
+        return (int)$count;
+    }
+
+    public function isShareDeviceKnown($link_id, $device_id) {
+        if (!$device_id) { return false; }
+        $this->resetFilters();
+        $this->filterEqual('link_id', (int)$link_id);
+        $this->filterEqual('device_id', (string)$device_id);
+        $count = $this->getCount('galleryplus_share_devices');
+        $this->resetFilters();
+        return (bool)$count;
+    }
+
+    public function registerShareDevice($link_id, $device_id, $ip = '', $ua = '') {
+        if (!$device_id) { return false; }
+        if ($this->isShareDeviceKnown($link_id, $device_id)) { return true; }
+        $this->insert('galleryplus_share_devices', [
+            'link_id'    => (int)$link_id,
+            'device_id'  => (string)$device_id,
+            'ip'         => $ip !== '' ? substr((string)$ip, 0, 45) : null,
+            'user_agent' => $ua !== '' ? substr((string)$ua, 0, 255) : null,
+            'date_pub'   => null,
+        ]);
+        return true;
+    }
+
+    public function clearShareDevices($link_id) {
+        $this->resetFilters();
+        $this->filterEqual('link_id', (int)$link_id);
+        $this->deleteFiltered('galleryplus_share_devices');
+        $this->resetFilters();
+        return true;
+    }
+
+    private function generateShareToken() {
+        for ($i = 0; $i < 12; $i++) {
+            $token = bin2hex(random_bytes(8));
+            $this->resetFilters();
+            $this->filterEqual('token', $token);
+            $exists = $this->getCount('galleryplus_share_links');
+            $this->resetFilters();
+            if (!$exists) { return $token; }
+        }
+        return bin2hex(random_bytes(12));
+    }
+
+    /**
+     * Доступ к альбому, выданный по секретной ссылке (сессия браузера).
+     */
+    public function hasShareAccess($album_id) {
+        $album_id = (int)$album_id;
+        if (!$album_id) { return false; }
+        $albums = $_SESSION['galleryplus_share_albums'] ?? null;
+        return is_array($albums) && !empty($albums[$album_id]);
+    }
+
+    public function grantShareAccess($album_id) {
+        $album_id = (int)$album_id;
+        if (!$album_id) { return false; }
+        if (!isset($_SESSION['galleryplus_share_albums']) || !is_array($_SESSION['galleryplus_share_albums'])) {
+            $_SESSION['galleryplus_share_albums'] = [];
+        }
+        $_SESSION['galleryplus_share_albums'][$album_id] = true;
+        return true;
     }
 
     public function isOriginalAccessGranted($user_id, $photo_id) {
@@ -793,6 +1005,8 @@ class modelGalleryplus extends cmsModel {
     public function canAccessAlbum($album, $user_id = 0, $user_karma = 0, $adult_karma = 0, $show_adult_for_guests = false, $user_rating = 0, $adult_rating = 0) {
         if (empty($album['privacy']) || $album['privacy'] === 'public') { return true; }
         if ($user_id && $album['user_id'] == $user_id) { return true; }
+        // Доступ по секретной ссылке (кроме платных — платный доступ проверяется отдельно)
+        if ($this->hasShareAccess($album['id'] ?? 0)) { return true; }
         switch ($album['privacy']) {
             case 'private':
                 return false;
@@ -984,7 +1198,11 @@ class modelGalleryplus extends cmsModel {
             $aid = $p['album_id'] ?? 0;
             if (isset($adult_albums[$aid])) {
                 $owner_id = $adult_albums[$aid];
-                if ($user_id && $user_id == $owner_id) {
+                if ($this->hasShareAccess($aid)) {
+                    // Доступ по секретной ссылке: adult-контент показываем без блюра
+                    $p['is_adult'] = false;
+                    $result[] = $p;
+                } elseif ($user_id && $user_id == $owner_id) {
                     $p['is_adult'] = false;
                     $result[] = $p;
                 } elseif ($show_adult) {
@@ -1603,6 +1821,7 @@ class modelGalleryplus extends cmsModel {
     const UPDATE_CHECK_INTERVAL = 21600;
 
     protected $updates_table_is_ready = false;
+    protected $share_tables_is_ready = false;
 
     // Автосоздание таблицы состояния проверки обновлений.
     // Нужно, чтобы проверка работала и на сайтах, где файлы обновлены вручную (без запуска установщика).

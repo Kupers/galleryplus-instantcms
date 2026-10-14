@@ -57,6 +57,15 @@
             <?php if ($user->is_logged && ($is_owner || $user->is_admin || !empty($can_select))) { ?>
                 <a href="<?php echo href_to('galleryplus', 'album', ['edit', $album['slug']]) . '.html'; ?>" class="galleryplus-btn">&#9998; <?php echo LANG_GALLERYPLUS_ALBUM_EDIT; ?></a>
             <?php } ?>
+            <?php if ($user->is_logged && ($is_owner || $user->is_admin)) { ?>
+                <button type="button" class="galleryplus-btn galleryplus-share-btn"
+                        data-gp-share
+                        data-gp-endpoint="<?php echo href_to('galleryplus', 'share'); ?>"
+                        data-gp-album="<?php echo (int)$album['id']; ?>"
+                        data-gp-photo="0"
+                        data-gp-csrf="<?php echo cmsForm::getCSRFToken(); ?>"
+                        data-gp-i18n="<?php echo htmlspecialchars(json_encode(galleryplus_share_i18n(), JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>">&#128279; <?php echo defined('LANG_GALLERYPLUS_SHARE_SECRET') ? LANG_GALLERYPLUS_SHARE_SECRET : 'Секретная ссылка'; ?></button>
+            <?php } ?>
         </div>
     </div>
 
@@ -196,7 +205,7 @@
             </div>
         <?php } ?>
 
-        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo $grid_url; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
+        <div class="galleryplus-grid<?php echo (!empty($album['privacy']) && $album['privacy'] !== 'public' && empty($is_owner) && empty($share_access)) ? ' galleryplus-grid-blurred' : ''; ?>" id="galleryplus-grid" data-page="<?php echo $page + 1; ?>" data-has-next="<?php echo $has_next ? '1' : '0'; ?>" data-url="<?php echo $grid_url; ?>" data-is-guest="<?php echo !$user->id ? '1' : '0'; ?>" data-login-url="<?php echo href_to('auth', 'login'); ?>" data-adult-lock="<?php echo !empty($adult_lock) ? '1' : '0'; ?>" data-adult-warn="<?php echo htmlspecialchars(defined('LANG_GALLERYPLUS_ADULT_AGE_WARN') ? LANG_GALLERYPLUS_ADULT_AGE_WARN : 'Контент для взрослых. Укажите дату рождения в профиле', ENT_QUOTES); ?>">
             <?php foreach ($photos as $photo) {
                 $title = htmlspecialchars($photo['title'] ?: ($photo['filename'] ?? ''));
                 $author = htmlspecialchars($photo['user']['nickname'] ?? '');

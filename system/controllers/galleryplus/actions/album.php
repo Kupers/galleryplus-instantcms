@@ -29,6 +29,8 @@ class actionGalleryplusAlbum extends cmsAction {
         $album = $this->model->getAlbumBySlug($slug);
         if (!$album) { return cmsCore::error404(); }
 
+        $share_access = $this->model->hasShareAccess((int)$album['id']);
+
         $this->cms_template->addBreadcrumb(
             defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
             href_to('galleryplus')
@@ -237,6 +239,7 @@ class actionGalleryplusAlbum extends cmsAction {
             'user_albums'     => $user_albums,
             'use_photo_tags'  => !empty($this->options['use_photo_tags']) && cmsCore::isModelExists('tags'),
             'adult_lock'      => $this->isAdultLocked(),
+            'share_access'    => $share_access,
         ]);
     }
 

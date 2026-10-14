@@ -108,6 +108,13 @@
         <div class="galleryplus-view-actions">
             <?php if (!empty($is_owner) || $user->is_admin) { ?>
                 <a href="<?php echo href_to('galleryplus', 'edit', [$photo['id']]); ?>" class="galleryplus-action-btn galleryplus-action-btn--edit"><?php echo defined('LANG_GALLERYPLUS_EDIT') ? LANG_GALLERYPLUS_EDIT : 'Редактировать'; ?></a>
+                <button type="button" class="galleryplus-action-btn galleryplus-share-btn"
+                        data-gp-share
+                        data-gp-endpoint="<?php echo href_to('galleryplus', 'share'); ?>"
+                        data-gp-album="<?php echo (int)($photo['album_id'] ?? 0); ?>"
+                        data-gp-photo="<?php echo (int)$photo['id']; ?>"
+                        data-gp-csrf="<?php echo cmsForm::getCSRFToken(); ?>"
+                        data-gp-i18n="<?php echo htmlspecialchars(json_encode(galleryplus_share_i18n(), JSON_UNESCAPED_UNICODE), ENT_QUOTES); ?>">&#128279; <?php echo defined('LANG_GALLERYPLUS_SHARE_SECRET') ? LANG_GALLERYPLUS_SHARE_SECRET : 'Секретная ссылка'; ?></button>
             <?php } ?>
             <?php if ($is_blurred) { ?>
                 <?php if (!empty($is_age_locked)) { ?>

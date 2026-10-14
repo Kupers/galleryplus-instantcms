@@ -1234,6 +1234,36 @@ a.galleryplus-btn.galleryplus-upload-btn:hover {
     background: #1557b0;
 }
 
+/* --- Upload page: mobile layout --- */
+@media (max-width: 640px) {
+    /* «+ Новый альбом» — на отдельную строку во всю ширину */
+    #galleryplus-new-album-btn {
+        flex: 1 1 100%;
+    }
+
+    /* Подсказку в поле поиска альбома заменяем значком лупы */
+    .galleryplus-album-search-icon {
+        display: block;
+    }
+    .galleryplus-album-search-wrap .form-control {
+        padding-left: 34px;
+    }
+    .galleryplus-album-search-wrap .form-control::placeholder {
+        color: transparent;
+    }
+
+    /* Прогресс загрузки фото — вниз под окно ввода тегов,
+       поля названия и тегов растягиваются на всю ширину */
+    .galleryplus-upload-item {
+        flex-wrap: wrap;
+    }
+    .galleryplus-upload-item-progress {
+        flex: 1 1 100%;
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
 /* --- Albums grid (JS masonry) --- */
 .galleryplus-empty {
     text-align: center;
@@ -2420,6 +2450,24 @@ img.galleryplus-viewer-blurred {
     flex: 1;
 }
 
+.galleryplus-album-search-icon {
+    display: none;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: #999;
+    pointer-events: none;
+    z-index: 1;
+}
+.galleryplus-album-search-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
 .galleryplus-album-search-wrap .form-control {
     width: 100%;
     padding: 8px 12px;
@@ -3402,5 +3450,207 @@ body.galleryplus-selecting .galleryplus-item .galleryplus-fav-btn--card {
         width: calc(100dvw - 4px);
         margin-left: calc(50% - 50vw + 2px);
         margin-right: calc(50% - 50vw + 2px);
+    }
+}
+
+/* ==== Секретные ссылки (share-token) ==== */
+.galleryplus-share-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+}
+.galleryplus-share-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .55);
+}
+.galleryplus-share-dialog {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 640px;
+    max-height: 88vh;
+    margin: 6vh auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+    overflow: hidden;
+}
+.galleryplus-share-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+.galleryplus-share-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+.galleryplus-share-x {
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    padding: 0 4px;
+    color: #888;
+    cursor: pointer;
+}
+.galleryplus-share-x:hover {
+    color: #333;
+}
+.galleryplus-share-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+}
+.galleryplus-share-hint {
+    margin: 0 0 16px;
+    color: #666;
+    font-size: 13px;
+}
+.galleryplus-share-form {
+    margin-bottom: 18px;
+    padding: 16px;
+    background: #f7f8fa;
+    border: 1px solid #eaecef;
+    border-radius: 10px;
+}
+.galleryplus-share-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.galleryplus-share-expires-label {
+    font-weight: 600;
+}
+.galleryplus-share-days {
+    max-width: 200px;
+}
+.galleryplus-share-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.galleryplus-share-devices-box {
+    padding: 4px 0 10px 26px;
+}
+.galleryplus-share-devices-num {
+    max-width: 120px;
+}
+.galleryplus-share-note {
+    margin: 6px 0 0;
+    color: #888;
+    font-size: 12px;
+}
+.galleryplus-share-create {
+    margin-top: 8px;
+}
+.galleryplus-share-error {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    color: #c0392b;
+    font-size: 13px;
+    background: #fdecea;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+}
+.galleryplus-share-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.galleryplus-share-item {
+    padding: 12px;
+    border: 1px solid #e6e8eb;
+    border-radius: 10px;
+}
+.galleryplus-share-item--inactive {
+    opacity: .65;
+}
+.galleryplus-share-url {
+    width: 100%;
+    font-family: monospace;
+    font-size: 12px;
+}
+.galleryplus-share-meta {
+    margin: 8px 0;
+    color: #777;
+    font-size: 12px;
+}
+.galleryplus-share-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.galleryplus-share-action {
+    padding: 5px 11px;
+    font-size: 12px;
+    background: #fff;
+    border: 1px solid #d0d4d9;
+    border-radius: 7px;
+    cursor: pointer;
+}
+.galleryplus-share-action:hover {
+    background: #f2f4f7;
+}
+.galleryplus-share-action.danger {
+    color: #c0392b;
+    border-color: #e6b3ad;
+}
+.galleryplus-share-action.danger:hover {
+    background: #fdecea;
+}
+.galleryplus-share-loading,
+.galleryplus-share-empty {
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+@media (max-width: 767.98px) {
+    .galleryplus-share-dialog {
+        max-width: none;
+        max-height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+    .galleryplus-share-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .galleryplus-share-days {
+        max-width: none;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .galleryplus-share-dialog {
+        background: #1e2023;
+        color: #e6e6e6;
+    }
+    .galleryplus-share-head {
+        border-bottom-color: #2c2f33;
+    }
+    .galleryplus-share-x {
+        color: #aaa;
+    }
+    .galleryplus-share-form {
+        background: #26282c;
+        border-color: #32353a;
+    }
+    .galleryplus-share-item {
+        border-color: #32353a;
+    }
+    .galleryplus-share-action {
+        background: #26282c;
+        border-color: #3a3d42;
+        color: #e6e6e6;
+    }
+    .galleryplus-share-action:hover {
+        background: #2f3238;
     }
 }
