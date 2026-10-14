@@ -380,3 +380,6 @@ define('LANG_GALLERYPLUS_SHARE_ERR_CREATE',      'Could not create the link.');
 define('LANG_GALLERYPLUS_SHARE_EXPIRED',         'This link has expired.');
 define('LANG_GALLERYPLUS_SHARE_DEVICES_LIMIT',   'The device limit for this link has been reached.');
 define('LANG_GALLERYPLUS_SHARE_BLOCKED_TITLE',   'Link unavailable');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_TITLE',    'Secret link');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_TEXT',     'To open the content, click the button below.');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_OPEN',     'Open');

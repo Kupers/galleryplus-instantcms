@@ -48,6 +48,15 @@ class actionGalleryplusShare extends cmsAction {
         $album = $album_id ? $this->model->getAlbum($album_id) : null;
         if (!$album) { return cmsCore::error404(); }
 
+        // Автоматические запросы (предпросмотр ссылок в мессенджерах/соцсетях, боты)
+        // не должны расходовать ссылку: не регистрируем устройство, не считаем переход
+        // и не закрываем одноразовую ссылку. Показываем страницу-прослойку с кнопкой;
+        // реальный пользователь нажимает её (?open=1) и получает доступ.
+        $force_open = ((int)$this->request->get('open', 0) === 1);
+        if (!$force_open && $this->isAutomatedRequest()) {
+            return $this->renderPreview($link, $album, $photo);
+        }
+
         // Ограничение по количеству устройств / привязка к устройству
         $device_id   = $this->getDeviceId();
         $max_devices = (int)$link['max_devices'];
@@ -84,6 +93,67 @@ class actionGalleryplusShare extends cmsAction {
         return $this->cms_template->render('share_blocked', [
             'message' => $message,
         ]);
+    }
+
+    // Страница-прослойка для предпросмотра/роботов: без расхода ссылки
+    private function renderPreview($link, $album, $photo) {
+        $title = $photo ? $photo['title'] : $album['title'];
+
+        $this->cms_template->addBreadcrumb(
+            defined('LANG_GALLERYPLUS_TITLE') ? LANG_GALLERYPLUS_TITLE : 'Gallery',
+            href_to('galleryplus')
+        );
+
+        return $this->cms_template->render('share_preview', [
+            'title'    => $title,
+            'open_url' => href_to('galleryplus', 's', [$link['token']]) . '?open=1',
+        ]);
+    }
+
+    // Определяем автоматический запрос (робот/предпросмотр), который не должен
+    // расходовать ссылку. Доверяем только «настоящим» браузерным движкам.
+    private function isAutomatedRequest() {
+
+        $method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string)$_SERVER['REQUEST_METHOD']) : 'GET';
+        if ($method !== 'GET') { return true; }
+
+        foreach (['HTTP_PURPOSE', 'HTTP_X_PURPOSE', 'HTTP_X_MOZ', 'HTTP_SEC_PURPOSE', 'HTTP_X_PREFETCH'] as $h) {
+            if (!empty($_SERVER[$h])) { return true; }
+        }
+
+        if (isset($_SERVER['HTTP_SEC_FETCH_MODE']) && strtolower((string)$_SERVER['HTTP_SEC_FETCH_MODE']) !== 'navigate') { return true; }
+        if (isset($_SERVER['HTTP_SEC_FETCH_DEST']) && strtolower((string)$_SERVER['HTTP_SEC_FETCH_DEST']) !== 'document') { return true; }
+
+        $ua     = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower(trim((string)$_SERVER['HTTP_USER_AGENT'])) : '';
+        $accept = isset($_SERVER['HTTP_ACCEPT']) ? strtolower((string)$_SERVER['HTTP_ACCEPT']) : '';
+
+        if ($ua === '' || strpos($accept, 'text/html') === false) { return true; }
+
+        $markers = [
+            'bot', 'crawler', 'spider', 'slurp', 'curl', 'wget', 'python', 'guzzle',
+            'okhttp', 'go-http-client', 'java/', 'libwww', 'httpclient', 'http-client',
+            'facebookexternalhit', 'facebookcatalog', 'facebot', 'facebook',
+            'telegram', 'whatsapp', 'slackbot', 'discord', 'twitterbot', 'skype',
+            'linkedinbot', 'embedly', 'iframely', 'metainspector', 'opengraph',
+            'unfurl', 'scraper', 'scrape', 'preview', 'headless', 'phantomjs',
+            'puppeteer', 'playwright', 'axios', 'node-fetch', 'rss', 'feed',
+            'monitor', 'uptime', 'pingdom', 'statuscake', 'validator', 'audit',
+            'semrush', 'ahrefs', 'mj12', 'dotbot', 'yandex', 'googlebot', 'bingbot',
+            'baidu', 'applebot', 'petalbot', 'sogou', 'exabot', 'ia_archiver',
+            'archive.org', 'bitly', 'pinterest', 'redditbot', 'tumblr', 'snapchat',
+            'nextcloud', 'owncloud', 'synology', 'zabbix', 'nagios', 'vk', 'mail.ru',
+            'maxbot',
+        ];
+        foreach ($markers as $m) {
+            if (strpos($ua, $m) !== false) { return true; }
+        }
+
+        $browser = (strpos($ua, 'mozilla') !== false) && preg_match(
+            '~chrome/|crios/|safari/|firefox/|gecko/|edg/|edgios/|edga/|opr/|opera|trident/|msie|yaapp|yabrowser|samsungbrowser|ucbrowser|vivaldi~',
+            $ua
+        );
+
+        return !$browser;
     }
 
     private function getDeviceId() {

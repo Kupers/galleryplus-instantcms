@@ -384,3 +384,6 @@ define('LANG_GALLERYPLUS_SHARE_ERR_CREATE',      'Не удалось созда
 define('LANG_GALLERYPLUS_SHARE_EXPIRED',         'Срок действия ссылки истёк.');
 define('LANG_GALLERYPLUS_SHARE_DEVICES_LIMIT',   'Достигнут лимит устройств для этой ссылки.');
 define('LANG_GALLERYPLUS_SHARE_BLOCKED_TITLE',   'Ссылка недоступна');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_TITLE',    'Секретная ссылка');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_TEXT',     'Чтобы открыть содержимое, нажмите кнопку ниже.');
+define('LANG_GALLERYPLUS_SHARE_PREVIEW_OPEN',     'Открыть');
